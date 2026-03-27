@@ -1,4 +1,5 @@
-import { Search, MessageCirclePlus, MoreVertical } from "lucide-react";
+import { Search, MessageCirclePlus, MoreVertical, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Contact } from "@/data/contacts";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -10,6 +11,7 @@ interface ChatSidebarProps {
 }
 
 const ChatSidebar = ({ contacts, selectedId, onSelect }: ChatSidebarProps) => {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
   const filtered = contacts.filter((c) =>
@@ -26,6 +28,9 @@ const ChatSidebar = ({ contacts, selectedId, onSelect }: ChatSidebarProps) => {
         <div className="flex items-center gap-2">
           <button className="p-2 rounded-full hover:bg-primary/80 transition-colors">
             <MessageCirclePlus className="w-5 h-5 text-primary-foreground" />
+          </button>
+          <button onClick={() => navigate("/profile")} className="p-2 rounded-full hover:bg-primary/80 transition-colors">
+            <User className="w-5 h-5 text-primary-foreground" />
           </button>
           <button className="p-2 rounded-full hover:bg-primary/80 transition-colors">
             <MoreVertical className="w-5 h-5 text-primary-foreground" />
