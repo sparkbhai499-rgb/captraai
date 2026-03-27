@@ -1,4 +1,5 @@
-import { Search, MessageCirclePlus, MoreVertical } from "lucide-react";
+import { Search, MessageCirclePlus, MoreVertical, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Contact } from "@/data/contacts";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
