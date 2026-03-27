@@ -1,16 +1,60 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState, useCallback } from "react";
+import ChatSidebar from "@/components/ChatSidebar";
+import ChatArea from "@/components/ChatArea";
+import EmptyChat from "@/components/EmptyChat";
+import { contacts as initialContacts, messages as initialMessages, Message } from "@/data/contacts";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const Index = () => {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [allMessages, setAllMessages] = useState(initialMessages);
+
+  const selectedContact = initialContacts.find((c) => c.id === selectedId) || null;
+  const currentMessages = selectedId ? allMessages[selectedId] || [] : [];
+
+  const handleSend = useCallback(
+    (text: string) => {
+      if (!selectedId) return;
+      const newMsg: Message = {
+        id: `msg-${Date.now()}`,
+        contactId: selectedId,
+        text,
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        sent: true,
+      };
+      setAllMessages((prev) => ({
+        ...prev,
+        [selectedId]: [...(prev[selectedId] || []), newMsg],
+      }));
+    },
+    [selectedId]
+  );
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="h-screen flex bg-background">
+      {/* Sidebar - hidden on mobile when chat is open */}
+      <div className={`${selectedId ? "hidden md:flex" : "flex"} w-full md:w-[380px] flex-shrink-0`}>
+        <ChatSidebar
+          contacts={initialContacts}
+          selectedId={selectedId}
+          onSelect={setSelectedId}
+        />
+      </div>
+
+      {/* Chat Area */}
+      <div className={`${selectedId ? "flex" : "hidden md:flex"} flex-1 flex-col min-w-0`}>
+        {selectedContact ? (
+          <ChatArea
+            contact={selectedContact}
+            messages={currentMessages}
+            onSend={handleSend}
+            onBack={() => setSelectedId(null)}
+          />
+        ) : (
+          <EmptyChat />
+        )}
+      </div>
     </div>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;

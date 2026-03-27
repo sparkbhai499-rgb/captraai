@@ -13,6 +13,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Nunito', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -57,6 +60,17 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        chat: {
+          bg: "hsl(var(--chat-bg))",
+          pattern: "hsl(var(--chat-pattern))",
+        },
+        bubble: {
+          sent: "hsl(var(--bubble-sent))",
+          "sent-foreground": "hsl(var(--bubble-sent-foreground))",
+          received: "hsl(var(--bubble-received))",
+          "received-foreground": "hsl(var(--bubble-received-foreground))",
+        },
+        online: "hsl(var(--online))",
       },
       borderRadius: {
         lg: "var(--radius)",
