@@ -29,6 +29,9 @@ const ChatSidebar = ({ contacts, selectedId, onSelect }: ChatSidebarProps) => {
           <button className="p-2 rounded-full hover:bg-primary/80 transition-colors">
             <MessageCirclePlus className="w-5 h-5 text-primary-foreground" />
           </button>
+          <button onClick={() => navigate("/profile")} className="p-2 rounded-full hover:bg-primary/80 transition-colors">
+            <User className="w-5 h-5 text-primary-foreground" />
+          </button>
           <button className="p-2 rounded-full hover:bg-primary/80 transition-colors">
             <MoreVertical className="w-5 h-5 text-primary-foreground" />
           </button>
