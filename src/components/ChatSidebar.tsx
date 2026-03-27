@@ -11,6 +11,7 @@ interface ChatSidebarProps {
 }
 
 const ChatSidebar = ({ contacts, selectedId, onSelect }: ChatSidebarProps) => {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
   const filtered = contacts.filter((c) =>
