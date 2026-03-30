@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Phone, MessageCircle, ArrowRight, Loader2 } from "lucide-react";
+import { Mail, Lock, MessageCircle, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface LoginPageProps {
@@ -8,48 +8,39 @@ interface LoginPageProps {
 }
 
 const LoginPage = ({ onLogin }: LoginPageProps) => {
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const handleSendOTP = async () => {
-    if (!phone.trim()) return;
+  const handleSubmit = async () => {
+    if (!email.trim() || !password.trim()) return;
     setLoading(true);
     setError("");
+    setSuccess("");
 
-    const formattedPhone = phone.startsWith("+") ? phone : `+91${phone}`;
-
-    const { error: err } = await supabase.auth.signInWithOtp({
-      phone: formattedPhone,
-    });
-
-    if (err) {
-      setError(err.message);
+    if (isSignUp) {
+      const { error: err } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      if (err) {
+        setError(err.message);
+      } else {
+        setSuccess("Signup ho gaya! Email verify karo aur phir login karo.");
+      }
     } else {
-      setStep("otp");
-    }
-    setLoading(false);
-  };
-
-  const handleVerifyOTP = async () => {
-    if (!otp.trim()) return;
-    setLoading(true);
-    setError("");
-
-    const formattedPhone = phone.startsWith("+") ? phone : `+91${phone}`;
-
-    const { error: err } = await supabase.auth.verifyOtp({
-      phone: formattedPhone,
-      token: otp,
-      type: "sms",
-    });
-
-    if (err) {
-      setError(err.message);
-    } else {
-      onLogin();
+      const { error: err } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (err) {
+        setError(err.message);
+      } else {
+        onLogin();
+      }
     }
     setLoading(false);
   };
@@ -69,88 +60,59 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
         </div>
 
         <div className="bg-card rounded-2xl p-6 shadow-lg border border-border">
-          {step === "phone" ? (
-            <>
-              <h2 className="text-lg font-semibold text-foreground mb-1">
-                Phone Number Enter Karo
-              </h2>
-              <p className="text-xs text-muted-foreground mb-4">
-                Hum aapko ek OTP bhejenge verification ke liye
-              </p>
+          <h2 className="text-lg font-semibold text-foreground mb-1">
+            {isSignUp ? "Account Banao" : "Login Karo"}
+          </h2>
+          <p className="text-xs text-muted-foreground mb-4">
+            {isSignUp ? "Naya account create karo" : "Apne account mein login karo"}
+          </p>
 
-              <div className="relative mb-4">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="tel"
-                  placeholder="+91 9876543210"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSendOTP()}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-secondary text-secondary-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
+          <div className="relative mb-3">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="email"
+              placeholder="email@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 rounded-xl bg-secondary text-secondary-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
 
-              {error && (
-                <p className="text-xs text-destructive mb-3">{error}</p>
-              )}
+          <div className="relative mb-4">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+              className="w-full pl-10 pr-4 py-3 rounded-xl bg-secondary text-secondary-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
 
-              <Button
-                onClick={handleSendOTP}
-                disabled={loading || !phone.trim()}
-                className="w-full rounded-xl h-11"
-              >
-                {loading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <>
-                    OTP Bhejo <ArrowRight className="w-4 h-4 ml-1" />
-                  </>
-                )}
-              </Button>
-            </>
-          ) : (
-            <>
-              <h2 className="text-lg font-semibold text-foreground mb-1">
-                OTP Enter Karo
-              </h2>
-              <p className="text-xs text-muted-foreground mb-4">
-                {phone} par bheja gaya 6-digit code daalo
-              </p>
+          {error && <p className="text-xs text-destructive mb-3">{error}</p>}
+          {success && <p className="text-xs text-green-600 mb-3">{success}</p>}
 
-              <input
-                type="text"
-                placeholder="123456"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                onKeyDown={(e) => e.key === "Enter" && handleVerifyOTP()}
-                className="w-full text-center tracking-[0.5em] px-4 py-3 rounded-xl bg-secondary text-secondary-foreground placeholder:text-muted-foreground text-lg font-mono focus:outline-none focus:ring-2 focus:ring-ring mb-4"
-                maxLength={6}
-              />
+          <Button
+            onClick={handleSubmit}
+            disabled={loading || !email.trim() || !password.trim()}
+            className="w-full rounded-xl h-11 mb-3"
+          >
+            {loading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                {isSignUp ? "Sign Up" : "Login"} <ArrowRight className="w-4 h-4 ml-1" />
+              </>
+            )}
+          </Button>
 
-              {error && (
-                <p className="text-xs text-destructive mb-3">{error}</p>
-              )}
-
-              <Button
-                onClick={handleVerifyOTP}
-                disabled={loading || otp.length < 6}
-                className="w-full rounded-xl h-11 mb-3"
-              >
-                {loading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  "Verify Karo"
-                )}
-              </Button>
-
-              <button
-                onClick={() => { setStep("phone"); setOtp(""); setError(""); }}
-                className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                ← Phone number badlo
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => { setIsSignUp(!isSignUp); setError(""); setSuccess(""); }}
+            className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {isSignUp ? "← Pehle se account hai? Login karo" : "Naya account banao →"}
+          </button>
         </div>
       </div>
     </div>
