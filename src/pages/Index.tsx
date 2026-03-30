@@ -5,6 +5,7 @@ import ChatSidebar from "@/components/ChatSidebar";
 import ChatArea from "@/components/ChatArea";
 import EmptyChat from "@/components/EmptyChat";
 import LoginPage from "@/pages/LoginPage";
+import NewChatDialog from "@/components/NewChatDialog";
 
 interface ContactWithProfile {
   id: string;
