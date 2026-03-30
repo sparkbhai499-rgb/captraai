@@ -1,4 +1,4 @@
-import { Search, MessageCirclePlus, MoreVertical, User } from "lucide-react";
+import { Search, MessageCirclePlus, Settings, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Contact } from "@/data/contacts";
 import { cn } from "@/lib/utils";
@@ -33,8 +33,8 @@ const ChatSidebar = ({ contacts, selectedId, onSelect, onNewChat }: ChatSidebarP
           <button onClick={() => navigate("/profile")} className="p-2 rounded-full hover:bg-primary/80 transition-colors">
             <User className="w-5 h-5 text-primary-foreground" />
           </button>
-          <button className="p-2 rounded-full hover:bg-primary/80 transition-colors">
-            <MoreVertical className="w-5 h-5 text-primary-foreground" />
+          <button onClick={() => navigate("/settings")} className="p-2 rounded-full hover:bg-primary/80 transition-colors">
+            <Settings className="w-5 h-5 text-primary-foreground" />
           </button>
         </div>
       </div>
