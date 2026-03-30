@@ -5,6 +5,7 @@ import ChatSidebar from "@/components/ChatSidebar";
 import ChatArea from "@/components/ChatArea";
 import EmptyChat from "@/components/EmptyChat";
 import LoginPage from "@/pages/LoginPage";
+import NewChatDialog from "@/components/NewChatDialog";
 
 interface ContactWithProfile {
   id: string;
@@ -35,6 +36,7 @@ const Index = () => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [contacts, setContacts] = useState<ContactWithProfile[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [showNewChat, setShowNewChat] = useState(false);
 
   const loadContacts = useCallback(async () => {
     if (!user) return;
@@ -256,6 +258,7 @@ const Index = () => {
           contacts={sidebarContacts}
           selectedId={selectedId}
           onSelect={setSelectedId}
+          onNewChat={() => setShowNewChat(true)}
         />
       </div>
 
@@ -271,6 +274,17 @@ const Index = () => {
           <EmptyChat />
         )}
       </div>
+
+      <NewChatDialog
+        open={showNewChat}
+        onClose={() => setShowNewChat(false)}
+        onChatCreated={(contactId) => {
+          setShowNewChat(false);
+          loadContacts();
+          setSelectedId(contactId);
+        }}
+        currentUserId={user.id}
+      />
     </div>
   );
 };

@@ -8,9 +8,10 @@ interface ChatSidebarProps {
   contacts: Contact[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  onNewChat?: () => void;
 }
 
-const ChatSidebar = ({ contacts, selectedId, onSelect }: ChatSidebarProps) => {
+const ChatSidebar = ({ contacts, selectedId, onSelect, onNewChat }: ChatSidebarProps) => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
@@ -26,7 +27,7 @@ const ChatSidebar = ({ contacts, selectedId, onSelect }: ChatSidebarProps) => {
           Message Hub
         </h1>
         <div className="flex items-center gap-2">
-          <button className="p-2 rounded-full hover:bg-primary/80 transition-colors">
+          <button onClick={onNewChat} className="p-2 rounded-full hover:bg-primary/80 transition-colors">
             <MessageCirclePlus className="w-5 h-5 text-primary-foreground" />
           </button>
           <button onClick={() => navigate("/profile")} className="p-2 rounded-full hover:bg-primary/80 transition-colors">
