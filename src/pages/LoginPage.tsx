@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, Lock, MessageCircle, ArrowRight, Loader2 } from "lucide-react";
+import { Mail, Lock, MessageCircle, ArrowRight, Loader2, User, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface LoginPageProps {
@@ -10,6 +10,8 @@ interface LoginPageProps {
 const LoginPage = ({ onLogin }: LoginPageProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -17,14 +19,37 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
 
   const handleSubmit = async () => {
     if (!email.trim() || !password.trim()) return;
+    if (isSignUp && (!phone.trim() || !displayName.trim())) {
+      setError("Naam aur phone number dono zaruri hai!");
+      return;
+    }
     setLoading(true);
     setError("");
     setSuccess("");
 
     if (isSignUp) {
+      // Check if phone number already exists
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("phone", phone.trim())
+        .maybeSingle();
+
+      if (existingProfile) {
+        setError("Ye phone number pehle se kisi account mein registered hai!");
+        setLoading(false);
+        return;
+      }
+
       const { error: err } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            display_name: displayName.trim(),
+            phone: phone.trim(),
+          },
+        },
       });
       if (err) {
         setError(err.message);
@@ -67,6 +92,32 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
             {isSignUp ? "Naya account create karo" : "Apne account mein login karo"}
           </p>
 
+          {isSignUp && (
+            <>
+              <div className="relative mb-3">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Apna naam likho"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-secondary text-secondary-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              <div className="relative mb-3">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="tel"
+                  placeholder="+91 9876543210"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-secondary text-secondary-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+            </>
+          )}
+
           <div className="relative mb-3">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
@@ -95,7 +146,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
 
           <Button
             onClick={handleSubmit}
-            disabled={loading || !email.trim() || !password.trim()}
+            disabled={loading || !email.trim() || !password.trim() || (isSignUp && (!phone.trim() || !displayName.trim()))}
             className="w-full rounded-xl h-11 mb-3"
           >
             {loading ? (
