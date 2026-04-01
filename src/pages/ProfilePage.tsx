@@ -127,7 +127,7 @@ const ProfilePage = () => {
           ) : (
             <div className="flex items-center justify-between">
               <span className="text-sm text-foreground">
-                {profile?.status_text || "Hey there! I am using Message Hub"}
+                {profile?.status_text || "Hey there! I am using W8sap"}
               </span>
               <button onClick={() => startEdit("status", profile?.status_text)} className="p-1 text-muted-foreground hover:text-foreground">
                 <Edit2 className="w-4 h-4" />
