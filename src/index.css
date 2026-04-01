@@ -39,10 +39,10 @@
     /* Custom tokens */
     --chat-bg: 180 10% 95%;
     --chat-pattern: 180 8% 92%;
-    --bubble-sent: 162 55% 42%;
-    --bubble-sent-foreground: 0 0% 100%;
+    --bubble-sent: 120 35% 87%;
+    --bubble-sent-foreground: 210 25% 10%;
     --bubble-received: 0 0% 100%;
-    --bubble-received-foreground: 210 25% 12%;
+    --bubble-received-foreground: 210 25% 10%;
     --sidebar-bg: 0 0% 100%;
     --sidebar-border: 200 15% 90%;
     --header-bg: 162 63% 38%;
