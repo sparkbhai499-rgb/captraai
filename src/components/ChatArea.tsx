@@ -77,8 +77,7 @@ const ChatArea = ({ contact, messages, onSend, onBack }: ChatAreaProps) => {
                 <p className="leading-relaxed">{msg.text}</p>
                 <span
                   className={cn(
-                    "text-[10px] mt-1 block text-right",
-                    msg.sent ? "text-primary-foreground/60" : "text-muted-foreground"
+                    "text-[10px] mt-1 block text-right text-muted-foreground/70"
                   )}
                 >
                   {msg.time}
