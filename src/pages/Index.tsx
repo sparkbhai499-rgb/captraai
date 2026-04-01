@@ -220,6 +220,7 @@ const Index = () => {
     id: c.id,
     name: c.nickname || c.profile?.display_name || c.profile?.phone || "Unknown",
     avatar: (c.nickname || c.profile?.display_name || "?").slice(0, 2).toUpperCase(),
+    avatarUrl: c.profile?.avatar_url || null,
     lastMessage: c.lastMessage,
     time: c.lastMessageTime,
     unread: c.unread,
@@ -242,6 +243,7 @@ const Index = () => {
         )
           .slice(0, 2)
           .toUpperCase(),
+        avatarUrl: selectedContact.profile?.avatar_url || null,
         lastMessage: selectedContact.lastMessage,
         time: selectedContact.lastMessageTime,
         unread: selectedContact.unread,

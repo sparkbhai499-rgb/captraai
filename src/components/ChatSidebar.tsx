@@ -66,8 +66,12 @@ const ChatSidebar = ({ contacts, selectedId, onSelect, onNewChat }: ChatSidebarP
           >
             {/* Avatar */}
             <div className="relative flex-shrink-0">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-accent-foreground">
-                {contact.avatar}
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-accent-foreground overflow-hidden">
+                {contact.avatarUrl ? (
+                  <img src={contact.avatarUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  contact.avatar
+                )}
               </div>
               {contact.online && (
                 <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-online border-2 border-card" />

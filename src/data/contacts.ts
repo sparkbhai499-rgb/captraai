@@ -2,6 +2,7 @@ export interface Contact {
   id: string;
   name: string;
   avatar: string;
+  avatarUrl?: string | null;
   lastMessage: string;
   time: string;
   unread: number;

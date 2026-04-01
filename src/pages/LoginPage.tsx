@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, Lock, MessageCircle, ArrowRight, Loader2, User, Phone } from "lucide-react";
+import { Mail, Lock, MessageCircle, ArrowRight, Loader2, User, Phone, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface LoginPageProps {
@@ -13,12 +13,15 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
   const [phone, setPhone] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgot, setIsForgot] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   const handleSubmit = async () => {
-    if (!email.trim() || !password.trim()) return;
+    if (!email.trim()) return;
+    if (!isForgot && !password.trim()) return;
     if (isSignUp && (!phone.trim() || !displayName.trim())) {
       setError("Naam aur phone number dono zaruri hai!");
       return;
@@ -27,8 +30,17 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
     setError("");
     setSuccess("");
 
+    if (isForgot) {
+      const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (err) setError(err.message);
+      else setSuccess("Password reset link aapke email pe bhej diya gaya hai!");
+      setLoading(false);
+      return;
+    }
+
     if (isSignUp) {
-      // Check if phone number already exists
       const { data: existingProfile } = await supabase
         .from("profiles")
         .select("id")
@@ -51,21 +63,12 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
           },
         },
       });
-      if (err) {
-        setError(err.message);
-      } else {
-        setSuccess("Signup ho gaya! Email verify karo aur phir login karo.");
-      }
+      if (err) setError(err.message);
+      else setSuccess("Signup ho gaya! Email verify karo aur phir login karo.");
     } else {
-      const { error: err } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (err) {
-        setError(err.message);
-      } else {
-        onLogin();
-      }
+      const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+      if (err) setError(err.message);
+      else onLogin();
     }
     setLoading(false);
   };
@@ -73,26 +76,27 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
-        {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
             <MessageCircle className="w-10 h-10 text-primary" />
           </div>
           <h1 className="text-2xl font-bold text-foreground">Message Hub</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Apne doston se connect karo
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">Apne doston se connect karo</p>
         </div>
 
         <div className="bg-card rounded-2xl p-6 shadow-lg border border-border">
           <h2 className="text-lg font-semibold text-foreground mb-1">
-            {isSignUp ? "Account Banao" : "Login Karo"}
+            {isForgot ? "Password Reset" : isSignUp ? "Account Banao" : "Login Karo"}
           </h2>
           <p className="text-xs text-muted-foreground mb-4">
-            {isSignUp ? "Naya account create karo" : "Apne account mein login karo"}
+            {isForgot
+              ? "Apna email daalo, reset link bhej denge"
+              : isSignUp
+              ? "Naya account create karo"
+              : "Apne account mein login karo"}
           </p>
 
-          {isSignUp && (
+          {isSignUp && !isForgot && (
             <>
               <div className="relative mb-3">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -104,7 +108,6 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-secondary text-secondary-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
-
               <div className="relative mb-3">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
@@ -129,41 +132,69 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
             />
           </div>
 
-          <div className="relative mb-4">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-secondary text-secondary-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
+          {!isForgot && (
+            <div className="relative mb-2">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                className="w-full pl-10 pr-12 py-3 rounded-xl bg-secondary text-secondary-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          )}
+
+          {!isSignUp && !isForgot && (
+            <button
+              onClick={() => { setIsForgot(true); setError(""); setSuccess(""); }}
+              className="text-xs text-primary hover:underline mb-3 block text-right"
+            >
+              Password bhool gaye?
+            </button>
+          )}
 
           {error && <p className="text-xs text-destructive mb-3">{error}</p>}
           {success && <p className="text-xs text-green-600 mb-3">{success}</p>}
 
           <Button
             onClick={handleSubmit}
-            disabled={loading || !email.trim() || !password.trim() || (isSignUp && (!phone.trim() || !displayName.trim()))}
+            disabled={loading || !email.trim() || (!isForgot && !password.trim()) || (isSignUp && (!phone.trim() || !displayName.trim()))}
             className="w-full rounded-xl h-11 mb-3"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                {isSignUp ? "Sign Up" : "Login"} <ArrowRight className="w-4 h-4 ml-1" />
+                {isForgot ? "Reset Link Bhejo" : isSignUp ? "Sign Up" : "Login"}{" "}
+                <ArrowRight className="w-4 h-4 ml-1" />
               </>
             )}
           </Button>
 
           <button
-            onClick={() => { setIsSignUp(!isSignUp); setError(""); setSuccess(""); }}
+            onClick={() => { setIsSignUp(!isSignUp); setIsForgot(false); setError(""); setSuccess(""); }}
             className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             {isSignUp ? "← Pehle se account hai? Login karo" : "Naya account banao →"}
           </button>
+
+          {isForgot && (
+            <button
+              onClick={() => { setIsForgot(false); setError(""); setSuccess(""); }}
+              className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors mt-2"
+            >
+              ← Wapas login pe jaao
+            </button>
+          )}
         </div>
       </div>
     </div>

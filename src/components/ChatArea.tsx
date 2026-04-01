@@ -29,8 +29,12 @@ const ChatArea = ({ contact, messages, onSend, onBack }: ChatAreaProps) => {
           </button>
         )}
         <div className="relative">
-          <div className="w-10 h-10 rounded-full bg-primary-foreground/20 flex items-center justify-center text-sm font-bold text-primary-foreground">
-            {contact.avatar}
+          <div className="w-10 h-10 rounded-full bg-primary-foreground/20 flex items-center justify-center text-sm font-bold text-primary-foreground overflow-hidden">
+            {contact.avatarUrl ? (
+              <img src={contact.avatarUrl} alt="" className="w-full h-full object-cover" />
+            ) : (
+              contact.avatar
+            )}
           </div>
           {contact.online && (
             <div className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-online border-2 border-primary" />
