@@ -24,7 +24,7 @@ const ChatSidebar = ({ contacts, selectedId, onSelect, onNewChat }: ChatSidebarP
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-primary">
         <h1 className="text-lg font-bold text-primary-foreground tracking-wide">
-          Message Hub
+          W8sap
         </h1>
         <div className="flex items-center gap-2">
           <button onClick={onNewChat} className="p-2 rounded-full hover:bg-primary/80 transition-colors">

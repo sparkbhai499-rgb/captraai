@@ -80,7 +80,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
           <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
             <MessageCircle className="w-10 h-10 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Message Hub</h1>
+          <h1 className="text-2xl font-bold text-foreground">W8sap</h1>
           <p className="text-sm text-muted-foreground mt-1">Apne doston se connect karo</p>
         </div>
 
