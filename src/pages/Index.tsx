@@ -243,6 +243,7 @@ const Index = () => {
         )
           .slice(0, 2)
           .toUpperCase(),
+        avatarUrl: selectedContact.profile?.avatar_url || null,
         lastMessage: selectedContact.lastMessage,
         time: selectedContact.lastMessageTime,
         unread: selectedContact.unread,
