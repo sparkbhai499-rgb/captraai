@@ -8,6 +8,9 @@ import Index from "./pages/Index.tsx";
 import ProfilePage from "./pages/ProfilePage.tsx";
 import SettingsPage from "./pages/SettingsPage.tsx";
 import ResetPasswordPage from "./pages/ResetPasswordPage.tsx";
+import AdminPage from "./pages/AdminPage.tsx";
+import CreateGroupPage from "./pages/CreateGroupPage.tsx";
+import CreateCommunityPage from "./pages/CreateCommunityPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -24,6 +27,9 @@ const App = () => (
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/create-group" element={<CreateGroupPage />} />
+            <Route path="/create-community" element={<CreateCommunityPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

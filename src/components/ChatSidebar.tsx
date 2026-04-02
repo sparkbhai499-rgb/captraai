@@ -1,8 +1,10 @@
-import { Search, MessageCirclePlus, Settings, User } from "lucide-react";
+import { Search, MessageCirclePlus, Settings, User, Shield, Users, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Contact } from "@/data/contacts";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ChatSidebarProps {
   contacts: Contact[];
@@ -13,7 +15,21 @@ interface ChatSidebarProps {
 
 const ChatSidebar = ({ contacts, selectedId, onSelect, onNewChat }: ChatSidebarProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id);
+      setIsAdmin(data?.some((r) => r.role === "admin") || false);
+    };
+    checkAdmin();
+  }, [user]);
 
   const filtered = contacts.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase())
@@ -26,10 +42,21 @@ const ChatSidebar = ({ contacts, selectedId, onSelect, onNewChat }: ChatSidebarP
         <h1 className="text-lg font-bold text-primary-foreground tracking-wide">
           W8sap
         </h1>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button onClick={onNewChat} className="p-2 rounded-full hover:bg-primary/80 transition-colors">
             <MessageCirclePlus className="w-5 h-5 text-primary-foreground" />
           </button>
+          <button onClick={() => navigate("/create-group")} className="p-2 rounded-full hover:bg-primary/80 transition-colors" title="Create Group">
+            <Users className="w-5 h-5 text-primary-foreground" />
+          </button>
+          <button onClick={() => navigate("/create-community")} className="p-2 rounded-full hover:bg-primary/80 transition-colors" title="Create Community">
+            <Globe className="w-5 h-5 text-primary-foreground" />
+          </button>
+          {isAdmin && (
+            <button onClick={() => navigate("/admin")} className="p-2 rounded-full hover:bg-primary/80 transition-colors" title="Admin Panel">
+              <Shield className="w-5 h-5 text-primary-foreground" />
+            </button>
+          )}
           <button onClick={() => navigate("/profile")} className="p-2 rounded-full hover:bg-primary/80 transition-colors">
             <User className="w-5 h-5 text-primary-foreground" />
           </button>
