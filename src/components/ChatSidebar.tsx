@@ -15,7 +15,21 @@ interface ChatSidebarProps {
 
 const ChatSidebar = ({ contacts, selectedId, onSelect, onNewChat }: ChatSidebarProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id);
+      setIsAdmin(data?.some((r) => r.role === "admin") || false);
+    };
+    checkAdmin();
+  }, [user]);
 
   const filtered = contacts.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase())
