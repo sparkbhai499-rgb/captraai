@@ -27,6 +27,9 @@ const App = () => (
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/create-group" element={<CreateGroupPage />} />
+            <Route path="/create-community" element={<CreateCommunityPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
