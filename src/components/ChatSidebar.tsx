@@ -1,8 +1,10 @@
-import { Search, MessageCirclePlus, Settings, User } from "lucide-react";
+import { Search, MessageCirclePlus, Settings, User, Shield, Users, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Contact } from "@/data/contacts";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ChatSidebarProps {
   contacts: Contact[];
