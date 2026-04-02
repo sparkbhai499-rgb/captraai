@@ -152,9 +152,12 @@ const SettingsPage = () => {
 
       <div className="max-w-md mx-auto px-4 py-6 space-y-4">
         {isAdmin && (
-          <div className="bg-primary/10 border border-primary/30 rounded-xl p-3 flex items-center gap-2">
+          <div
+            onClick={() => navigate("/admin")}
+            className="bg-primary/10 border border-primary/30 rounded-xl p-3 flex items-center gap-2 cursor-pointer hover:bg-primary/20 transition-colors"
+          >
             <Shield className="w-5 h-5 text-primary" />
-            <span className="text-sm font-medium text-primary">Admin Account</span>
+            <span className="text-sm font-medium text-primary">Admin Panel →</span>
           </div>
         )}
 
