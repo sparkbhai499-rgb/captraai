@@ -252,30 +252,30 @@ const Index = () => {
     : null;
 
   return (
-    <div className="h-screen flex bg-background">
-      <div
-        className={`${selectedId ? "hidden md:flex" : "flex"} w-full md:w-[380px] flex-shrink-0`}
-      >
-        <ChatSidebar
-          contacts={sidebarContacts}
-          selectedId={selectedId}
-          onSelect={setSelectedId}
-          onNewChat={() => setShowNewChat(true)}
-        />
-      </div>
-
-      <div className={`${selectedId ? "flex" : "hidden md:flex"} flex-1 flex-col min-w-0`}>
-        {chatContact ? (
-          <ChatArea
-            contact={chatContact}
-            messages={messages}
-            onSend={handleSend}
-            onBack={() => setSelectedId(null)}
+    <div className="h-screen flex bg-background w-full">
+      {!selectedId ? (
+        <div className="flex w-full h-full">
+          <ChatSidebar
+            contacts={sidebarContacts}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            onNewChat={() => setShowNewChat(true)}
           />
-        ) : (
-          <EmptyChat />
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="flex flex-1 flex-col min-w-0 w-full h-full">
+          {chatContact ? (
+            <ChatArea
+              contact={chatContact}
+              messages={messages}
+              onSend={handleSend}
+              onBack={() => setSelectedId(null)}
+            />
+          ) : (
+            <EmptyChat />
+          )}
+        </div>
+      )}
 
       <NewChatDialog
         open={showNewChat}
