@@ -172,15 +172,35 @@ const Index = () => {
         (payload) => {
           const msg = payload.new as any;
           if (msg.sender_id === user.id || msg.receiver_id === user.id) {
-            loadContacts();
+            // Instantly append message if in current chat
             const selectedContact = contacts.find((c) => c.id === selectedId);
             if (
               selectedContact &&
               (msg.sender_id === selectedContact.contact_user_id ||
                 msg.receiver_id === selectedContact.contact_user_id)
             ) {
-              loadMessages(selectedContact.contact_user_id);
+              const newMsg: ChatMessage = {
+                id: msg.id,
+                contactId: selectedContact.contact_user_id,
+                text: msg.content,
+                time: new Date(msg.created_at).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }),
+                sent: msg.sender_id === user.id,
+              };
+              setMessages((prev) => [...prev, newMsg]);
+              // Mark as read if viewing
+              if (msg.sender_id !== user.id) {
+                supabase
+                  .from("messages")
+                  .update({ read: true })
+                  .eq("id", msg.id)
+                  .then();
+              }
             }
+            // Always refresh contacts for unread counts & last message
+            loadContacts();
           }
         }
       )
