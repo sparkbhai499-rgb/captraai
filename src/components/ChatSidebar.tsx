@@ -42,10 +42,21 @@ const ChatSidebar = ({ contacts, selectedId, onSelect, onNewChat }: ChatSidebarP
         <h1 className="text-lg font-bold text-primary-foreground tracking-wide">
           W8sap
         </h1>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button onClick={onNewChat} className="p-2 rounded-full hover:bg-primary/80 transition-colors">
             <MessageCirclePlus className="w-5 h-5 text-primary-foreground" />
           </button>
+          <button onClick={() => navigate("/create-group")} className="p-2 rounded-full hover:bg-primary/80 transition-colors" title="Create Group">
+            <Users className="w-5 h-5 text-primary-foreground" />
+          </button>
+          <button onClick={() => navigate("/create-community")} className="p-2 rounded-full hover:bg-primary/80 transition-colors" title="Create Community">
+            <Globe className="w-5 h-5 text-primary-foreground" />
+          </button>
+          {isAdmin && (
+            <button onClick={() => navigate("/admin")} className="p-2 rounded-full hover:bg-primary/80 transition-colors" title="Admin Panel">
+              <Shield className="w-5 h-5 text-primary-foreground" />
+            </button>
+          )}
           <button onClick={() => navigate("/profile")} className="p-2 rounded-full hover:bg-primary/80 transition-colors">
             <User className="w-5 h-5 text-primary-foreground" />
           </button>
