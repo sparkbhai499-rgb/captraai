@@ -116,9 +116,18 @@ const ChatSidebar = ({ contacts, selectedId, onSelect, onNewChat }: ChatSidebarP
             )}
           >
             <div className="relative flex-shrink-0">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-accent-foreground overflow-hidden">
+              <div className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden",
+                contact.type === "group" ? "bg-accent text-accent-foreground" :
+                contact.type === "community" ? "bg-primary/30 text-primary" :
+                "bg-primary/20 text-accent-foreground"
+              )}>
                 {contact.avatarUrl ? (
                   <img src={contact.avatarUrl} alt="" className="w-full h-full object-cover" />
+                ) : contact.type === "group" ? (
+                  <Users className="w-5 h-5" />
+                ) : contact.type === "community" ? (
+                  <Globe className="w-5 h-5" />
                 ) : (
                   contact.avatar
                 )}
