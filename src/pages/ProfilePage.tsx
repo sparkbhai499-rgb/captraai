@@ -38,7 +38,7 @@ const ProfilePage = () => {
 
     await supabase
       .from("profiles")
-      .update({ [field]: editValue })
+      .update({ [field]: editValue } as any)
       .eq("user_id", user.id);
 
     setProfile((prev) => prev ? { ...prev, [field]: editValue } : prev);
