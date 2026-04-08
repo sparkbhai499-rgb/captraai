@@ -7,6 +7,7 @@ export interface Contact {
   time: string;
   unread: number;
   online: boolean;
+  type?: "contact" | "group" | "community";
 }
 
 export interface Message {
