@@ -1,8 +1,8 @@
-import { Search, MessageCirclePlus, Settings, User, Shield, Users, Globe } from "lucide-react";
+import { Search, MessageCirclePlus, MoreVertical, Settings, User, Shield, Users, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Contact } from "@/data/contacts";
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -18,6 +18,8 @@ const ChatSidebar = ({ contacts, selectedId, onSelect, onNewChat }: ChatSidebarP
   const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -31,9 +33,28 @@ const ChatSidebar = ({ contacts, selectedId, onSelect, onNewChat }: ChatSidebarP
     checkAdmin();
   }, [user]);
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const filtered = contacts.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  const menuItems = [
+    { label: "New Chat", icon: MessageCirclePlus, action: () => onNewChat?.() },
+    { label: "Create Group", icon: Users, action: () => navigate("/create-group") },
+    { label: "Create Community", icon: Globe, action: () => navigate("/create-community") },
+    { label: "Profile", icon: User, action: () => navigate("/profile") },
+    { label: "Settings", icon: Settings, action: () => navigate("/settings") },
+    ...(isAdmin ? [{ label: "Admin Panel", icon: Shield, action: () => navigate("/admin") }] : []),
+  ];
 
   return (
     <div className="flex flex-col h-full bg-card border-r border-border">
@@ -42,27 +63,30 @@ const ChatSidebar = ({ contacts, selectedId, onSelect, onNewChat }: ChatSidebarP
         <h1 className="text-lg font-bold text-primary-foreground tracking-wide">
           W8sap
         </h1>
-        <div className="flex items-center gap-1">
-          <button onClick={onNewChat} className="p-2 rounded-full hover:bg-primary/80 transition-colors">
-            <MessageCirclePlus className="w-5 h-5 text-primary-foreground" />
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="p-2 rounded-full hover:bg-primary-foreground/10 transition-colors"
+          >
+            <MoreVertical className="w-5 h-5 text-primary-foreground" />
           </button>
-          <button onClick={() => navigate("/create-group")} className="p-2 rounded-full hover:bg-primary/80 transition-colors" title="Create Group">
-            <Users className="w-5 h-5 text-primary-foreground" />
-          </button>
-          <button onClick={() => navigate("/create-community")} className="p-2 rounded-full hover:bg-primary/80 transition-colors" title="Create Community">
-            <Globe className="w-5 h-5 text-primary-foreground" />
-          </button>
-          {isAdmin && (
-            <button onClick={() => navigate("/admin")} className="p-2 rounded-full hover:bg-primary/80 transition-colors" title="Admin Panel">
-              <Shield className="w-5 h-5 text-primary-foreground" />
-            </button>
+          {menuOpen && (
+            <div className="absolute right-0 top-full mt-1 w-48 bg-card rounded-lg shadow-lg border border-border z-50 py-1 overflow-hidden">
+              {menuItems.map((item) => (
+                <button
+                  key={item.label}
+                  onClick={() => {
+                    item.action();
+                    setMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"
+                >
+                  <item.icon className="w-4 h-4 text-muted-foreground" />
+                  {item.label}
+                </button>
+              ))}
+            </div>
           )}
-          <button onClick={() => navigate("/profile")} className="p-2 rounded-full hover:bg-primary/80 transition-colors">
-            <User className="w-5 h-5 text-primary-foreground" />
-          </button>
-          <button onClick={() => navigate("/settings")} className="p-2 rounded-full hover:bg-primary/80 transition-colors">
-            <Settings className="w-5 h-5 text-primary-foreground" />
-          </button>
         </div>
       </div>
 
@@ -91,7 +115,6 @@ const ChatSidebar = ({ contacts, selectedId, onSelect, onNewChat }: ChatSidebarP
               selectedId === contact.id && "bg-accent"
             )}
           >
-            {/* Avatar */}
             <div className="relative flex-shrink-0">
               <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-accent-foreground overflow-hidden">
                 {contact.avatarUrl ? (
@@ -104,8 +127,6 @@ const ChatSidebar = ({ contacts, selectedId, onSelect, onNewChat }: ChatSidebarP
                 <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-online border-2 border-card" />
               )}
             </div>
-
-            {/* Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-sm text-foreground truncate">
