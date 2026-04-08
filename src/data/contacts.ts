@@ -16,6 +16,7 @@ export interface Message {
   text: string;
   time: string;
   sent: boolean;
+  replyToId?: string;
 }
 
 export const contacts: Contact[] = [

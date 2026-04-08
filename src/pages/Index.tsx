@@ -30,6 +30,7 @@ interface ChatMessage {
   text: string;
   time: string;
   sent: boolean;
+  replyToId?: string;
 }
 
 const Index = () => {
@@ -101,7 +102,7 @@ const Index = () => {
       setContacts(enrichedContacts);
     }
 
-    // Load groups the user is a member of
+    // Load groups
     const { data: groupMemberships } = await supabase
       .from("group_members")
       .select("group_id")
@@ -131,7 +132,7 @@ const Index = () => {
       setGroups([]);
     }
 
-    // Load communities the user is a member of
+    // Load communities
     const { data: communityMemberships } = await supabase
       .from("community_members")
       .select("community_id")
@@ -175,12 +176,13 @@ const Index = () => {
 
       if (data) {
         setMessages(
-          data.map((m) => ({
+          data.map((m: any) => ({
             id: m.id,
             contactId: contactUserId,
             text: m.content,
             time: new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
             sent: m.sender_id === user.id,
+            replyToId: m.reply_to || undefined,
           }))
         );
         await supabase
@@ -211,8 +213,13 @@ const Index = () => {
       .channel("messages-realtime")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages" },
+        { event: "*", schema: "public", table: "messages" },
         (payload) => {
+          if (payload.eventType === "DELETE") {
+            const oldMsg = payload.old as any;
+            setMessages((prev) => prev.filter((m) => m.id !== oldMsg.id));
+            return;
+          }
           const msg = payload.new as any;
           if (msg.sender_id === user.id || msg.receiver_id === user.id) {
             const selectedContact = contacts.find((c) => c.id === selectedId);
@@ -221,16 +228,22 @@ const Index = () => {
               (msg.sender_id === selectedContact.contact_user_id ||
                 msg.receiver_id === selectedContact.contact_user_id)
             ) {
-              const newMsg: ChatMessage = {
-                id: msg.id,
-                contactId: selectedContact.contact_user_id,
-                text: msg.content,
-                time: new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-                sent: msg.sender_id === user.id,
-              };
-              setMessages((prev) => [...prev, newMsg]);
-              if (msg.sender_id !== user.id) {
-                supabase.from("messages").update({ read: true }).eq("id", msg.id).then();
+              if (payload.eventType === "INSERT") {
+                const newMsg: ChatMessage = {
+                  id: msg.id,
+                  contactId: selectedContact.contact_user_id,
+                  text: msg.content,
+                  time: new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                  sent: msg.sender_id === user.id,
+                  replyToId: msg.reply_to || undefined,
+                };
+                setMessages((prev) => {
+                  if (prev.some((m) => m.id === newMsg.id)) return prev;
+                  return [...prev, newMsg];
+                });
+                if (msg.sender_id !== user.id) {
+                  supabase.from("messages").update({ read: true }).eq("id", msg.id).then();
+                }
               }
             }
             loadContacts();
@@ -239,9 +252,9 @@ const Index = () => {
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user, selectedId, contacts, loadContacts, loadMessages]);
+  }, [user, selectedId, contacts, loadContacts]);
 
-  const handleSend = async (text: string) => {
+  const handleSend = async (text: string, replyToId?: string) => {
     if (!user || !selectedId) return;
     const contact = contacts.find((c) => c.id === selectedId);
     if (!contact) return;
@@ -249,14 +262,20 @@ const Index = () => {
       sender_id: user.id,
       receiver_id: contact.contact_user_id,
       content: text,
-    });
+      reply_to: replyToId || null,
+    } as any);
+  };
+
+  const handleDelete = async (messageId: string) => {
+    await supabase.from("messages").delete().eq("id", messageId);
+    setMessages((prev) => prev.filter((m) => m.id !== messageId));
   };
 
   const handleSelect = (id: string, type: "contact" | "group" | "community" = "contact") => {
     setSelectedId(id);
     setSelectedType(type);
     if (type !== "contact") {
-      setMessages([]); // Groups/communities don't have messaging yet
+      setMessages([]);
     }
   };
 
@@ -272,7 +291,6 @@ const Index = () => {
     return <LoginPage onLogin={() => {}} />;
   }
 
-  // Combine all items for sidebar
   const sidebarContacts: Contact[] = [
     ...contacts.map((c) => ({
       id: c.id,
@@ -328,6 +346,7 @@ const Index = () => {
               contact={chatContact}
               messages={messages}
               onSend={handleSend}
+              onDelete={handleDelete}
               onBack={() => { setSelectedId(null); setSelectedType("contact"); }}
             />
           ) : (
