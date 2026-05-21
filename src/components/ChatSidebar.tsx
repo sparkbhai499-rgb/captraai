@@ -1,4 +1,4 @@
-import { Search, MessageCirclePlus, MoreVertical, Settings, User, Shield, Users, Globe } from "lucide-react";
+import { Search, MessageCirclePlus, MoreVertical, Settings, User, Shield, Users, Globe, Bot } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Contact } from "@/data/contacts";
 import { cn } from "@/lib/utils";
@@ -53,7 +53,10 @@ const ChatSidebar = ({ contacts, selectedId, onSelect, onNewChat }: ChatSidebarP
     { label: "Create Community", icon: Globe, action: () => navigate("/create-community") },
     { label: "Profile", icon: User, action: () => navigate("/profile") },
     { label: "Settings", icon: Settings, action: () => navigate("/settings") },
-    ...(isAdmin ? [{ label: "Admin Panel", icon: Shield, action: () => navigate("/admin") }] : []),
+    ...(isAdmin ? [
+      { label: "WhatsApp AI Agent", icon: Bot, action: () => navigate("/whatsapp-agent") },
+      { label: "Admin Panel", icon: Shield, action: () => navigate("/admin") },
+    ] : []),
   ];
 
   return (
