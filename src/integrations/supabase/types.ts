@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_settings: {
+        Row: {
+          agent_enabled: boolean
+          id: string
+          model: string
+          system_prompt: string
+          twilio_whatsapp_from: string | null
+          updated_at: string
+        }
+        Insert: {
+          agent_enabled?: boolean
+          id?: string
+          model?: string
+          system_prompt?: string
+          twilio_whatsapp_from?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agent_enabled?: boolean
+          id?: string
+          model?: string
+          system_prompt?: string
+          twilio_whatsapp_from?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       communities: {
         Row: {
           avatar_url: string | null
@@ -256,6 +283,77 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      whatsapp_conversations: {
+        Row: {
+          agent_enabled: boolean
+          created_at: string
+          display_name: string | null
+          id: string
+          last_message: string | null
+          last_message_at: string | null
+          phone_number: string
+          unread_count: number
+          updated_at: string
+        }
+        Insert: {
+          agent_enabled?: boolean
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          last_message?: string | null
+          last_message_at?: string | null
+          phone_number: string
+          unread_count?: number
+          updated_at?: string
+        }
+        Update: {
+          agent_enabled?: boolean
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          last_message?: string | null
+          last_message_at?: string | null
+          phone_number?: string
+          unread_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      whatsapp_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+          twilio_sid: string | null
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+          twilio_sid?: string | null
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          twilio_sid?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
