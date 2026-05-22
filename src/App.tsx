@@ -14,6 +14,7 @@ import CreateCommunityPage from "./pages/CreateCommunityPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import WhatsappAgentPage from "./pages/WhatsappAgentPage.tsx";
 import MyAgentsPage from "./pages/MyAgentsPage.tsx";
+import AgentLandingPage from "./pages/AgentLandingPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/create-community" element={<CreateCommunityPage />} />
             <Route path="/whatsapp-agent" element={<WhatsappAgentPage />} />
             <Route path="/my-agents" element={<MyAgentsPage />} />
+            <Route path="/agent" element={<AgentLandingPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
