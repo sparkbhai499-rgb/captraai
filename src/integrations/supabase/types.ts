@@ -230,6 +230,118 @@ export type Database = {
           },
         ]
       }
+      my_agent_conversations: {
+        Row: {
+          agent_id: string
+          created_at: string
+          id: string
+          last_message: string | null
+          last_message_at: string | null
+          origin: string | null
+          visitor_id: string | null
+          visitor_name: string | null
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          id?: string
+          last_message?: string | null
+          last_message_at?: string | null
+          origin?: string | null
+          visitor_id?: string | null
+          visitor_name?: string | null
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          id?: string
+          last_message?: string | null
+          last_message_at?: string | null
+          origin?: string | null
+          visitor_id?: string | null
+          visitor_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "my_agent_conversations_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "my_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      my_agent_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "my_agent_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "my_agent_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      my_agents: {
+        Row: {
+          created_at: string
+          greeting: string | null
+          id: string
+          is_public: boolean
+          knowledge: string | null
+          model: string
+          name: string
+          system_prompt: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          greeting?: string | null
+          id?: string
+          is_public?: boolean
+          knowledge?: string | null
+          model?: string
+          name: string
+          system_prompt?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          greeting?: string | null
+          id?: string
+          is_public?: boolean
+          knowledge?: string | null
+          model?: string
+          name?: string
+          system_prompt?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
