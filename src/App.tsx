@@ -35,6 +35,7 @@ const App = () => (
             <Route path="/create-community" element={<CreateCommunityPage />} />
             <Route path="/whatsapp-agent" element={<WhatsappAgentPage />} />
             <Route path="/my-agents" element={<MyAgentsPage />} />
+            <Route path="/agent" element={<AgentLandingPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
