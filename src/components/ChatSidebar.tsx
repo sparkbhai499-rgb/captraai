@@ -53,6 +53,7 @@ const ChatSidebar = ({ contacts, selectedId, onSelect, onNewChat }: ChatSidebarP
     { label: "Create Community", icon: Globe, action: () => navigate("/create-community") },
     { label: "Profile", icon: User, action: () => navigate("/profile") },
     { label: "Settings", icon: Settings, action: () => navigate("/settings") },
+    { label: "My AI Agents", icon: Bot, action: () => navigate("/my-agents") },
     ...(isAdmin ? [
       { label: "WhatsApp AI Agent", icon: Bot, action: () => navigate("/whatsapp-agent") },
       { label: "Admin Panel", icon: Shield, action: () => navigate("/admin") },
