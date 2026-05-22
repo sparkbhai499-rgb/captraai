@@ -14,6 +14,7 @@ import CreateCommunityPage from "./pages/CreateCommunityPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import WhatsappAgentPage from "./pages/WhatsappAgentPage.tsx";
 import MyAgentsPage from "./pages/MyAgentsPage.tsx";
+import AgentLandingPage from "./pages/AgentLandingPage.tsx";
 
 const queryClient = new QueryClient();
 
