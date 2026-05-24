@@ -180,12 +180,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
             )}
           </Button>
 
-          <button
-            onClick={() => { setIsSignUp(!isSignUp); setIsForgot(false); setError(""); setSuccess(""); }}
-            className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {isSignUp ? "← Pehle se account hai? Login karo" : "Naya account banao →"}
-          </button>
+          {/* Signup disabled — only existing users can login */}
 
           {isForgot && (
             <button
