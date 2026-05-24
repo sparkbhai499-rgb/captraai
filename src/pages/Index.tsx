@@ -3,10 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import ChatSidebar from "@/components/ChatSidebar";
 import ChatArea from "@/components/ChatArea";
+import AIChatArea from "@/components/AIChatArea";
 import EmptyChat from "@/components/EmptyChat";
 import LoginPage from "@/pages/LoginPage";
 import NewChatDialog from "@/components/NewChatDialog";
 import { Contact } from "@/data/contacts";
+
+const W8_AI_ID = "__w8_ai__";
 
 interface ContactWithProfile {
   id: string;
@@ -291,7 +294,20 @@ const Index = () => {
     return <LoginPage onLogin={() => {}} />;
   }
 
+  const aiContact: Contact = {
+    id: W8_AI_ID,
+    name: "W8 AI ✨",
+    avatar: "AI",
+    avatarUrl: null,
+    lastMessage: "Built-in assistant — kuch bhi pucho",
+    time: "",
+    unread: 0,
+    online: true,
+    type: "contact" as const,
+  };
+
   const sidebarContacts: Contact[] = [
+    aiContact,
     ...contacts.map((c) => ({
       id: c.id,
       name: c.nickname || c.profile?.display_name || c.profile?.phone || "Unknown",
@@ -341,7 +357,9 @@ const Index = () => {
         </div>
       ) : (
         <div className="flex flex-1 flex-col min-w-0 w-full h-full">
-          {chatContact ? (
+          {selectedId === W8_AI_ID ? (
+            <AIChatArea onBack={() => { setSelectedId(null); setSelectedType("contact"); }} />
+          ) : chatContact ? (
             <ChatArea
               contact={chatContact}
               messages={messages}
