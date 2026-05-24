@@ -357,7 +357,9 @@ const Index = () => {
         </div>
       ) : (
         <div className="flex flex-1 flex-col min-w-0 w-full h-full">
-          {chatContact ? (
+          {selectedId === W8_AI_ID ? (
+            <AIChatArea onBack={() => { setSelectedId(null); setSelectedType("contact"); }} />
+          ) : chatContact ? (
             <ChatArea
               contact={chatContact}
               messages={messages}
