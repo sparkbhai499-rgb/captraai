@@ -3,10 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import ChatSidebar from "@/components/ChatSidebar";
 import ChatArea from "@/components/ChatArea";
+import AIChatArea from "@/components/AIChatArea";
 import EmptyChat from "@/components/EmptyChat";
 import LoginPage from "@/pages/LoginPage";
 import NewChatDialog from "@/components/NewChatDialog";
 import { Contact } from "@/data/contacts";
+
+const W8_AI_ID = "__w8_ai__";
 
 interface ContactWithProfile {
   id: string;
