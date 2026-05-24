@@ -294,7 +294,20 @@ const Index = () => {
     return <LoginPage onLogin={() => {}} />;
   }
 
+  const aiContact: Contact = {
+    id: W8_AI_ID,
+    name: "W8 AI ✨",
+    avatar: "AI",
+    avatarUrl: null,
+    lastMessage: "Built-in assistant — kuch bhi pucho",
+    time: "",
+    unread: 0,
+    online: true,
+    type: "contact" as const,
+  };
+
   const sidebarContacts: Contact[] = [
+    aiContact,
     ...contacts.map((c) => ({
       id: c.id,
       name: c.nickname || c.profile?.display_name || c.profile?.phone || "Unknown",
