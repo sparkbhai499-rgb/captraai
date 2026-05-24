@@ -12,7 +12,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, _setIsSignUp] = useState(false);
   const [isForgot, setIsForgot] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -180,12 +180,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
             )}
           </Button>
 
-          <button
-            onClick={() => { setIsSignUp(!isSignUp); setIsForgot(false); setError(""); setSuccess(""); }}
-            className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {isSignUp ? "← Pehle se account hai? Login karo" : "Naya account banao →"}
-          </button>
+          {/* Signup disabled — only existing users can login */}
 
           {isForgot && (
             <button
