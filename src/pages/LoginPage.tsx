@@ -12,7 +12,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, _setIsSignUp] = useState(false);
   const [isForgot, setIsForgot] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
