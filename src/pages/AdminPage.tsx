@@ -123,6 +123,9 @@ const AdminPage = () => {
           </div>
         </div>
 
+        {/* Embed Widget Generator */}
+        <EmbedWidgetSection />
+
         {/* Users Table */}
         <div className="bg-card rounded-xl border border-border overflow-hidden">
           <div className="px-4 py-3 border-b border-border">
