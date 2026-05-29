@@ -258,3 +258,75 @@ const AdminPage = () => {
 };
 
 export default AdminPage;
+
+function EmbedWidgetSection() {
+  const [title, setTitle] = useState("W8 AI Assistant");
+  const [color, setColor] = useState("#10b981");
+  const [greeting, setGreeting] = useState("Hi! Main W8 AI hoon. Kuch bhi pucho 👋");
+  const [copied, setCopied] = useState(false);
+
+  const scriptUrl = `${window.location.origin}/w8-ai-widget.js`;
+  const snippet = `<script src="${scriptUrl}"
+        data-title="${title.replace(/"/g, "&quot;")}"
+        data-color="${color}"
+        data-greeting="${greeting.replace(/"/g, "&quot;")}"></script>`;
+
+  const copy = async () => {
+    await navigator.clipboard.writeText(snippet);
+    setCopied(true);
+    toast.success("Embed code copy ho gaya!");
+    setTimeout(() => setCopied(false), 1800);
+  };
+
+  return (
+    <div className="bg-card rounded-xl border border-border overflow-hidden">
+      <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+        <Code2 className="w-4 h-4 text-primary" />
+        <h2 className="font-semibold text-foreground">AI Chatbot Embed Code</h2>
+      </div>
+      <div className="p-4 space-y-4">
+        <p className="text-xs text-muted-foreground">
+          Apni doosri website ke <code className="px-1 bg-muted rounded">&lt;body&gt;</code> me ye snippet paste karo —
+          floating AI chatbot button add ho jayega (same W8 AI brain).
+        </p>
+
+        <div className="grid sm:grid-cols-3 gap-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Title</Label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Theme Color</Label>
+            <div className="flex gap-2">
+              <Input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="w-12 p-1 h-10" />
+              <Input value={color} onChange={(e) => setColor(e.target.value)} />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Greeting</Label>
+            <Input value={greeting} onChange={(e) => setGreeting(e.target.value)} />
+          </div>
+        </div>
+
+        <div className="relative">
+          <pre className="bg-muted text-foreground text-xs rounded-lg p-3 overflow-x-auto whitespace-pre-wrap break-all">
+{snippet}
+          </pre>
+          <Button size="sm" onClick={copy} className="absolute top-2 right-2">
+            {copied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
+            {copied ? "Copied" : "Copy"}
+          </Button>
+        </div>
+
+        <div className="text-xs text-muted-foreground">
+          <p className="font-medium text-foreground mb-1">Kaise lagayein:</p>
+          <ol className="list-decimal list-inside space-y-0.5">
+            <li>Apni website ka HTML file kholo</li>
+            <li>Closing <code className="px-1 bg-muted rounded">&lt;/body&gt;</code> tag ke just upar paste karo</li>
+            <li>Save & refresh — bottom-right corner me chat button aa jayega</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  );
+}
