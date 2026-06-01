@@ -77,11 +77,11 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-            <MessageCircle className="w-10 h-10 text-primary" />
+          <div className="w-20 h-20 rounded-2xl gradient-primary flex items-center justify-center mb-4 shadow-card">
+            <GraduationCap className="w-10 h-10 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">W8sap</h1>
-          <p className="text-sm text-muted-foreground mt-1">Apne doston se connect karo</p>
+          <h1 className="text-2xl font-bold text-foreground">StudyHub</h1>
+          <p className="text-sm text-muted-foreground mt-1">Learn at your own pace</p>
         </div>
 
         <div className="bg-card rounded-2xl p-6 shadow-lg border border-border">
