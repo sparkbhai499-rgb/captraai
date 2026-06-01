@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, Lock, MessageCircle, ArrowRight, Loader2, User, Phone, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, GraduationCap, ArrowRight, Loader2, User, Phone, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface LoginPageProps {
@@ -12,7 +12,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [isSignUp, _setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   const [isForgot, setIsForgot] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -77,11 +77,11 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-            <MessageCircle className="w-10 h-10 text-primary" />
+          <div className="w-20 h-20 rounded-2xl gradient-primary flex items-center justify-center mb-4 shadow-card">
+            <GraduationCap className="w-10 h-10 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">W8sap</h1>
-          <p className="text-sm text-muted-foreground mt-1">Apne doston se connect karo</p>
+          <h1 className="text-2xl font-bold text-foreground">StudyHub</h1>
+          <p className="text-sm text-muted-foreground mt-1">Learn at your own pace</p>
         </div>
 
         <div className="bg-card rounded-2xl p-6 shadow-lg border border-border">
@@ -180,7 +180,14 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
             )}
           </Button>
 
-          {/* Signup disabled — only existing users can login */}
+          {!isForgot && (
+            <button
+              onClick={() => { setIsSignUp(!isSignUp); setError(""); setSuccess(""); }}
+              className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {isSignUp ? "Already have an account? Login" : "New here? Create an account"}
+            </button>
+          )}
 
           {isForgot && (
             <button

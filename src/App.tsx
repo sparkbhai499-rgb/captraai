@@ -6,15 +6,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index.tsx";
 import ProfilePage from "./pages/ProfilePage.tsx";
-import SettingsPage from "./pages/SettingsPage.tsx";
 import ResetPasswordPage from "./pages/ResetPasswordPage.tsx";
 import AdminPage from "./pages/AdminPage.tsx";
-import CreateGroupPage from "./pages/CreateGroupPage.tsx";
-import CreateCommunityPage from "./pages/CreateCommunityPage.tsx";
+import BatchDetailPage from "./pages/BatchDetailPage.tsx";
+import MyBatchesPage from "./pages/MyBatchesPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
-import WhatsappAgentPage from "./pages/WhatsappAgentPage.tsx";
-import MyAgentsPage from "./pages/MyAgentsPage.tsx";
-import AgentLandingPage from "./pages/AgentLandingPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -28,14 +24,10 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/settings" element={<SettingsPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/admin" element={<AdminPage />} />
-            <Route path="/create-group" element={<CreateGroupPage />} />
-            <Route path="/create-community" element={<CreateCommunityPage />} />
-            <Route path="/whatsapp-agent" element={<WhatsappAgentPage />} />
-            <Route path="/my-agents" element={<MyAgentsPage />} />
-            <Route path="/agent" element={<AgentLandingPage />} />
+            <Route path="/batch/:id" element={<BatchDetailPage />} />
+            <Route path="/my-batches" element={<MyBatchesPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

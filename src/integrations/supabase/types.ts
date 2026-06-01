@@ -41,6 +41,144 @@ export type Database = {
         }
         Relationships: []
       }
+      batch_announcements: {
+        Row: {
+          batch_id: string
+          created_at: string
+          id: string
+          message: string
+          title: string
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          id?: string
+          message: string
+          title: string
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "batch_announcements_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      batch_contents: {
+        Row: {
+          batch_id: string
+          created_at: string
+          description: string | null
+          file_path: string | null
+          id: string
+          order_index: number
+          title: string
+          type: string
+          video_url: string | null
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          description?: string | null
+          file_path?: string | null
+          id?: string
+          order_index?: number
+          title: string
+          type: string
+          video_url?: string | null
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          description?: string | null
+          file_path?: string | null
+          id?: string
+          order_index?: number
+          title?: string
+          type?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "batch_contents_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      batch_enrollments: {
+        Row: {
+          batch_id: string
+          id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          batch_id: string
+          id?: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          batch_id?: string
+          id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "batch_enrollments_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      batches: {
+        Row: {
+          cover_image: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_published: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          cover_image?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          cover_image?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       communities: {
         Row: {
           avatar_url: string | null
@@ -477,6 +615,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_enrolled: {
+        Args: { _batch_id: string; _user_id: string }
         Returns: boolean
       }
     }
