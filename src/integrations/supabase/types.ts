@@ -155,6 +155,7 @@ export type Database = {
           id: string
           is_published: boolean
           name: string
+          price: number
           updated_at: string
         }
         Insert: {
@@ -165,6 +166,7 @@ export type Database = {
           id?: string
           is_published?: boolean
           name: string
+          price?: number
           updated_at?: string
         }
         Update: {
@@ -175,6 +177,7 @@ export type Database = {
           id?: string
           is_published?: boolean
           name?: string
+          price?: number
           updated_at?: string
         }
         Relationships: []
@@ -480,6 +483,93 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_requests: {
+        Row: {
+          admin_note: string | null
+          amount: number
+          batch_id: string | null
+          created_at: string
+          id: string
+          plan_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          screenshot_path: string
+          status: string
+          type: string
+          user_id: string
+          utr: string
+        }
+        Insert: {
+          admin_note?: string | null
+          amount: number
+          batch_id?: string | null
+          created_at?: string
+          id?: string
+          plan_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          screenshot_path: string
+          status?: string
+          type: string
+          user_id: string
+          utr: string
+        }
+        Update: {
+          admin_note?: string | null
+          amount?: number
+          batch_id?: string | null
+          created_at?: string
+          id?: string
+          plan_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          screenshot_path?: string
+          status?: string
+          type?: string
+          user_id?: string
+          utr?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_requests_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_requests_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_settings: {
+        Row: {
+          id: string
+          instructions: string | null
+          qr_image_url: string | null
+          updated_at: string
+          upi_id: string | null
+        }
+        Insert: {
+          id?: string
+          instructions?: string | null
+          qr_image_url?: string | null
+          updated_at?: string
+          upi_id?: string | null
+        }
+        Update: {
+          id?: string
+          instructions?: string | null
+          qr_image_url?: string | null
+          updated_at?: string
+          upi_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -516,6 +606,36 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_plans: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_days: number
+          id: string
+          is_active: boolean
+          name: string
+          price: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_days: number
+          id?: string
+          is_active?: boolean
+          name: string
+          price: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_days?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -533,6 +653,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_subscriptions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          plan_id: string
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          plan_id: string
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          plan_id?: string
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       whatsapp_conversations: {
         Row: {
@@ -610,6 +765,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
