@@ -75,11 +75,15 @@ const AdminPage = () => {
     loadRequests();
   }, [isAdmin]);
 
-  const loadRequests = () => {
-    supabase.from("payment_requests")
-      .select("*, batches(name), subscription_plans(name), profiles!inner(display_name)")
-      .order("created_at", { ascending: false })
-      .then(({ data }) => setRequests(data || []));
+  const loadRequests = async () => {
+    const { data } = await supabase.from("payment_requests")
+      .select("*, batches(name), subscription_plans(name)")
+      .order("created_at", { ascending: false });
+    const rows = data || [];
+    const userIds = [...new Set(rows.map((r: any) => r.user_id))];
+    const { data: profs } = await supabase.from("profiles").select("user_id,display_name").in("user_id", userIds);
+    const map = new Map((profs || []).map((p: any) => [p.user_id, p.display_name]));
+    setRequests(rows.map((r: any) => ({ ...r, profiles: { display_name: map.get(r.user_id) } })));
   };
 
   useEffect(() => {
