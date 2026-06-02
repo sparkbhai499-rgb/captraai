@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 interface Content { id: string; type: string; title: string; description: string | null; file_path: string | null; video_url: string | null; }
 interface Announcement { id: string; title: string; message: string; created_at: string; }
-interface Batch { id: string; name: string; description: string | null; }
+interface Batch { id: string; name: string; description: string | null; price: number; }
 
 const youtubeEmbed = (url: string) => {
   const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/);
@@ -27,16 +27,21 @@ const BatchDetailPage = () => {
   const [enrolled, setEnrolled] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const [hasSub, setHasSub] = useState(false);
+
   useEffect(() => {
     if (!id || !user) return;
     (async () => {
       setLoading(true);
-      const { data: b } = await supabase.from("batches").select("id,name,description").eq("id", id).maybeSingle();
+      const { data: b } = await supabase.from("batches").select("id,name,description,price").eq("id", id).maybeSingle();
       setBatch(b);
-      const { data: en } = await supabase.from("batch_enrollments").select("id").eq("batch_id", id).eq("user_id", user.id).maybeSingle();
-      const isEnr = !!en;
-      setEnrolled(isEnr);
-      if (isEnr) {
+      const [{ data: en }, { data: sub }] = await Promise.all([
+        supabase.from("batch_enrollments").select("id").eq("batch_id", id).eq("user_id", user.id).maybeSingle(),
+        supabase.from("user_subscriptions").select("id").eq("user_id", user.id).gt("expires_at", new Date().toISOString()).maybeSingle(),
+      ]);
+      const access = !!en || !!sub;
+      setEnrolled(access); setHasSub(!!sub);
+      if (access) {
         const [{ data: c }, { data: a }] = await Promise.all([
           supabase.from("batch_contents").select("*").eq("batch_id", id).order("order_index"),
           supabase.from("batch_announcements").select("*").eq("batch_id", id).order("created_at", { ascending: false }),
@@ -53,7 +58,7 @@ const BatchDetailPage = () => {
     window.open(data.signedUrl, "_blank");
   };
 
-  const enroll = async () => {
+  const enrollFree = async () => {
     if (!user || !id) return;
     const { error } = await supabase.from("batch_enrollments").insert({ batch_id: id, user_id: user.id });
     if (error) toast.error(error.message); else { setEnrolled(true); window.location.reload(); }
