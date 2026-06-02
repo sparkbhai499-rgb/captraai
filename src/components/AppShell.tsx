@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState, ReactNode } from "react";
-import { GraduationCap, LogOut, User as UserIcon, Shield, BookOpen, LayoutGrid } from "lucide-react";
+import { GraduationCap, LogOut, User as UserIcon, Shield, BookOpen, LayoutGrid, Crown } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
           <nav className="flex items-center gap-1">
             <Link to="/"><Button variant="ghost" size="sm" className="gap-1.5"><LayoutGrid className="w-4 h-4" />Browse</Button></Link>
             <Link to="/my-batches"><Button variant="ghost" size="sm" className="gap-1.5"><BookOpen className="w-4 h-4" />My Batches</Button></Link>
+            <Link to="/subscriptions"><Button variant="ghost" size="sm" className="gap-1.5"><Crown className="w-4 h-4" />Premium</Button></Link>
             {isAdmin && (
               <Link to="/admin"><Button variant="ghost" size="sm" className="gap-1.5"><Shield className="w-4 h-4" />Admin</Button></Link>
             )}

@@ -10,6 +10,8 @@ import ResetPasswordPage from "./pages/ResetPasswordPage.tsx";
 import AdminPage from "./pages/AdminPage.tsx";
 import BatchDetailPage from "./pages/BatchDetailPage.tsx";
 import MyBatchesPage from "./pages/MyBatchesPage.tsx";
+import PaymentPage from "./pages/PaymentPage.tsx";
+import SubscriptionsPage from "./pages/SubscriptionsPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -28,6 +30,8 @@ const App = () => (
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/batch/:id" element={<BatchDetailPage />} />
             <Route path="/my-batches" element={<MyBatchesPage />} />
+            <Route path="/subscriptions" element={<SubscriptionsPage />} />
+            <Route path="/pay" element={<PaymentPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
