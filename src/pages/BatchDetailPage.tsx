@@ -77,7 +77,14 @@ const BatchDetailPage = () => {
       <div className="bg-card rounded-2xl p-6 border border-border shadow-card mb-6">
         <h1 className="text-2xl font-bold mb-2">{batch.name}</h1>
         <p className="text-muted-foreground">{batch.description}</p>
-        {!enrolled && <Button onClick={enroll} className="mt-4">Enroll Now</Button>}
+        {!enrolled && (
+          batch.price && batch.price > 0 ? (
+            <Button onClick={() => navigate(`/pay?type=batch&id=${batch.id}`)} className="mt-4">Buy ₹{batch.price}</Button>
+          ) : (
+            <Button onClick={enrollFree} className="mt-4">Enroll Free</Button>
+          )
+        )}
+        {hasSub && enrolled && <p className="text-xs text-emerald-600 mt-2">✓ Access via All-Access subscription</p>}
       </div>
 
       {enrolled && (
