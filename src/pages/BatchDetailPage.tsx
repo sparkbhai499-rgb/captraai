@@ -81,7 +81,23 @@ const BatchDetailPage = () => {
         <p className="text-muted-foreground">{batch.description}</p>
         {!enrolled && (
           batch.price && batch.price > 0 ? (
-            <Button onClick={() => navigate(`/pay?type=batch&id=${batch.id}`)} className="mt-4">Buy ₹{batch.price}</Button>
+            <div className="mt-4 space-y-3">
+              {paymentReq?.status === "pending" && (
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
+                  <p className="font-semibold text-amber-700 dark:text-amber-300">⏳ Payment under review</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">UTR: {paymentReq.utr} · Submitted {new Date(paymentReq.created_at).toLocaleString()}. Admin verify karne ke baad access mil jayega.</p>
+                </div>
+              )}
+              {paymentReq?.status === "rejected" && (
+                <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm">
+                  <p className="font-semibold text-destructive">✕ Payment rejected</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Last UTR: {paymentReq.utr}. Phir se try karein.</p>
+                </div>
+              )}
+              <Button onClick={() => navigate(`/pay?type=batch&id=${batch.id}`)}>
+                {paymentReq?.status === "pending" ? "View payment" : paymentReq?.status === "rejected" ? "Retry payment" : `Buy ₹${batch.price}`}
+              </Button>
+            </div>
           ) : (
             <Button onClick={enrollFree} className="mt-4">Enroll Free</Button>
           )
