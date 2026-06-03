@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Trash2, FileText, Video, StickyNote, Megaphone, Upload, Check, X, Eye, ImageIcon } from "lucide-react";
+import { Loader2, Plus, Trash2, FileText, Video, StickyNote, Megaphone, Upload, Check, X, Eye, ImageIcon, Pencil } from "lucide-react";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 
 const AdminPage = () => {
   const { user, loading: authLoading } = useAuth();
@@ -57,6 +59,44 @@ const AdminPage = () => {
 
   // requests
   const [requests, setRequests] = useState<any[]>([]);
+
+  // edit batch dialog
+  const [editing, setEditing] = useState<any | null>(null);
+  const [eName, setEName] = useState("");
+  const [eDesc, setEDesc] = useState("");
+  const [ePrice, setEPrice] = useState("0");
+  const [ePublished, setEPublished] = useState(true);
+  const [eCoverMode, setECoverMode] = useState<"keep" | "upload" | "url">("keep");
+  const [eCoverFile, setECoverFile] = useState<File | null>(null);
+  const [eCoverUrl, setECoverUrl] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const openEdit = (b: any) => {
+    setEditing(b);
+    setEName(b.name); setEDesc(b.description || ""); setEPrice(String(b.price || 0));
+    setEPublished(!!b.is_published); setECoverMode("keep"); setECoverFile(null); setECoverUrl(b.cover_image || "");
+  };
+
+  const saveEdit = async () => {
+    if (!editing || !eName.trim()) return;
+    setSavingEdit(true);
+    let cover: string | null = editing.cover_image;
+    if (eCoverMode === "upload" && eCoverFile) {
+      const u = await uploadThumbnail(eCoverFile);
+      if (!u) { setSavingEdit(false); return; }
+      cover = u;
+    } else if (eCoverMode === "url") cover = eCoverUrl.trim() || null;
+    const { data, error } = await supabase.from("batches").update({
+      name: eName.trim(), description: eDesc.trim() || null,
+      price: parseFloat(ePrice) || 0, is_published: ePublished, cover_image: cover,
+      updated_at: new Date().toISOString(),
+    }).eq("id", editing.id).select().single();
+    setSavingEdit(false);
+    if (error) { toast.error(error.message); return; }
+    setBatches(batches.map((x) => x.id === data.id ? data : x));
+    setEditing(null);
+    toast.success("Batch updated!");
+  };
 
   useEffect(() => {
     if (authLoading) return;
@@ -270,12 +310,20 @@ const AdminPage = () => {
                       className={`p-3 rounded-lg border cursor-pointer flex items-center justify-between ${selected === b.id ? "border-primary bg-accent" : "border-border hover:bg-muted"}`}
                       onClick={() => setSelected(b.id)}>
                       <div className="min-w-0">
-                        <p className="font-medium truncate text-sm">{b.name}</p>
+                        <p className="font-medium truncate text-sm flex items-center gap-1.5">
+                          {b.name}
+                          {!b.is_published && <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">draft</span>}
+                        </p>
                         <p className="text-xs text-muted-foreground">{b.price > 0 ? `₹${b.price}` : "Free"}</p>
                       </div>
-                      <button onClick={(e) => { e.stopPropagation(); deleteBatch(b.id); }} className="text-destructive hover:opacity-70">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button onClick={(e) => { e.stopPropagation(); openEdit(b); }} className="text-muted-foreground hover:text-primary" title="Edit">
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); deleteBatch(b.id); }} className="text-destructive hover:opacity-70" title="Delete">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                   {batches.length === 0 && <p className="text-sm text-muted-foreground">No batches yet.</p>}
@@ -376,11 +424,11 @@ const AdminPage = () => {
                     </div>
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" onClick={() => viewProof(r.screenshot_path)} className="gap-1"><Eye className="w-3.5 h-3.5" />Proof</Button>
-                      {r.status === "pending" && (
-                        <>
-                          <Button size="sm" onClick={() => reviewRequest(r.id, "approved")} className="gap-1 bg-emerald-600 hover:bg-emerald-700"><Check className="w-3.5 h-3.5" />Approve</Button>
-                          <Button size="sm" variant="destructive" onClick={() => reviewRequest(r.id, "rejected")} className="gap-1"><X className="w-3.5 h-3.5" />Reject</Button>
-                        </>
+                      {r.status !== "approved" && (
+                        <Button size="sm" onClick={() => reviewRequest(r.id, "approved")} className="gap-1 bg-emerald-600 hover:bg-emerald-700"><Check className="w-3.5 h-3.5" />Approve</Button>
+                      )}
+                      {r.status !== "rejected" && (
+                        <Button size="sm" variant="destructive" onClick={() => reviewRequest(r.id, "rejected")} className="gap-1"><X className="w-3.5 h-3.5" />{r.status === "approved" ? "Revoke" : "Reject"}</Button>
                       )}
                     </div>
                   </div>
@@ -442,6 +490,55 @@ const AdminPage = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Edit Batch</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-medium">Name</label>
+              <Input value={eName} onChange={(e) => setEName(e.target.value)} className="mt-1" />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Description</label>
+              <Textarea value={eDesc} onChange={(e) => setEDesc(e.target.value)} rows={2} className="mt-1" />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Price (₹, 0 = free)</label>
+              <Input type="number" min="0" value={ePrice} onChange={(e) => setEPrice(e.target.value)} className="mt-1" />
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-border p-3">
+              <div>
+                <p className="text-sm font-medium">Published</p>
+                <p className="text-xs text-muted-foreground">Visible to students on Browse page</p>
+              </div>
+              <Switch checked={ePublished} onCheckedChange={setEPublished} />
+            </div>
+            <div className="rounded-lg border border-border p-3 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground flex items-center gap-1"><ImageIcon className="w-3.5 h-3.5" />Thumbnail</p>
+              <Select value={eCoverMode} onValueChange={(v: any) => setECoverMode(v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="keep">Keep current</SelectItem>
+                  <SelectItem value="upload">Upload new image</SelectItem>
+                  <SelectItem value="url">Paste URL</SelectItem>
+                </SelectContent>
+              </Select>
+              {eCoverMode === "upload" && <Input type="file" accept="image/*" onChange={(e) => setECoverFile(e.target.files?.[0] || null)} />}
+              {eCoverMode === "url" && <Input placeholder="https://..." value={eCoverUrl} onChange={(e) => setECoverUrl(e.target.value)} />}
+              {editing?.cover_image && eCoverMode === "keep" && (
+                <img src={editing.cover_image} alt="current" className="w-20 h-20 object-cover rounded border border-border" />
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
+            <Button onClick={saveEdit} disabled={savingEdit || !eName.trim()}>
+              {savingEdit ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 };
