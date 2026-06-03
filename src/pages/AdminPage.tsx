@@ -490,6 +490,55 @@ const AdminPage = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Edit Batch</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-medium">Name</label>
+              <Input value={eName} onChange={(e) => setEName(e.target.value)} className="mt-1" />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Description</label>
+              <Textarea value={eDesc} onChange={(e) => setEDesc(e.target.value)} rows={2} className="mt-1" />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Price (₹, 0 = free)</label>
+              <Input type="number" min="0" value={ePrice} onChange={(e) => setEPrice(e.target.value)} className="mt-1" />
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-border p-3">
+              <div>
+                <p className="text-sm font-medium">Published</p>
+                <p className="text-xs text-muted-foreground">Visible to students on Browse page</p>
+              </div>
+              <Switch checked={ePublished} onCheckedChange={setEPublished} />
+            </div>
+            <div className="rounded-lg border border-border p-3 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground flex items-center gap-1"><ImageIcon className="w-3.5 h-3.5" />Thumbnail</p>
+              <Select value={eCoverMode} onValueChange={(v: any) => setECoverMode(v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="keep">Keep current</SelectItem>
+                  <SelectItem value="upload">Upload new image</SelectItem>
+                  <SelectItem value="url">Paste URL</SelectItem>
+                </SelectContent>
+              </Select>
+              {eCoverMode === "upload" && <Input type="file" accept="image/*" onChange={(e) => setECoverFile(e.target.files?.[0] || null)} />}
+              {eCoverMode === "url" && <Input placeholder="https://..." value={eCoverUrl} onChange={(e) => setECoverUrl(e.target.value)} />}
+              {editing?.cover_image && eCoverMode === "keep" && (
+                <img src={editing.cover_image} alt="current" className="w-20 h-20 object-cover rounded border border-border" />
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
+            <Button onClick={saveEdit} disabled={savingEdit || !eName.trim()}>
+              {savingEdit ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 };
