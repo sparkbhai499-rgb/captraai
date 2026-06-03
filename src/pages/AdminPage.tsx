@@ -424,11 +424,11 @@ const AdminPage = () => {
                     </div>
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" onClick={() => viewProof(r.screenshot_path)} className="gap-1"><Eye className="w-3.5 h-3.5" />Proof</Button>
-                      {r.status === "pending" && (
-                        <>
-                          <Button size="sm" onClick={() => reviewRequest(r.id, "approved")} className="gap-1 bg-emerald-600 hover:bg-emerald-700"><Check className="w-3.5 h-3.5" />Approve</Button>
-                          <Button size="sm" variant="destructive" onClick={() => reviewRequest(r.id, "rejected")} className="gap-1"><X className="w-3.5 h-3.5" />Reject</Button>
-                        </>
+                      {r.status !== "approved" && (
+                        <Button size="sm" onClick={() => reviewRequest(r.id, "approved")} className="gap-1 bg-emerald-600 hover:bg-emerald-700"><Check className="w-3.5 h-3.5" />Approve</Button>
+                      )}
+                      {r.status !== "rejected" && (
+                        <Button size="sm" variant="destructive" onClick={() => reviewRequest(r.id, "rejected")} className="gap-1"><X className="w-3.5 h-3.5" />{r.status === "approved" ? "Revoke" : "Reject"}</Button>
                       )}
                     </div>
                   </div>
