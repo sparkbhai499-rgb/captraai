@@ -310,12 +310,20 @@ const AdminPage = () => {
                       className={`p-3 rounded-lg border cursor-pointer flex items-center justify-between ${selected === b.id ? "border-primary bg-accent" : "border-border hover:bg-muted"}`}
                       onClick={() => setSelected(b.id)}>
                       <div className="min-w-0">
-                        <p className="font-medium truncate text-sm">{b.name}</p>
+                        <p className="font-medium truncate text-sm flex items-center gap-1.5">
+                          {b.name}
+                          {!b.is_published && <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">draft</span>}
+                        </p>
                         <p className="text-xs text-muted-foreground">{b.price > 0 ? `₹${b.price}` : "Free"}</p>
                       </div>
-                      <button onClick={(e) => { e.stopPropagation(); deleteBatch(b.id); }} className="text-destructive hover:opacity-70">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button onClick={(e) => { e.stopPropagation(); openEdit(b); }} className="text-muted-foreground hover:text-primary" title="Edit">
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); deleteBatch(b.id); }} className="text-destructive hover:opacity-70" title="Delete">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                   {batches.length === 0 && <p className="text-sm text-muted-foreground">No batches yet.</p>}
