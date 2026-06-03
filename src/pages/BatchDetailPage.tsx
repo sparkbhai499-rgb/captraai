@@ -26,6 +26,7 @@ const BatchDetailPage = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [enrolled, setEnrolled] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [paymentReq, setPaymentReq] = useState<{ status: string; utr: string; created_at: string } | null>(null);
 
   const [hasSub, setHasSub] = useState(false);
 
@@ -35,12 +36,13 @@ const BatchDetailPage = () => {
       setLoading(true);
       const { data: b } = await supabase.from("batches").select("id,name,description,price").eq("id", id).maybeSingle();
       setBatch(b);
-      const [{ data: en }, { data: sub }] = await Promise.all([
+      const [{ data: en }, { data: sub }, { data: pr }] = await Promise.all([
         supabase.from("batch_enrollments").select("id").eq("batch_id", id).eq("user_id", user.id).maybeSingle(),
         supabase.from("user_subscriptions").select("id").eq("user_id", user.id).gt("expires_at", new Date().toISOString()).maybeSingle(),
+        supabase.from("payment_requests").select("status,utr,created_at").eq("user_id", user.id).eq("batch_id", id).eq("type", "batch").order("created_at", { ascending: false }).limit(1).maybeSingle(),
       ]);
       const access = !!en || !!sub;
-      setEnrolled(access); setHasSub(!!sub);
+      setEnrolled(access); setHasSub(!!sub); setPaymentReq(pr);
       if (access) {
         const [{ data: c }, { data: a }] = await Promise.all([
           supabase.from("batch_contents").select("*").eq("batch_id", id).order("order_index"),
