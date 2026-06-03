@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Trash2, FileText, Video, StickyNote, Megaphone, Upload, Check, X, Eye, ImageIcon } from "lucide-react";
+import { Loader2, Plus, Trash2, FileText, Video, StickyNote, Megaphone, Upload, Check, X, Eye, ImageIcon, Pencil } from "lucide-react";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 
 const AdminPage = () => {
   const { user, loading: authLoading } = useAuth();
@@ -57,6 +59,44 @@ const AdminPage = () => {
 
   // requests
   const [requests, setRequests] = useState<any[]>([]);
+
+  // edit batch dialog
+  const [editing, setEditing] = useState<any | null>(null);
+  const [eName, setEName] = useState("");
+  const [eDesc, setEDesc] = useState("");
+  const [ePrice, setEPrice] = useState("0");
+  const [ePublished, setEPublished] = useState(true);
+  const [eCoverMode, setECoverMode] = useState<"keep" | "upload" | "url">("keep");
+  const [eCoverFile, setECoverFile] = useState<File | null>(null);
+  const [eCoverUrl, setECoverUrl] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const openEdit = (b: any) => {
+    setEditing(b);
+    setEName(b.name); setEDesc(b.description || ""); setEPrice(String(b.price || 0));
+    setEPublished(!!b.is_published); setECoverMode("keep"); setECoverFile(null); setECoverUrl(b.cover_image || "");
+  };
+
+  const saveEdit = async () => {
+    if (!editing || !eName.trim()) return;
+    setSavingEdit(true);
+    let cover: string | null = editing.cover_image;
+    if (eCoverMode === "upload" && eCoverFile) {
+      const u = await uploadThumbnail(eCoverFile);
+      if (!u) { setSavingEdit(false); return; }
+      cover = u;
+    } else if (eCoverMode === "url") cover = eCoverUrl.trim() || null;
+    const { data, error } = await supabase.from("batches").update({
+      name: eName.trim(), description: eDesc.trim() || null,
+      price: parseFloat(ePrice) || 0, is_published: ePublished, cover_image: cover,
+      updated_at: new Date().toISOString(),
+    }).eq("id", editing.id).select().single();
+    setSavingEdit(false);
+    if (error) { toast.error(error.message); return; }
+    setBatches(batches.map((x) => x.id === data.id ? data : x));
+    setEditing(null);
+    toast.success("Batch updated!");
+  };
 
   useEffect(() => {
     if (authLoading) return;
