@@ -483,6 +483,63 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          address: string
+          assigned_to: string | null
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          customer_user_id: string | null
+          delivered_at: string | null
+          delivery_otp: string
+          id: string
+          items_summary: string
+          notes: string | null
+          payout: number
+          picked_up_at: string | null
+          status: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          assigned_to?: string | null
+          created_at?: string
+          customer_name: string
+          customer_phone: string
+          customer_user_id?: string | null
+          delivered_at?: string | null
+          delivery_otp?: string
+          id?: string
+          items_summary: string
+          notes?: string | null
+          payout?: number
+          picked_up_at?: string | null
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          assigned_to?: string | null
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string
+          customer_user_id?: string | null
+          delivered_at?: string | null
+          delivery_otp?: string
+          id?: string
+          items_summary?: string
+          notes?: string | null
+          payout?: number
+          picked_up_at?: string | null
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payment_requests: {
         Row: {
           admin_note: string | null
@@ -776,6 +833,10 @@ export type Database = {
       is_enrolled: {
         Args: { _batch_id: string; _user_id: string }
         Returns: boolean
+      }
+      verify_delivery_otp: {
+        Args: { _order_id: string; _otp: string }
+        Returns: Json
       }
     }
     Enums: {
