@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState, ReactNode } from "react";
-import { GraduationCap, LogOut, User as UserIcon, Shield, BookOpen, LayoutGrid, Crown, Sparkles } from "lucide-react";
+import { Bike, LogOut, User as UserIcon, Shield, Truck, Package } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -33,15 +33,13 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
-              <GraduationCap className="w-5 h-5 text-primary-foreground" />
+              <Bike className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="font-bold text-lg">StudyHub</span>
+            <span className="font-bold text-lg">Sellnix Partner</span>
           </Link>
           <nav className="flex items-center gap-1">
-            <Link to="/"><Button variant="ghost" size="sm" className="gap-1.5"><LayoutGrid className="w-4 h-4" />Browse</Button></Link>
-            <Link to="/my-batches"><Button variant="ghost" size="sm" className="gap-1.5"><BookOpen className="w-4 h-4" />My Batches</Button></Link>
-            <Link to="/subscriptions"><Button variant="ghost" size="sm" className="gap-1.5"><Crown className="w-4 h-4" />Premium</Button></Link>
-            <Link to="/ai-tutor"><Button variant="ghost" size="sm" className="gap-1.5"><Sparkles className="w-4 h-4" />AI Tutor</Button></Link>
+            <Link to="/"><Button variant="ghost" size="sm" className="gap-1.5"><Package className="w-4 h-4" />Orders</Button></Link>
+            <Link to="/my-deliveries"><Button variant="ghost" size="sm" className="gap-1.5"><Truck className="w-4 h-4" />My Deliveries</Button></Link>
             {isAdmin && (
               <Link to="/admin"><Button variant="ghost" size="sm" className="gap-1.5"><Shield className="w-4 h-4" />Admin</Button></Link>
             )}

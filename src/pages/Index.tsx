@@ -1,42 +1,61 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppShell } from "@/components/AppShell";
 import LoginPage from "./LoginPage";
 import { Button } from "@/components/ui/button";
-import { BookOpen, ArrowRight, Loader2, Lock, Crown } from "lucide-react";
+import { Loader2, MapPin, Phone, Package, IndianRupee, ArrowRight } from "lucide-react";
 
-interface Batch { id: string; name: string; description: string | null; cover_image: string | null; price: number; }
+interface Order {
+  id: string;
+  customer_name: string;
+  customer_phone: string;
+  address: string;
+  items_summary: string;
+  total: number;
+  payout: number;
+  status: string;
+  created_at: string;
+}
 
 const Index = () => {
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
-  const [batches, setBatches] = useState<Batch[]>([]);
-  const [enrolled, setEnrolled] = useState<Set<string>>(new Set());
-  const [hasSub, setHasSub] = useState(false);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [fetching, setFetching] = useState(true);
+  const [isDelivery, setIsDelivery] = useState(false);
+
+  const load = async () => {
+    setFetching(true);
+    const { data } = await supabase
+      .from("orders")
+      .select("id,customer_name,customer_phone,address,items_summary,total,payout,status,created_at")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+    setOrders((data as Order[]) || []);
+    setFetching(false);
+  };
 
   useEffect(() => {
     if (!user) return;
-    (async () => {
-      setFetching(true);
-      const [{ data: bs }, { data: es }, { data: sub }] = await Promise.all([
-        supabase.from("batches").select("id,name,description,cover_image,price").eq("is_published", true).order("created_at", { ascending: false }),
-        supabase.from("batch_enrollments").select("batch_id").eq("user_id", user.id),
-        supabase.from("user_subscriptions").select("id").eq("user_id", user.id).gt("expires_at", new Date().toISOString()).maybeSingle(),
-      ]);
-      setBatches(bs || []);
-      setEnrolled(new Set((es || []).map((e: any) => e.batch_id)));
-      setHasSub(!!sub);
-      setFetching(false);
-    })();
+    supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "delivery").maybeSingle()
+      .then(({ data }) => setIsDelivery(!!data));
+    load();
+    const ch = supabase
+      .channel("orders-feed")
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => load())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
   }, [user]);
 
-  const enrollFree = async (batchId: string) => {
+  const accept = async (id: string) => {
     if (!user) return;
-    const { error } = await supabase.from("batch_enrollments").insert({ batch_id: batchId, user_id: user.id });
-    if (!error) setEnrolled(new Set([...enrolled, batchId]));
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: "assigned", assigned_to: user.id })
+      .eq("id", id)
+      .eq("status", "pending");
+    if (!error) load();
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
@@ -44,55 +63,46 @@ const Index = () => {
 
   return (
     <AppShell>
-      <div className="mb-8 flex items-end justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-3xl font-bold mb-1">Explore Batches</h1>
-          <p className="text-muted-foreground">Choose a batch to start learning</p>
-        </div>
-        {hasSub && (
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-sm font-medium">
-            <Crown className="w-3.5 h-3.5" />All-Access Active
-          </div>
-        )}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-1">Available Orders</h1>
+        <p className="text-muted-foreground">Naye orders accept karke earn karo</p>
       </div>
+
+      {!isDelivery && (
+        <div className="mb-6 p-4 rounded-xl border border-border bg-card">
+          <p className="text-sm">Aapka account abhi <b>Delivery Partner</b> nahi hai. Admin se request karo activation ke liye, ya admin ho to <Link to="/admin" className="text-primary underline">Admin panel</Link> me khud role assign karo.</p>
+        </div>
+      )}
+
       {fetching ? (
-        <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-      ) : batches.length === 0 ? (
+        <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+      ) : orders.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
-          <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-40" />
-          <p>No batches available yet. Check back soon!</p>
+          <Package className="w-12 h-12 mx-auto mb-3 opacity-40" />
+          Abhi koi pending order nahi hai. Thodi der baad check karo.
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {batches.map((b) => {
-            const hasAccess = enrolled.has(b.id) || hasSub;
-            const isFree = !b.price || b.price === 0;
-            return (
-              <div key={b.id} className="bg-card rounded-2xl overflow-hidden border border-border shadow-card hover:shadow-lg transition-shadow group flex flex-col">
-                <div className="aspect-video gradient-primary flex items-center justify-center overflow-hidden relative">
-                  {b.cover_image ? (
-                    <img src={b.cover_image} alt={b.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <BookOpen className="w-12 h-12 text-primary-foreground/80" />
-                  )}
-                  {!isFree && (
-                    <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-background/90 backdrop-blur text-xs font-semibold">₹{b.price}</span>
-                  )}
+        <div className="grid gap-4 md:grid-cols-2">
+          {orders.map((o) => (
+            <div key={o.id} className="rounded-2xl border border-border bg-card p-5 hover:shadow-md transition-shadow">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <h3 className="font-semibold text-lg">{o.customer_name}</h3>
+                  <p className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString()}</p>
                 </div>
-                <div className="p-5 flex-1 flex flex-col">
-                  <h3 className="font-semibold text-lg mb-1 line-clamp-1">{b.name}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-4 min-h-[2.5rem] flex-1">{b.description || "No description"}</p>
-                  {hasAccess ? (
-                    <Link to={`/batch/${b.id}`}><Button className="w-full gap-2">Open <ArrowRight className="w-4 h-4" /></Button></Link>
-                  ) : isFree ? (
-                    <Button onClick={() => enrollFree(b.id)} variant="outline" className="w-full">Enroll Free</Button>
-                  ) : (
-                    <Button onClick={() => navigate(`/pay?type=batch&id=${b.id}`)} className="w-full gap-1.5"><Lock className="w-3.5 h-3.5" />Buy ₹{b.price}</Button>
-                  )}
+                <div className="text-right">
+                  <div className="flex items-center text-primary font-bold text-lg"><IndianRupee className="w-4 h-4" />{o.payout}</div>
+                  <p className="text-[10px] text-muted-foreground">payout</p>
                 </div>
               </div>
-            );
-          })}
+              <p className="text-sm mb-2 flex gap-2"><Package className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />{o.items_summary}</p>
+              <p className="text-sm mb-2 flex gap-2"><MapPin className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />{o.address}</p>
+              <p className="text-sm mb-4 flex gap-2 items-center"><Phone className="w-4 h-4 text-muted-foreground" />{o.customer_phone}</p>
+              <Button className="w-full gap-2" onClick={() => accept(o.id)} disabled={!isDelivery}>
+                Accept Order <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+          ))}
         </div>
       )}
     </AppShell>
