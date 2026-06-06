@@ -89,7 +89,7 @@ const OrderDetailPage = () => {
 
         <div className="space-y-3 text-sm border-t border-border pt-4">
           <div className="flex gap-2"><Package className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" /><div><div className="text-muted-foreground text-xs">Items</div>{order.items_summary}</div></div>
-          <div className="flex gap-2"><MapPin className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" /><div><div className="text-muted-foreground text-xs">Delivery address</div>{order.address}</div></div>
+          <div className="flex gap-2"><MapPin className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" /><div className="flex-1"><div className="text-muted-foreground text-xs">Delivery address</div>{order.address}<a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.address)}`} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-xs text-primary font-medium"><Navigation className="w-3 h-3" />Open in Maps</a></div></div>
           <div className="flex gap-2"><Phone className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" /><div><div className="text-muted-foreground text-xs">Customer</div><a href={`tel:${order.customer_phone}`} className="text-primary">{order.customer_phone}</a></div></div>
           <div className="flex gap-2"><IndianRupee className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" /><div><div className="text-muted-foreground text-xs">Order total</div>₹{order.total}</div></div>
         </div>
