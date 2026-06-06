@@ -65,15 +65,6 @@ const OrderDetailPage = () => {
       load();
     }
   };
-    const res = data as { ok: boolean; error?: string } | null;
-    if (error || !res?.ok) {
-      toast({ title: "Wrong OTP", description: res?.error || error?.message || "Galat code", variant: "destructive" });
-      setOtp("");
-    } else {
-      toast({ title: "Delivered ✓", description: "Payout aapke earnings me add ho gaya." });
-      load();
-    }
-  };
 
   if (loading) return <AppShell><div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div></AppShell>;
   if (!order) return <AppShell><p>Order not found.</p></AppShell>;
