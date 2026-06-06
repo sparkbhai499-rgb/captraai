@@ -6,7 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, MapPin, Phone, Package, IndianRupee, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Loader2, MapPin, Phone, Package, IndianRupee, ArrowLeft, CheckCircle2, XCircle, Navigation } from "lucide-react";
 
 const OrderDetailPage = () => {
   const { id } = useParams();
