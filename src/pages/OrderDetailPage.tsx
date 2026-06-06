@@ -116,6 +116,37 @@ const OrderDetailPage = () => {
         </div>
       </div>
 
+      {(order.status === "assigned" || order.status === "picked_up") && (
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="font-semibold flex items-center gap-2">
+              <Navigation className="w-4 h-4 text-primary" />Live tracking
+            </h2>
+            {trackingActive && (
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+                <Radio className="w-3 h-3 animate-pulse" />
+                {partnerPos ? "Sharing your location" : "Getting GPS…"}
+              </span>
+            )}
+          </div>
+          <LiveMap
+            partner={
+              partnerPos
+                ? { ...partnerPos, updatedAt: order.partner_location_at }
+                : null
+            }
+            destination={null}
+          />
+          {geoError && trackingActive && (
+            <p className="text-xs text-destructive mt-2">Location error: {geoError}. Browser me location permission allow karo.</p>
+          )}
+          {!partnerPos && !trackingActive && (
+            <p className="text-xs text-muted-foreground mt-2">Partner ne abhi location share nahi ki.</p>
+          )}
+        </div>
+      )}
+
+
       {isMine && order.status === "assigned" && (
         <div className="space-y-2">
           <Button className="w-full" size="lg" onClick={markPickedUp} disabled={busy}>
