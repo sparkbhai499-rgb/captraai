@@ -6,7 +6,9 @@ import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, MapPin, Phone, Package, IndianRupee, ArrowLeft, CheckCircle2, XCircle, Navigation } from "lucide-react";
+import { Loader2, MapPin, Phone, Package, IndianRupee, ArrowLeft, CheckCircle2, XCircle, Navigation, Radio } from "lucide-react";
+import { LiveMap } from "@/components/LiveMap";
+import { useLiveLocation } from "@/hooks/useLiveLocation";
 
 const OrderDetailPage = () => {
   const { id } = useParams();
@@ -24,7 +26,27 @@ const OrderDetailPage = () => {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => {
+    load();
+    if (!id) return;
+    const ch = supabase
+      .channel(`order-${id}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${id}` },
+        (payload) => setOrder((prev: any) => ({ ...prev, ...payload.new })))
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [id]);
+
+  const isMine = order?.assigned_to === user?.id;
+  const trackingActive = !!(isMine && order && (order.status === "assigned" || order.status === "picked_up"));
+  const { coords: liveCoords, error: geoError } = useLiveLocation(id, trackingActive);
+
+  // Prefer fresh in-memory coords, fall back to last DB-stored position
+  const partnerPos =
+    liveCoords ??
+    (order?.partner_lat && order?.partner_lng
+      ? { lat: order.partner_lat, lng: order.partner_lng }
+      : null);
 
   const markPickedUp = async () => {
     setBusy(true);
@@ -69,7 +91,6 @@ const OrderDetailPage = () => {
   if (loading) return <AppShell><div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div></AppShell>;
   if (!order) return <AppShell><p>Order not found.</p></AppShell>;
 
-  const isMine = order.assigned_to === user?.id;
 
   return (
     <AppShell>
@@ -94,6 +115,37 @@ const OrderDetailPage = () => {
           <div className="flex gap-2"><IndianRupee className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" /><div><div className="text-muted-foreground text-xs">Order total</div>₹{order.total}</div></div>
         </div>
       </div>
+
+      {(order.status === "assigned" || order.status === "picked_up") && (
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="font-semibold flex items-center gap-2">
+              <Navigation className="w-4 h-4 text-primary" />Live tracking
+            </h2>
+            {trackingActive && (
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+                <Radio className="w-3 h-3 animate-pulse" />
+                {partnerPos ? "Sharing your location" : "Getting GPS…"}
+              </span>
+            )}
+          </div>
+          <LiveMap
+            partner={
+              partnerPos
+                ? { ...partnerPos, updatedAt: order.partner_location_at }
+                : null
+            }
+            destination={null}
+          />
+          {geoError && trackingActive && (
+            <p className="text-xs text-destructive mt-2">Location error: {geoError}. Browser me location permission allow karo.</p>
+          )}
+          {!partnerPos && !trackingActive && (
+            <p className="text-xs text-muted-foreground mt-2">Partner ne abhi location share nahi ki.</p>
+          )}
+        </div>
+      )}
+
 
       {isMine && order.status === "assigned" && (
         <div className="space-y-2">

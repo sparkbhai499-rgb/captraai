@@ -496,6 +496,9 @@ export type Database = {
           id: string
           items_summary: string
           notes: string | null
+          partner_lat: number | null
+          partner_lng: number | null
+          partner_location_at: string | null
           payout: number
           picked_up_at: string | null
           status: string
@@ -514,6 +517,9 @@ export type Database = {
           id?: string
           items_summary: string
           notes?: string | null
+          partner_lat?: number | null
+          partner_lng?: number | null
+          partner_location_at?: string | null
           payout?: number
           picked_up_at?: string | null
           status?: string
@@ -532,6 +538,9 @@ export type Database = {
           id?: string
           items_summary?: string
           notes?: string | null
+          partner_lat?: number | null
+          partner_lng?: number | null
+          partner_location_at?: string | null
           payout?: number
           picked_up_at?: string | null
           status?: string
