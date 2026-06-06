@@ -122,6 +122,9 @@ const OrderDetailPage = () => {
           <Button className="w-full" size="lg" onClick={verifyOtp} disabled={busy || otp.length !== 4}>
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle2 className="w-5 h-5" />Verify & Deliver</>}
           </Button>
+          <Button variant="ghost" className="w-full mt-2 text-destructive" onClick={cancelAssignment} disabled={busy}>
+            <XCircle className="w-4 h-4" />Cancel & release order
+          </Button>
         </div>
       )}
 
