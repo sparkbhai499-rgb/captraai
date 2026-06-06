@@ -135,6 +135,14 @@ const AdminPage = () => {
             <Input type="number" placeholder="Order total ₹" value={form.total} onChange={e=>setForm({...form,total:e.target.value})} />
             <Input type="number" placeholder="Delivery payout ₹" value={form.payout} onChange={e=>setForm({...form,payout:e.target.value})} />
           </div>
+          <Input
+            inputMode="numeric"
+            maxLength={4}
+            placeholder="4-digit delivery OTP (customer ko batana)"
+            value={form.delivery_otp}
+            onChange={e=>setForm({...form,delivery_otp:e.target.value.replace(/\D/g,"").slice(0,4)})}
+            className="font-mono tracking-widest"
+          />
           <Button onClick={createOrder} disabled={creating || !form.customer_name || !form.customer_phone || !form.address}>
             {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4" />Create Order</>}
           </Button>
