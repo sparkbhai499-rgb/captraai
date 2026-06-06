@@ -26,7 +26,27 @@ const OrderDetailPage = () => {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => {
+    load();
+    if (!id) return;
+    const ch = supabase
+      .channel(`order-${id}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${id}` },
+        (payload) => setOrder((prev: any) => ({ ...prev, ...payload.new })))
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [id]);
+
+  const isMine = order?.assigned_to === user?.id;
+  const trackingActive = !!(isMine && order && (order.status === "assigned" || order.status === "picked_up"));
+  const { coords: liveCoords, error: geoError } = useLiveLocation(id, trackingActive);
+
+  // Prefer fresh in-memory coords, fall back to last DB-stored position
+  const partnerPos =
+    liveCoords ??
+    (order?.partner_lat && order?.partner_lng
+      ? { lat: order.partner_lat, lng: order.partner_lng }
+      : null);
 
   const markPickedUp = async () => {
     setBusy(true);
