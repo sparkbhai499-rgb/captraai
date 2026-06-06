@@ -91,7 +91,6 @@ const OrderDetailPage = () => {
   if (loading) return <AppShell><div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div></AppShell>;
   if (!order) return <AppShell><p>Order not found.</p></AppShell>;
 
-  const isMine = order.assigned_to === user?.id;
 
   return (
     <AppShell>
