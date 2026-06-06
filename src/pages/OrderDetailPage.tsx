@@ -36,11 +36,35 @@ const OrderDetailPage = () => {
     else { toast({ title: "Picked up!", description: "Customer ke pass jao." }); load(); }
   };
 
+  const cancelAssignment = async () => {
+    if (!confirm("Order cancel karke wapas dusro ke liye available kar do?")) return;
+    setBusy(true);
+    const { error } = await supabase.from("orders")
+      .update({ status: "pending", assigned_to: null, picked_up_at: null })
+      .eq("id", id!);
+    setBusy(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Order released", description: "Wapas available orders me chala gaya." });
+      navigate("/my-deliveries");
+    }
+  };
+
   const verifyOtp = async () => {
     if (otp.length !== 4) { toast({ title: "4-digit OTP daalo", variant: "destructive" }); return; }
     setBusy(true);
     const { data, error } = await supabase.rpc("verify_delivery_otp", { _order_id: id!, _otp: otp });
     setBusy(false);
+    const res = data as { ok: boolean; error?: string } | null;
+    if (error || !res?.ok) {
+      toast({ title: "Wrong OTP", description: res?.error || error?.message || "Galat code", variant: "destructive" });
+      setOtp("");
+    } else {
+      toast({ title: "Delivered ✓", description: "Payout aapke earnings me add ho gaya." });
+      load();
+    }
+  };
     const res = data as { ok: boolean; error?: string } | null;
     if (error || !res?.ok) {
       toast({ title: "Wrong OTP", description: res?.error || error?.message || "Galat code", variant: "destructive" });
