@@ -20,7 +20,7 @@ const AdminPage = () => {
   const [partnerEmail, setPartnerEmail] = useState("");
 
   // new order form
-  const [form, setForm] = useState({ customer_name: "", customer_phone: "", address: "", items_summary: "", total: "", payout: "40" });
+  const [form, setForm] = useState({ customer_name: "", customer_phone: "", address: "", items_summary: "", total: "", payout: "40", delivery_otp: "" });
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
