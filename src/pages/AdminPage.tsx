@@ -46,6 +46,10 @@ const AdminPage = () => {
   useEffect(() => { if (isAdmin) loadAll(); }, [isAdmin]);
 
   const createOrder = async () => {
+    if (!/^\d{4}$/.test(form.delivery_otp)) {
+      toast({ title: "OTP zaroori", description: "4-digit delivery OTP daalo", variant: "destructive" });
+      return;
+    }
     setCreating(true);
     const { error } = await supabase.from("orders").insert({
       customer_name: form.customer_name,
@@ -54,12 +58,13 @@ const AdminPage = () => {
       items_summary: form.items_summary,
       total: Number(form.total) || 0,
       payout: Number(form.payout) || 40,
+      delivery_otp: form.delivery_otp,
     });
     setCreating(false);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else {
       toast({ title: "Order created" });
-      setForm({ customer_name: "", customer_phone: "", address: "", items_summary: "", total: "", payout: "40" });
+      setForm({ customer_name: "", customer_phone: "", address: "", items_summary: "", total: "", payout: "40", delivery_otp: "" });
       loadAll();
     }
   };
