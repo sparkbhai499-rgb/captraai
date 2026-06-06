@@ -96,9 +96,14 @@ const OrderDetailPage = () => {
       </div>
 
       {isMine && order.status === "assigned" && (
-        <Button className="w-full" size="lg" onClick={markPickedUp} disabled={busy}>
-          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Mark as Picked Up"}
-        </Button>
+        <div className="space-y-2">
+          <Button className="w-full" size="lg" onClick={markPickedUp} disabled={busy}>
+            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Mark as Picked Up"}
+          </Button>
+          <Button variant="outline" className="w-full text-destructive border-destructive/30 hover:bg-destructive/10" onClick={cancelAssignment} disabled={busy}>
+            <XCircle className="w-4 h-4" />Cancel & release order
+          </Button>
+        </div>
       )}
 
       {isMine && order.status === "picked_up" && (
