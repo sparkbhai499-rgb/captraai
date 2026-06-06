@@ -20,7 +20,7 @@ const AdminPage = () => {
   const [partnerEmail, setPartnerEmail] = useState("");
 
   // new order form
-  const [form, setForm] = useState({ customer_name: "", customer_phone: "", address: "", items_summary: "", total: "", payout: "40" });
+  const [form, setForm] = useState({ customer_name: "", customer_phone: "", address: "", items_summary: "", total: "", payout: "40", delivery_otp: "" });
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
@@ -46,6 +46,10 @@ const AdminPage = () => {
   useEffect(() => { if (isAdmin) loadAll(); }, [isAdmin]);
 
   const createOrder = async () => {
+    if (!/^\d{4}$/.test(form.delivery_otp)) {
+      toast({ title: "OTP zaroori", description: "4-digit delivery OTP daalo", variant: "destructive" });
+      return;
+    }
     setCreating(true);
     const { error } = await supabase.from("orders").insert({
       customer_name: form.customer_name,
@@ -54,12 +58,13 @@ const AdminPage = () => {
       items_summary: form.items_summary,
       total: Number(form.total) || 0,
       payout: Number(form.payout) || 40,
+      delivery_otp: form.delivery_otp,
     });
     setCreating(false);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else {
       toast({ title: "Order created" });
-      setForm({ customer_name: "", customer_phone: "", address: "", items_summary: "", total: "", payout: "40" });
+      setForm({ customer_name: "", customer_phone: "", address: "", items_summary: "", total: "", payout: "40", delivery_otp: "" });
       loadAll();
     }
   };
@@ -130,6 +135,14 @@ const AdminPage = () => {
             <Input type="number" placeholder="Order total ₹" value={form.total} onChange={e=>setForm({...form,total:e.target.value})} />
             <Input type="number" placeholder="Delivery payout ₹" value={form.payout} onChange={e=>setForm({...form,payout:e.target.value})} />
           </div>
+          <Input
+            inputMode="numeric"
+            maxLength={4}
+            placeholder="4-digit delivery OTP (customer ko batana)"
+            value={form.delivery_otp}
+            onChange={e=>setForm({...form,delivery_otp:e.target.value.replace(/\D/g,"").slice(0,4)})}
+            className="font-mono tracking-widest"
+          />
           <Button onClick={createOrder} disabled={creating || !form.customer_name || !form.customer_phone || !form.address}>
             {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4" />Create Order</>}
           </Button>
