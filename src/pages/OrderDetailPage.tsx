@@ -6,7 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, MapPin, Phone, Package, IndianRupee, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Loader2, MapPin, Phone, Package, IndianRupee, ArrowLeft, CheckCircle2, XCircle, Navigation } from "lucide-react";
 
 const OrderDetailPage = () => {
   const { id } = useParams();
@@ -34,6 +34,21 @@ const OrderDetailPage = () => {
     setBusy(false);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else { toast({ title: "Picked up!", description: "Customer ke pass jao." }); load(); }
+  };
+
+  const cancelAssignment = async () => {
+    if (!confirm("Order cancel karke wapas dusro ke liye available kar do?")) return;
+    setBusy(true);
+    const { error } = await supabase.from("orders")
+      .update({ status: "pending", assigned_to: null, picked_up_at: null })
+      .eq("id", id!);
+    setBusy(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Order released", description: "Wapas available orders me chala gaya." });
+      navigate("/my-deliveries");
+    }
   };
 
   const verifyOtp = async () => {
@@ -74,16 +89,21 @@ const OrderDetailPage = () => {
 
         <div className="space-y-3 text-sm border-t border-border pt-4">
           <div className="flex gap-2"><Package className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" /><div><div className="text-muted-foreground text-xs">Items</div>{order.items_summary}</div></div>
-          <div className="flex gap-2"><MapPin className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" /><div><div className="text-muted-foreground text-xs">Delivery address</div>{order.address}</div></div>
+          <div className="flex gap-2"><MapPin className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" /><div className="flex-1"><div className="text-muted-foreground text-xs">Delivery address</div>{order.address}<a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.address)}`} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-xs text-primary font-medium"><Navigation className="w-3 h-3" />Open in Maps</a></div></div>
           <div className="flex gap-2"><Phone className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" /><div><div className="text-muted-foreground text-xs">Customer</div><a href={`tel:${order.customer_phone}`} className="text-primary">{order.customer_phone}</a></div></div>
           <div className="flex gap-2"><IndianRupee className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" /><div><div className="text-muted-foreground text-xs">Order total</div>₹{order.total}</div></div>
         </div>
       </div>
 
       {isMine && order.status === "assigned" && (
-        <Button className="w-full" size="lg" onClick={markPickedUp} disabled={busy}>
-          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Mark as Picked Up"}
-        </Button>
+        <div className="space-y-2">
+          <Button className="w-full" size="lg" onClick={markPickedUp} disabled={busy}>
+            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Mark as Picked Up"}
+          </Button>
+          <Button variant="outline" className="w-full text-destructive border-destructive/30 hover:bg-destructive/10" onClick={cancelAssignment} disabled={busy}>
+            <XCircle className="w-4 h-4" />Cancel & release order
+          </Button>
+        </div>
       )}
 
       {isMine && order.status === "picked_up" && (
@@ -101,6 +121,9 @@ const OrderDetailPage = () => {
           />
           <Button className="w-full" size="lg" onClick={verifyOtp} disabled={busy || otp.length !== 4}>
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle2 className="w-5 h-5" />Verify & Deliver</>}
+          </Button>
+          <Button variant="ghost" className="w-full mt-2 text-destructive" onClick={cancelAssignment} disabled={busy}>
+            <XCircle className="w-4 h-4" />Cancel & release order
           </Button>
         </div>
       )}
