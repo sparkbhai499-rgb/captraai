@@ -2,65 +2,93 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-
 @layer base {
   :root {
-    --background: 220 30% 98%;
-    --foreground: 222 47% 11%;
+    --background: 240 20% 5%;
+    --foreground: 240 10% 96%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card: 240 20% 9%;
+    --card-foreground: 240 10% 96%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover: 240 20% 9%;
+    --popover-foreground: 240 10% 96%;
 
-    --primary: 243 75% 59%;
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 252 86% 70%;
+    --primary: 265 90% 65%;
+    --primary-foreground: 240 10% 98%;
+    --primary-glow: 275 95% 72%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 222 47% 15%;
+    --secondary: 240 15% 14%;
+    --secondary-foreground: 240 10% 96%;
 
-    --muted: 220 14% 95%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 240 15% 12%;
+    --muted-foreground: 240 8% 65%;
 
-    --accent: 243 75% 96%;
-    --accent-foreground: 243 75% 35%;
+    --accent: 190 95% 55%;
+    --accent-foreground: 240 20% 5%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 243 75% 59%;
+    --border: 240 15% 18%;
+    --input: 240 15% 15%;
+    --ring: 265 90% 65%;
 
-    --radius: 0.875rem;
+    --radius: 0.9rem;
 
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --shadow-soft: 0 1px 3px 0 hsl(222 47% 11% / 0.05), 0 1px 2px -1px hsl(222 47% 11% / 0.05);
-    --shadow-card: 0 4px 20px -8px hsl(243 75% 59% / 0.15);
+    --gradient-primary: linear-gradient(135deg, hsl(265 90% 65%), hsl(190 95% 55%));
+    --gradient-hero: radial-gradient(ellipse at top left, hsl(265 90% 55% / 0.35), transparent 60%),
+                     radial-gradient(ellipse at bottom right, hsl(190 95% 45% / 0.28), transparent 60%);
+    --glass-bg: hsla(240, 20%, 12%, 0.55);
+    --glass-border: hsla(0, 0%, 100%, 0.08);
+    --shadow-glow: 0 20px 60px -20px hsl(265 90% 55% / 0.5);
+    --shadow-glass: 0 10px 40px -10px hsl(240 40% 2% / 0.6);
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222 47% 15%;
-    --sidebar-primary: 243 75% 59%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 243 75% 96%;
-    --sidebar-accent-foreground: 243 75% 35%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 243 75% 59%;
+    --sidebar-background: 240 20% 7%;
+    --sidebar-foreground: 240 10% 96%;
+    --sidebar-primary: 265 90% 65%;
+    --sidebar-primary-foreground: 240 10% 98%;
+    --sidebar-accent: 240 15% 14%;
+    --sidebar-accent-foreground: 240 10% 96%;
+    --sidebar-border: 240 15% 18%;
+    --sidebar-ring: 265 90% 65%;
   }
 }
 
 @layer base {
   * { @apply border-border; }
+  html, body, #root { @apply min-h-screen; }
   body {
-    @apply bg-background text-foreground;
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+    background-image: var(--gradient-hero);
+    background-attachment: fixed;
   }
+  h1, h2, h3, h4, .font-display {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    letter-spacing: -0.02em;
+  }
+  ::selection { background: hsl(var(--primary) / 0.35); }
 }
 
 @layer utilities {
   .gradient-primary { background: var(--gradient-primary); }
-  .shadow-card { box-shadow: var(--shadow-card); }
+  .gradient-text {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-glass);
+  }
+  .glow { box-shadow: var(--shadow-glow); }
+  .blob {
+    filter: blur(80px);
+    opacity: 0.55;
+    pointer-events: none;
+  }
 }
