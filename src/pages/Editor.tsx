@@ -109,7 +109,7 @@ const Editor = () => {
       const styleStr = `Fontname=${style.font},Fontsize=${Math.round(style.size/2)},PrimaryColour=&H${style.color.slice(5,7)}${style.color.slice(3,5)}${style.color.slice(1,3)}&,BorderStyle=3,Outline=1,BackColour=&H80000000&,Alignment=${style.position==='top'?8:style.position==='middle'?5:2}`;
       await ff.exec(["-i", "in.mp4", "-vf", `subtitles=subs.srt:force_style='${styleStr}'`, "-c:a", "copy", "out.mp4"]);
       const out = await ff.readFile("out.mp4");
-      const blob = new Blob([new Uint8Array(out as ArrayBuffer)], { type: "video/mp4" });
+      const blob = new Blob([out as unknown as BlobPart], { type: "video/mp4" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url; a.download = `${(project?.title||"video")}_captioned.mp4`; a.click();
