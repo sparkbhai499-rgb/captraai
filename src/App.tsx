@@ -6,13 +6,16 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { PageTransition } from "@/components/PageTransition";
-import Index from "./pages/Index.tsx";
-import ProfilePage from "./pages/ProfilePage.tsx";
-import ResetPasswordPage from "./pages/ResetPasswordPage.tsx";
-import AdminPage from "./pages/AdminPage.tsx";
-import MyDeliveriesPage from "./pages/MyDeliveriesPage.tsx";
-import OrderDetailPage from "./pages/OrderDetailPage.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import Landing from "./pages/Landing";
+import Auth from "./pages/Auth";
+import Dashboard from "./pages/Dashboard";
+import Projects from "./pages/Projects";
+import Editor from "./pages/Editor";
+import Pricing from "./pages/Pricing";
+import Contact from "./pages/Contact";
+import AdminPage from "./pages/AdminPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -22,12 +25,15 @@ const AnimatedRoutes = () => {
     <AnimatePresence mode="wait">
       <PageTransition key={location.pathname}>
         <Routes location={location}>
-          <Route path="/" element={<Index />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/editor/:id" element={<Editor />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/admin" element={<AdminPage />} />
-          <Route path="/my-deliveries" element={<MyDeliveriesPage />} />
-          <Route path="/order/:id" element={<OrderDetailPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </PageTransition>
