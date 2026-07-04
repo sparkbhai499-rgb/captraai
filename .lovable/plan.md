@@ -1,53 +1,64 @@
-## Goal
-Pivot W8sap from AI chat/WhatsApp clone into a **Study Course platform** where admin creates batches and uploads PDFs/notes, optional video lectures, posts announcements, and students enroll to access content.
+## RXP Caption AI — Complete Pivot Plan
 
-## Scope
-- **Full replace**: remove AI chat UI, WhatsApp chat, contacts, groups, communities, my-agents pages from navigation/routing.
-- Keep: auth (email/password), profiles, admin role system, avatars storage.
+Replacing Sellnix Partner entirely with **RXP Caption AI** — a video-caption SaaS with real AI transcription via Lovable AI Gateway (openai/gpt-4o-mini-transcribe). No extra API key needed — `LOVABLE_API_KEY` already exists.
 
-## New Database Schema (migration)
-- `batches` — name, description, cover_image, created_by, is_published
-- `batch_contents` — batch_id, type (`pdf` | `video` | `note`), title, description, file_url (PDF in storage), video_url (YouTube/link), order_index
-- `batch_enrollments` — batch_id, user_id, joined_at (unique pair)
-- `batch_announcements` — batch_id, title, message, created_at
+### 1. Database migration (drop old, create new)
+Drop: `orders, user_roles(delivery), batches, batch_*, whatsapp_*, my_agents*, communities, groups, contacts, messages, agent_settings, payment_requests, payment_settings, subscription_plans, user_subscriptions`.
+Keep + repurpose: `profiles`, `user_roles(admin)`, `has_role()`.
+New tables:
+- `projects` — user_id, title, video_url, video_path, duration_sec, language, status(uploaded/transcribing/ready/failed), thumbnail_url
+- `captions` — project_id, index, start_ms, end_ms, text, speaker (edited inline)
+- `yt_metadata` — project_id, title, description, hashtags[], keywords[], tone
+- `plans` — name, price_inr, minutes_included, features[]
+- `subscriptions` — user_id, plan_id, status, expires_at
+- `contact_messages` — name, email, subject, message
 
-Storage bucket: `batch-pdfs` (private; signed URLs for enrolled students + admin).
+Storage buckets: `videos` (private, signed URLs), `thumbnails` (public).
+RLS: users see only own projects/captions/yt_metadata/subscriptions; admin sees all; contact_messages insert-anon, admin read.
 
-RLS:
-- Batches: everyone authenticated can view published; only admin insert/update/delete.
-- batch_contents/announcements: enrolled students + admin read; admin write.
-- enrollments: user can self-enroll & view own; admin can view all.
+### 2. Edge functions
+- `transcribe-video` — accepts `{project_id}`, downloads video from storage, extracts audio (send full file to `/v1/audio/transcriptions` with `openai/gpt-4o-mini-transcribe`, streaming), splits into ~5s caption chunks, inserts into `captions` table, marks project ready. Language auto-detect (Hindi/English/Hinglish/etc).
+- `generate-yt-metadata` — takes project transcript, calls `google/gemini-3-flash-preview` with structured output, returns title/description/hashtags/keywords/tags.
 
-## New Pages
-- `/` — **Home**: list all published batches as cards (cover, name, description, Enroll/Open button).
-- `/batch/:id` — Batch detail: tabs for **Contents** (PDF list w/ download + video lectures embed) and **Announcements**. Enroll button if not enrolled.
-- `/my-batches` — Student's enrolled batches.
-- `/admin` — Admin dashboard rewritten:
-  - Create/edit/delete batches
-  - Upload PDFs to a batch (file picker → Supabase storage)
-  - Add video lecture (paste YouTube/MP4 URL + title)
-  - Post announcement
-  - Manage users (keep ban/unban)
-- `/auth` — login/signup (existing).
-- `/profile`, `/settings` — keep.
+### 3. Frontend — full replace
+**Design tokens** (`index.css`): dark theme — bg `240 15% 6%`, cards glass `240 20% 12% / 0.6` with backdrop-blur, primary electric violet `265 90% 65%`, accent cyan `190 95% 55%`, gradient `linear-gradient(135deg, violet, cyan)`, glow shadows. Fonts: **Space Grotesk** (display) + **Inter** (body) via @fontsource. Framer Motion transitions everywhere.
 
-## Pages to Remove
-Index AI chat, WhatsApp agent, my-agents, agent landing, create-group, create-community, embed widget section, edge functions w8sap-ai/agent-chat/whatsapp-webhook (leave files but unroute, or delete).
+**Pages:**
+- `/` **Landing** — Hero (animated gradient blob, tagline "Create Professional AI Captions in Seconds"), inline Upload dropzone (redirects to /editor after upload), Live Demo player, Features grid (6 cards), Pricing (3 tiers), Testimonials carousel, FAQ accordion, Contact form, Footer.
+- `/auth` — Login/Signup tabs, email/password + Google OAuth.
+- `/dashboard` — Recent projects grid, quick upload, usage stats (minutes left).
+- `/projects` — All projects list (search, filter by language/status).
+- `/editor/:id` — Split view: video player (left) with live caption overlay; caption list (right) — editable rows, style panel (font/color/size/position/animation), tabs: Captions | Styling | YouTube Kit | Export.
+  - Export: SRT / VTT / TXT download (client-side generated).
+  - Burn-in: ffmpeg.wasm client-side option (with warning for large files).
+- `/pricing` — Standalone pricing page.
+- `/contact` — Contact form + FAQ.
+- `/admin` — Users list, project count, contact messages (admin-only).
 
-## UI Direction
-Clean education theme — replace WhatsApp green with indigo/blue scholar palette. Card-grid layout for batches. Top header with logo "StudyHub" + nav (Browse, My Batches, Admin if admin) + profile avatar dropdown.
+**Components:**
+- `GlassCard`, `GradientButton`, `UploadDropzone`, `VideoPlayer` (with canvas caption overlay), `CaptionEditor`, `StylePanel`, `ExportMenu`, `Navbar` (sticky glass), `Footer`, `PricingCard`, `TestimonialCarousel`, `FAQAccordion`, `ContactForm`, `AnimatedBlob`.
 
-## Technical Notes
-- PDFs stored in private `batch-pdfs` bucket; download via `supabase.storage.from('batch-pdfs').createSignedUrl()` only if enrolled.
-- Videos: YouTube embed via iframe if URL is youtube, else `<video>` tag.
-- Use react-pdf? No — just open signed URL in new tab; keep light.
-- Realtime announcement updates optional (skip v1).
+### 4. Tech additions
+- `@fontsource/space-grotesk`, `@fontsource/inter`
+- `@ffmpeg/ffmpeg`, `@ffmpeg/util` (lazy-loaded only on burn action)
+- Keep existing framer-motion, sonner, shadcn stack.
 
-## Build Order
-1. Migration (tables + storage bucket + RLS + grants).
-2. Remove old routes from `App.tsx`, delete old chat components from active tree.
-3. Build `BatchesHome`, `BatchDetail`, `MyBatches`, new `AdminPage`.
-4. Update theme tokens in `index.css` for study look.
-5. Update memory file to reflect new app identity.
+### 5. SEO / head
+`index.html`: title "RXP Caption AI — Create Professional AI Captions in Seconds", meta description, og tags. Single H1 on landing.
+
+### 6. Memory update
+Rewrite `mem://index.md` core to reflect RXP Caption AI identity.
+
+### Build order
+1. Migration (drop + create + buckets + RLS + grants)
+2. Edge functions (transcribe-video, generate-yt-metadata)
+3. Design tokens + fonts + Tailwind config
+4. Layout shell (Navbar, Footer, PageTransition kept)
+5. Landing page + Auth
+6. Dashboard + Projects list
+7. Editor (player + caption editor + style panel + export + ffmpeg burn)
+8. Admin + Contact + Pricing pages
+9. Delete stale old files
+10. Memory update
 
 Confirm to proceed?
