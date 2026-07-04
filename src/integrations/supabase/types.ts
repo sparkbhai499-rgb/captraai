@@ -14,625 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
-      agent_settings: {
+      captions: {
         Row: {
-          agent_enabled: boolean
-          id: string
-          model: string
-          system_prompt: string
-          twilio_whatsapp_from: string | null
-          updated_at: string
-        }
-        Insert: {
-          agent_enabled?: boolean
-          id?: string
-          model?: string
-          system_prompt?: string
-          twilio_whatsapp_from?: string | null
-          updated_at?: string
-        }
-        Update: {
-          agent_enabled?: boolean
-          id?: string
-          model?: string
-          system_prompt?: string
-          twilio_whatsapp_from?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      batch_announcements: {
-        Row: {
-          batch_id: string
           created_at: string
+          end_ms: number
           id: string
-          message: string
-          title: string
+          idx: number
+          project_id: string
+          speaker: string | null
+          start_ms: number
+          text: string
         }
         Insert: {
-          batch_id: string
           created_at?: string
+          end_ms: number
           id?: string
-          message: string
-          title: string
+          idx: number
+          project_id: string
+          speaker?: string | null
+          start_ms: number
+          text?: string
         }
         Update: {
-          batch_id?: string
           created_at?: string
+          end_ms?: number
+          id?: string
+          idx?: number
+          project_id?: string
+          speaker?: string | null
+          start_ms?: number
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "captions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contact_messages: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+          subject: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+          subject?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
           id?: string
           message?: string
-          title?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "batch_announcements_batch_id_fkey"
-            columns: ["batch_id"]
-            isOneToOne: false
-            referencedRelation: "batches"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      batch_contents: {
-        Row: {
-          batch_id: string
-          created_at: string
-          description: string | null
-          file_path: string | null
-          id: string
-          order_index: number
-          title: string
-          type: string
-          video_url: string | null
-        }
-        Insert: {
-          batch_id: string
-          created_at?: string
-          description?: string | null
-          file_path?: string | null
-          id?: string
-          order_index?: number
-          title: string
-          type: string
-          video_url?: string | null
-        }
-        Update: {
-          batch_id?: string
-          created_at?: string
-          description?: string | null
-          file_path?: string | null
-          id?: string
-          order_index?: number
-          title?: string
-          type?: string
-          video_url?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "batch_contents_batch_id_fkey"
-            columns: ["batch_id"]
-            isOneToOne: false
-            referencedRelation: "batches"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      batch_enrollments: {
-        Row: {
-          batch_id: string
-          id: string
-          joined_at: string
-          user_id: string
-        }
-        Insert: {
-          batch_id: string
-          id?: string
-          joined_at?: string
-          user_id: string
-        }
-        Update: {
-          batch_id?: string
-          id?: string
-          joined_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "batch_enrollments_batch_id_fkey"
-            columns: ["batch_id"]
-            isOneToOne: false
-            referencedRelation: "batches"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      batches: {
-        Row: {
-          cover_image: string | null
-          created_at: string
-          created_by: string
-          description: string | null
-          id: string
-          is_published: boolean
-          name: string
-          price: number
-          updated_at: string
-        }
-        Insert: {
-          cover_image?: string | null
-          created_at?: string
-          created_by: string
-          description?: string | null
-          id?: string
-          is_published?: boolean
-          name: string
-          price?: number
-          updated_at?: string
-        }
-        Update: {
-          cover_image?: string | null
-          created_at?: string
-          created_by?: string
-          description?: string | null
-          id?: string
-          is_published?: boolean
           name?: string
-          price?: number
-          updated_at?: string
+          subject?: string | null
         }
         Relationships: []
       }
-      communities: {
+      plans: {
         Row: {
-          avatar_url: string | null
           created_at: string
-          created_by: string
-          description: string | null
+          features: string[] | null
           id: string
-          is_public: boolean
+          is_popular: boolean | null
+          minutes_included: number
           name: string
-          updated_at: string
+          price_inr: number
+          slug: string
+          sort_order: number | null
         }
         Insert: {
-          avatar_url?: string | null
           created_at?: string
-          created_by: string
-          description?: string | null
+          features?: string[] | null
           id?: string
-          is_public?: boolean
+          is_popular?: boolean | null
+          minutes_included?: number
           name: string
-          updated_at?: string
+          price_inr?: number
+          slug: string
+          sort_order?: number | null
         }
         Update: {
-          avatar_url?: string | null
           created_at?: string
-          created_by?: string
-          description?: string | null
+          features?: string[] | null
           id?: string
-          is_public?: boolean
+          is_popular?: boolean | null
+          minutes_included?: number
           name?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      community_members: {
-        Row: {
-          community_id: string
-          id: string
-          joined_at: string
-          role: string
-          user_id: string
-        }
-        Insert: {
-          community_id: string
-          id?: string
-          joined_at?: string
-          role?: string
-          user_id: string
-        }
-        Update: {
-          community_id?: string
-          id?: string
-          joined_at?: string
-          role?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "community_members_community_id_fkey"
-            columns: ["community_id"]
-            isOneToOne: false
-            referencedRelation: "communities"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      contacts: {
-        Row: {
-          contact_user_id: string
-          created_at: string
-          id: string
-          nickname: string | null
-          user_id: string
-        }
-        Insert: {
-          contact_user_id: string
-          created_at?: string
-          id?: string
-          nickname?: string | null
-          user_id: string
-        }
-        Update: {
-          contact_user_id?: string
-          created_at?: string
-          id?: string
-          nickname?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      group_members: {
-        Row: {
-          group_id: string
-          id: string
-          joined_at: string
-          role: string
-          user_id: string
-        }
-        Insert: {
-          group_id: string
-          id?: string
-          joined_at?: string
-          role?: string
-          user_id: string
-        }
-        Update: {
-          group_id?: string
-          id?: string
-          joined_at?: string
-          role?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "group_members_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "groups"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      groups: {
-        Row: {
-          avatar_url: string | null
-          created_at: string
-          created_by: string
-          description: string | null
-          id: string
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          created_by: string
-          description?: string | null
-          id?: string
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string
-          created_by?: string
-          description?: string | null
-          id?: string
-          name?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      messages: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          read: boolean
-          receiver_id: string
-          reply_to: string | null
-          sender_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          read?: boolean
-          receiver_id: string
-          reply_to?: string | null
-          sender_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          read?: boolean
-          receiver_id?: string
-          reply_to?: string | null
-          sender_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "messages_reply_to_fkey"
-            columns: ["reply_to"]
-            isOneToOne: false
-            referencedRelation: "messages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      my_agent_conversations: {
-        Row: {
-          agent_id: string
-          created_at: string
-          id: string
-          last_message: string | null
-          last_message_at: string | null
-          origin: string | null
-          visitor_id: string | null
-          visitor_name: string | null
-        }
-        Insert: {
-          agent_id: string
-          created_at?: string
-          id?: string
-          last_message?: string | null
-          last_message_at?: string | null
-          origin?: string | null
-          visitor_id?: string | null
-          visitor_name?: string | null
-        }
-        Update: {
-          agent_id?: string
-          created_at?: string
-          id?: string
-          last_message?: string | null
-          last_message_at?: string | null
-          origin?: string | null
-          visitor_id?: string | null
-          visitor_name?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "my_agent_conversations_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "my_agents"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      my_agent_messages: {
-        Row: {
-          content: string
-          conversation_id: string
-          created_at: string
-          id: string
-          role: string
-        }
-        Insert: {
-          content: string
-          conversation_id: string
-          created_at?: string
-          id?: string
-          role: string
-        }
-        Update: {
-          content?: string
-          conversation_id?: string
-          created_at?: string
-          id?: string
-          role?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "my_agent_messages_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "my_agent_conversations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      my_agents: {
-        Row: {
-          created_at: string
-          greeting: string | null
-          id: string
-          is_public: boolean
-          knowledge: string | null
-          model: string
-          name: string
-          system_prompt: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          greeting?: string | null
-          id?: string
-          is_public?: boolean
-          knowledge?: string | null
-          model?: string
-          name: string
-          system_prompt?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          greeting?: string | null
-          id?: string
-          is_public?: boolean
-          knowledge?: string | null
-          model?: string
-          name?: string
-          system_prompt?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      orders: {
-        Row: {
-          address: string
-          assigned_to: string | null
-          created_at: string
-          customer_name: string
-          customer_phone: string
-          customer_user_id: string | null
-          delivered_at: string | null
-          delivery_otp: string
-          id: string
-          items_summary: string
-          notes: string | null
-          partner_lat: number | null
-          partner_lng: number | null
-          partner_location_at: string | null
-          payout: number
-          picked_up_at: string | null
-          status: string
-          total: number
-          updated_at: string
-        }
-        Insert: {
-          address: string
-          assigned_to?: string | null
-          created_at?: string
-          customer_name: string
-          customer_phone: string
-          customer_user_id?: string | null
-          delivered_at?: string | null
-          delivery_otp?: string
-          id?: string
-          items_summary: string
-          notes?: string | null
-          partner_lat?: number | null
-          partner_lng?: number | null
-          partner_location_at?: string | null
-          payout?: number
-          picked_up_at?: string | null
-          status?: string
-          total?: number
-          updated_at?: string
-        }
-        Update: {
-          address?: string
-          assigned_to?: string | null
-          created_at?: string
-          customer_name?: string
-          customer_phone?: string
-          customer_user_id?: string | null
-          delivered_at?: string | null
-          delivery_otp?: string
-          id?: string
-          items_summary?: string
-          notes?: string | null
-          partner_lat?: number | null
-          partner_lng?: number | null
-          partner_location_at?: string | null
-          payout?: number
-          picked_up_at?: string | null
-          status?: string
-          total?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      payment_requests: {
-        Row: {
-          admin_note: string | null
-          amount: number
-          batch_id: string | null
-          created_at: string
-          id: string
-          plan_id: string | null
-          reviewed_at: string | null
-          reviewed_by: string | null
-          screenshot_path: string
-          status: string
-          type: string
-          user_id: string
-          utr: string
-        }
-        Insert: {
-          admin_note?: string | null
-          amount: number
-          batch_id?: string | null
-          created_at?: string
-          id?: string
-          plan_id?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          screenshot_path: string
-          status?: string
-          type: string
-          user_id: string
-          utr: string
-        }
-        Update: {
-          admin_note?: string | null
-          amount?: number
-          batch_id?: string | null
-          created_at?: string
-          id?: string
-          plan_id?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          screenshot_path?: string
-          status?: string
-          type?: string
-          user_id?: string
-          utr?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "payment_requests_batch_id_fkey"
-            columns: ["batch_id"]
-            isOneToOne: false
-            referencedRelation: "batches"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payment_requests_plan_id_fkey"
-            columns: ["plan_id"]
-            isOneToOne: false
-            referencedRelation: "subscription_plans"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      payment_settings: {
-        Row: {
-          id: string
-          instructions: string | null
-          qr_image_url: string | null
-          updated_at: string
-          upi_id: string | null
-        }
-        Insert: {
-          id?: string
-          instructions?: string | null
-          qr_image_url?: string | null
-          updated_at?: string
-          upi_id?: string | null
-        }
-        Update: {
-          id?: string
-          instructions?: string | null
-          qr_image_url?: string | null
-          updated_at?: string
-          upi_id?: string | null
+          price_inr?: number
+          slug?: string
+          sort_order?: number | null
         }
         Relationships: []
       }
@@ -672,35 +154,88 @@ export type Database = {
         }
         Relationships: []
       }
-      subscription_plans: {
+      projects: {
         Row: {
           created_at: string
-          description: string | null
-          duration_days: number
+          duration_sec: number | null
+          error_message: string | null
           id: string
-          is_active: boolean
-          name: string
-          price: number
+          language: string | null
+          status: string
+          thumbnail_url: string | null
+          title: string
+          transcript_text: string | null
+          updated_at: string
+          user_id: string
+          video_path: string | null
+          video_url: string | null
         }
         Insert: {
           created_at?: string
-          description?: string | null
-          duration_days: number
+          duration_sec?: number | null
+          error_message?: string | null
           id?: string
-          is_active?: boolean
-          name: string
-          price: number
+          language?: string | null
+          status?: string
+          thumbnail_url?: string | null
+          title?: string
+          transcript_text?: string | null
+          updated_at?: string
+          user_id: string
+          video_path?: string | null
+          video_url?: string | null
         }
         Update: {
           created_at?: string
-          description?: string | null
-          duration_days?: number
+          duration_sec?: number | null
+          error_message?: string | null
           id?: string
-          is_active?: boolean
-          name?: string
-          price?: number
+          language?: string | null
+          status?: string
+          thumbnail_url?: string | null
+          title?: string
+          transcript_text?: string | null
+          updated_at?: string
+          user_id?: string
+          video_path?: string | null
+          video_url?: string | null
         }
         Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          plan_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          plan_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          plan_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -723,108 +258,49 @@ export type Database = {
         }
         Relationships: []
       }
-      user_subscriptions: {
+      yt_metadata: {
         Row: {
           created_at: string
-          expires_at: string
+          description: string | null
+          hashtags: string[] | null
           id: string
-          plan_id: string
-          started_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          expires_at: string
-          id?: string
-          plan_id: string
-          started_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          expires_at?: string
-          id?: string
-          plan_id?: string
-          started_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_subscriptions_plan_id_fkey"
-            columns: ["plan_id"]
-            isOneToOne: false
-            referencedRelation: "subscription_plans"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      whatsapp_conversations: {
-        Row: {
-          agent_enabled: boolean
-          created_at: string
-          display_name: string | null
-          id: string
-          last_message: string | null
-          last_message_at: string | null
-          phone_number: string
-          unread_count: number
+          keywords: string[] | null
+          project_id: string
+          tags: string[] | null
+          title: string | null
+          tone: string | null
           updated_at: string
         }
         Insert: {
-          agent_enabled?: boolean
           created_at?: string
-          display_name?: string | null
+          description?: string | null
+          hashtags?: string[] | null
           id?: string
-          last_message?: string | null
-          last_message_at?: string | null
-          phone_number: string
-          unread_count?: number
+          keywords?: string[] | null
+          project_id: string
+          tags?: string[] | null
+          title?: string | null
+          tone?: string | null
           updated_at?: string
         }
         Update: {
-          agent_enabled?: boolean
           created_at?: string
-          display_name?: string | null
+          description?: string | null
+          hashtags?: string[] | null
           id?: string
-          last_message?: string | null
-          last_message_at?: string | null
-          phone_number?: string
-          unread_count?: number
+          keywords?: string[] | null
+          project_id?: string
+          tags?: string[] | null
+          title?: string | null
+          tone?: string | null
           updated_at?: string
-        }
-        Relationships: []
-      }
-      whatsapp_messages: {
-        Row: {
-          content: string
-          conversation_id: string
-          created_at: string
-          id: string
-          role: string
-          twilio_sid: string | null
-        }
-        Insert: {
-          content: string
-          conversation_id: string
-          created_at?: string
-          id?: string
-          role: string
-          twilio_sid?: string | null
-        }
-        Update: {
-          content?: string
-          conversation_id?: string
-          created_at?: string
-          id?: string
-          role?: string
-          twilio_sid?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "whatsapp_messages_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "whatsapp_conversations"
+            foreignKeyName: "yt_metadata_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -834,21 +310,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
-      }
-      is_enrolled: {
-        Args: { _batch_id: string; _user_id: string }
-        Returns: boolean
-      }
-      verify_delivery_otp: {
-        Args: { _order_id: string; _otp: string }
-        Returns: Json
       }
     }
     Enums: {
