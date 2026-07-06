@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Download, Sparkles, Type, Palette, Youtube, Play, Flame } from "lucide-react";
+import { Loader2, Download, Sparkles, Type, Palette, Youtube, Play, Flame, Plus, Trash2, Scissors, ArrowDown, ChevronsLeftRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { toSRT, toVTT, toTXT, download, Caption } from "@/lib/captionUtils";
 import { LANGS } from "@/components/UploadDropzone";
