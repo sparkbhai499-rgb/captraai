@@ -80,11 +80,12 @@ const Editor = () => {
     await supabase.from("captions").update({ text }).eq("project_id", id!).eq("idx", idx);
   };
 
-  const retranscribe = async () => {
+  const retranscribe = async (lang?: string) => {
     if (!id) return;
-    await supabase.from("projects").update({ status: "transcribing" }).eq("id", id);
-    supabase.functions.invoke("transcribe-video", { body: { project_id: id } }).catch(() => {});
-    toast.success("Re-transcribing…");
+    const language = lang || project?.language || "auto";
+    await supabase.from("projects").update({ status: "transcribing", language }).eq("id", id);
+    supabase.functions.invoke("transcribe-video", { body: { project_id: id, language } }).catch(() => {});
+    toast.success(`Re-transcribing in ${LANGS.find(l => l.value === language)?.label || language}…`);
   };
 
   const genYT = async () => {
