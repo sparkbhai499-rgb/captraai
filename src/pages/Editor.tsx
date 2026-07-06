@@ -14,9 +14,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Download, Sparkles, Type, Palette, Youtube, Play, Flame } from "lucide-react";
 import { toast } from "sonner";
 import { toSRT, toVTT, toTXT, download, Caption } from "@/lib/captionUtils";
+import { LANGS } from "@/components/UploadDropzone";
 
 const fontOptions = ["Inter", "Space Grotesk", "Arial", "Georgia", "Impact", "Courier New"];
 const positions = ["bottom", "top", "middle"] as const;
+
+type StyleState = { font: string; size: number; color: string; bg: string; bgOpacity: number; position: typeof positions[number] };
+
+const STYLE_PRESETS: { name: string; style: StyleState }[] = [
+  { name: "Classic", style: { font: "Inter", size: 28, color: "#ffffff", bg: "#000000", bgOpacity: 0.6, position: "bottom" } },
+  { name: "YouTube Bold", style: { font: "Impact", size: 40, color: "#ffff00", bg: "#000000", bgOpacity: 0.7, position: "bottom" } },
+  { name: "Reels/Shorts", style: { font: "Space Grotesk", size: 44, color: "#ffffff", bg: "#7c3aed", bgOpacity: 0.85, position: "middle" } },
+  { name: "Minimal", style: { font: "Inter", size: 24, color: "#ffffff", bg: "#000000", bgOpacity: 0, position: "bottom" } },
+  { name: "Neon", style: { font: "Space Grotesk", size: 36, color: "#00ffe0", bg: "#000000", bgOpacity: 0.4, position: "bottom" } },
+  { name: "Podcast Top", style: { font: "Georgia", size: 26, color: "#ffffff", bg: "#111827", bgOpacity: 0.8, position: "top" } },
+];
 
 const Editor = () => {
   const { id } = useParams();
