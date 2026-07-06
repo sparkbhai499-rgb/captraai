@@ -146,8 +146,14 @@ const Editor = () => {
             <h1 className="font-display text-2xl font-bold truncate max-w-xl">{project.title}</h1>
             <p className="text-xs text-muted-foreground">Status: <span className="capitalize">{project.status}</span></p>
           </div>
-          <div className="flex gap-2">
-            {project.status !== "transcribing" && <Button variant="outline" size="sm" onClick={retranscribe}><Sparkles className="w-4 h-4 mr-1"/>Re-transcribe</Button>}
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={project.language || "auto"} onValueChange={(v) => retranscribe(v)} disabled={project.status === "transcribing"}>
+              <SelectTrigger className="bg-secondary/50 h-9 w-[190px]"><SelectValue placeholder="Language"/></SelectTrigger>
+              <SelectContent>
+                {LANGS.map(l => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            {project.status !== "transcribing" && <Button variant="outline" size="sm" onClick={() => retranscribe()}><Sparkles className="w-4 h-4 mr-1"/>Re-transcribe</Button>}
           </div>
         </div>
 
