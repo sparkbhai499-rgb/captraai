@@ -216,7 +216,18 @@ const Editor = () => {
             <TabsContent value="captions">
               <GlassCard className="max-h-[70vh] overflow-y-auto space-y-2">
                 {captions.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-10">No captions yet.</p>
+                  <div className="text-center py-10 space-y-4">
+                    <p className="text-sm text-muted-foreground">No captions yet. Pick a language and generate.</p>
+                    <div className="flex justify-center">
+                      <Select value={project.language || "auto"} onValueChange={(v) => setProject((p: any) => ({ ...p, language: v }))}>
+                        <SelectTrigger className="bg-secondary/50 h-9 w-[220px]"><SelectValue/></SelectTrigger>
+                        <SelectContent>{LANGS.map(l => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <Button onClick={() => retranscribe()} disabled={project.status === "transcribing"} className="gradient-primary text-white border-0">
+                      {project.status === "transcribing" ? <><Loader2 className="w-4 h-4 mr-2 animate-spin"/>Generating…</> : <><Sparkles className="w-4 h-4 mr-2"/>Generate Captions</>}
+                    </Button>
+                  </div>
                 ) : captions.map(c => {
                   const active = activeCap?.idx === c.idx;
                   return (
