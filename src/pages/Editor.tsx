@@ -80,6 +80,62 @@ const Editor = () => {
     await supabase.from("captions").update({ text }).eq("project_id", id!).eq("idx", idx);
   };
 
+  const updateCapTime = async (idx: number, field: "start_ms" | "end_ms", ms: number) => {
+    setCaptions(cs => cs.map(c => c.idx === idx ? { ...c, [field]: ms } : c));
+    await supabase.from("captions").update({ [field]: ms }).eq("project_id", id!).eq("idx", idx);
+  };
+
+  const reindex = async (list: Caption[]) => {
+    // Rewrite indices to be sequential; delete-all + insert to keep it simple & safe.
+    const renumbered = list.map((c, i) => ({ ...c, idx: i }));
+    setCaptions(renumbered);
+    await supabase.from("captions").delete().eq("project_id", id!);
+    if (renumbered.length) {
+      await supabase.from("captions").insert(renumbered.map(c => ({ project_id: id!, idx: c.idx, start_ms: c.start_ms, end_ms: c.end_ms, text: c.text })));
+    }
+  };
+
+  const addCaption = async () => {
+    const now = Math.round((videoRef.current?.currentTime || 0) * 1000);
+    const newCap: Caption = { idx: 0, start_ms: now, end_ms: now + 2000, text: "New caption" };
+    const merged = [...captions, newCap].sort((a, b) => a.start_ms - b.start_ms);
+    await reindex(merged);
+    toast.success("Caption added at playhead");
+  };
+
+  const deleteCap = async (idx: number) => {
+    const filtered = captions.filter(c => c.idx !== idx);
+    await reindex(filtered);
+  };
+
+  const splitCap = async (idx: number) => {
+    const c = captions.find(x => x.idx === idx); if (!c) return;
+    const mid = Math.round((c.start_ms + c.end_ms) / 2);
+    const words = c.text.trim().split(/\s+/);
+    const half = Math.ceil(words.length / 2);
+    const a: Caption = { ...c, end_ms: mid, text: words.slice(0, half).join(" ") };
+    const b: Caption = { ...c, start_ms: mid, text: words.slice(half).join(" ") || "…" };
+    const rest = captions.filter(x => x.idx !== idx);
+    const merged = [...rest, a, b].sort((x, y) => x.start_ms - y.start_ms);
+    await reindex(merged);
+  };
+
+  const mergeWithNext = async (idx: number) => {
+    const sorted = [...captions].sort((a, b) => a.start_ms - b.start_ms);
+    const i = sorted.findIndex(c => c.idx === idx);
+    if (i < 0 || i >= sorted.length - 1) return;
+    const cur = sorted[i], nxt = sorted[i + 1];
+    const merged: Caption = { ...cur, end_ms: nxt.end_ms, text: `${cur.text} ${nxt.text}`.trim() };
+    const list = [...sorted.slice(0, i), merged, ...sorted.slice(i + 2)];
+    await reindex(list);
+  };
+
+  const shiftAll = async (deltaMs: number) => {
+    const shifted = captions.map(c => ({ ...c, start_ms: Math.max(0, c.start_ms + deltaMs), end_ms: Math.max(0, c.end_ms + deltaMs) }));
+    await reindex(shifted);
+    toast.success(`Shifted all captions by ${deltaMs > 0 ? "+" : ""}${deltaMs}ms`);
+  };
+
   const retranscribe = async (lang?: string) => {
     if (!id) return;
     const language = lang || project?.language || "auto";
