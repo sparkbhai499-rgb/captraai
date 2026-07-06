@@ -82,7 +82,8 @@ const Editor = () => {
 
   const updateCapTime = async (idx: number, field: "start_ms" | "end_ms", ms: number) => {
     setCaptions(cs => cs.map(c => c.idx === idx ? { ...c, [field]: ms } : c));
-    await supabase.from("captions").update({ [field]: ms }).eq("project_id", id!).eq("idx", idx);
+    const patch: { start_ms?: number; end_ms?: number } = { [field]: ms };
+    await supabase.from("captions").update(patch).eq("project_id", id!).eq("idx", idx);
   };
 
   const reindex = async (list: Caption[]) => {
