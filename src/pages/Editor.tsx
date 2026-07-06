@@ -14,9 +14,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Download, Sparkles, Type, Palette, Youtube, Play, Flame } from "lucide-react";
 import { toast } from "sonner";
 import { toSRT, toVTT, toTXT, download, Caption } from "@/lib/captionUtils";
+import { LANGS } from "@/components/UploadDropzone";
 
 const fontOptions = ["Inter", "Space Grotesk", "Arial", "Georgia", "Impact", "Courier New"];
 const positions = ["bottom", "top", "middle"] as const;
+
+type StyleState = { font: string; size: number; color: string; bg: string; bgOpacity: number; position: typeof positions[number] };
+
+const STYLE_PRESETS: { name: string; style: StyleState }[] = [
+  { name: "Classic", style: { font: "Inter", size: 28, color: "#ffffff", bg: "#000000", bgOpacity: 0.6, position: "bottom" } },
+  { name: "YouTube Bold", style: { font: "Impact", size: 40, color: "#ffff00", bg: "#000000", bgOpacity: 0.7, position: "bottom" } },
+  { name: "Reels/Shorts", style: { font: "Space Grotesk", size: 44, color: "#ffffff", bg: "#7c3aed", bgOpacity: 0.85, position: "middle" } },
+  { name: "Minimal", style: { font: "Inter", size: 24, color: "#ffffff", bg: "#000000", bgOpacity: 0, position: "bottom" } },
+  { name: "Neon", style: { font: "Space Grotesk", size: 36, color: "#00ffe0", bg: "#000000", bgOpacity: 0.4, position: "bottom" } },
+  { name: "Podcast Top", style: { font: "Georgia", size: 26, color: "#ffffff", bg: "#111827", bgOpacity: 0.8, position: "top" } },
+];
 
 const Editor = () => {
   const { id } = useParams();
@@ -68,11 +80,12 @@ const Editor = () => {
     await supabase.from("captions").update({ text }).eq("project_id", id!).eq("idx", idx);
   };
 
-  const retranscribe = async () => {
+  const retranscribe = async (lang?: string) => {
     if (!id) return;
-    await supabase.from("projects").update({ status: "transcribing" }).eq("id", id);
-    supabase.functions.invoke("transcribe-video", { body: { project_id: id } }).catch(() => {});
-    toast.success("Re-transcribing…");
+    const language = lang || project?.language || "auto";
+    await supabase.from("projects").update({ status: "transcribing", language }).eq("id", id);
+    supabase.functions.invoke("transcribe-video", { body: { project_id: id, language } }).catch(() => {});
+    toast.success(`Re-transcribing in ${LANGS.find(l => l.value === language)?.label || language}…`);
   };
 
   const genYT = async () => {
@@ -133,8 +146,14 @@ const Editor = () => {
             <h1 className="font-display text-2xl font-bold truncate max-w-xl">{project.title}</h1>
             <p className="text-xs text-muted-foreground">Status: <span className="capitalize">{project.status}</span></p>
           </div>
-          <div className="flex gap-2">
-            {project.status !== "transcribing" && <Button variant="outline" size="sm" onClick={retranscribe}><Sparkles className="w-4 h-4 mr-1"/>Re-transcribe</Button>}
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={project.language || "auto"} onValueChange={(v) => retranscribe(v)} disabled={project.status === "transcribing"}>
+              <SelectTrigger className="bg-secondary/50 h-9 w-[190px]"><SelectValue placeholder="Language"/></SelectTrigger>
+              <SelectContent>
+                {LANGS.map(l => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            {project.status !== "transcribing" && <Button variant="outline" size="sm" onClick={() => retranscribe()}><Sparkles className="w-4 h-4 mr-1"/>Re-transcribe</Button>}
           </div>
         </div>
 
@@ -207,6 +226,16 @@ const Editor = () => {
 
             <TabsContent value="style">
               <GlassCard className="space-y-4">
+                <div>
+                  <Label>Presets</Label>
+                  <div className="grid grid-cols-3 gap-2 mt-1.5">
+                    {STYLE_PRESETS.map(p => (
+                      <Button key={p.name} type="button" size="sm" variant="outline" onClick={() => setStyle(p.style)} className="text-xs">
+                        {p.name}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
                 <div><Label>Font</Label>
                   <Select value={style.font} onValueChange={(v) => setStyle({...style, font: v})}>
                     <SelectTrigger className="bg-secondary/50 mt-1.5"><SelectValue/></SelectTrigger>

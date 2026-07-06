@@ -34,27 +34,35 @@ serve(async (req) => {
   );
 
   try {
-    const { project_id } = await req.json();
+    const { project_id, language: reqLang } = await req.json();
     if (!project_id) return new Response(JSON.stringify({ error: "project_id required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const { data: proj, error: pErr } = await supabase.from("projects").select("*").eq("id", project_id).maybeSingle();
     if (pErr || !proj) throw new Error("Project not found");
 
-    await supabase.from("projects").update({ status: "transcribing", error_message: null }).eq("id", project_id);
+    const language = reqLang || proj.language || "auto";
+    await supabase.from("projects").update({ status: "transcribing", error_message: null, language }).eq("id", project_id);
     await supabase.from("captions").delete().eq("project_id", project_id);
 
     // Download the video file
     const { data: fileData, error: dlErr } = await supabase.storage.from("videos").download(proj.video_path);
     if (dlErr || !fileData) throw new Error("Failed to download video");
 
-    // Detect duration via HTMLMediaElement isn't available; approximate by file size later, use fixed default 60s if unknown.
-    // We'll try to infer duration by asking the transcription model with segment timestamps if supported;
-    // for now, we send the whole file and split evenly across returned text.
-
     const form = new FormData();
     form.append("model", "openai/gpt-4o-mini-transcribe");
     const ext = proj.video_path.split(".").pop() || "mp4";
     form.append("file", new File([fileData], `audio.${ext}`, { type: fileData.type || "video/mp4" }));
+
+    // Language hint: Whisper accepts ISO code; Hinglish/multi -> let it auto-detect with prompt guidance.
+    if (language === "hi") form.append("language", "hi");
+    else if (language === "en") form.append("language", "en");
+    if (language === "hinglish") {
+      form.append("prompt", "Transcribe as Hinglish: mix of Hindi and English words, written in Roman/Latin script when spoken casually. Preserve code-switching.");
+    } else if (language === "multi") {
+      form.append("prompt", "Transcribe multilingual speech accurately in the original language(s) spoken.");
+    } else if (language === "hi") {
+      form.append("prompt", "हिंदी में लिप्यंतरण करें, देवनागरी लिपि का उपयोग करें।");
+    }
 
     const LOVABLE_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_KEY) throw new Error("LOVABLE_API_KEY missing");
