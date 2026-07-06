@@ -83,9 +83,18 @@ const Editor = () => {
   const retranscribe = async (lang?: string) => {
     if (!id) return;
     const language = lang || project?.language || "auto";
-    await supabase.from("projects").update({ status: "transcribing", language }).eq("id", id);
-    supabase.functions.invoke("transcribe-video", { body: { project_id: id, language } }).catch(() => {});
-    toast.success(`Re-transcribing in ${LANGS.find(l => l.value === language)?.label || language}…`);
+    await supabase.from("projects").update({ status: "transcribing", language, error_message: null }).eq("id", id);
+    setProject((p: any) => ({ ...p, status: "transcribing", language }));
+    toast.loading(`Generating captions in ${LANGS.find(l => l.value === language)?.label || language}…`, { id: "gen-caps" });
+    const { data, error } = await supabase.functions.invoke("transcribe-video", { body: { project_id: id, language } });
+    toast.dismiss("gen-caps");
+    if (error) {
+      toast.error(error.message || "Caption generation failed");
+      loadProj();
+      return;
+    }
+    toast.success(`Captions generated (${data?.count || 0} lines)!`);
+    loadProj();
   };
 
   const genYT = async () => {
@@ -207,7 +216,18 @@ const Editor = () => {
             <TabsContent value="captions">
               <GlassCard className="max-h-[70vh] overflow-y-auto space-y-2">
                 {captions.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-10">No captions yet.</p>
+                  <div className="text-center py-10 space-y-4">
+                    <p className="text-sm text-muted-foreground">No captions yet. Pick a language and generate.</p>
+                    <div className="flex justify-center">
+                      <Select value={project.language || "auto"} onValueChange={(v) => setProject((p: any) => ({ ...p, language: v }))}>
+                        <SelectTrigger className="bg-secondary/50 h-9 w-[220px]"><SelectValue/></SelectTrigger>
+                        <SelectContent>{LANGS.map(l => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <Button onClick={() => retranscribe()} disabled={project.status === "transcribing"} className="gradient-primary text-white border-0">
+                      {project.status === "transcribing" ? <><Loader2 className="w-4 h-4 mr-2 animate-spin"/>Generating…</> : <><Sparkles className="w-4 h-4 mr-2"/>Generate Captions</>}
+                    </Button>
+                  </div>
                 ) : captions.map(c => {
                   const active = activeCap?.idx === c.idx;
                   return (
