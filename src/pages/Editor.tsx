@@ -226,6 +226,16 @@ const Editor = () => {
 
             <TabsContent value="style">
               <GlassCard className="space-y-4">
+                <div>
+                  <Label>Presets</Label>
+                  <div className="grid grid-cols-3 gap-2 mt-1.5">
+                    {STYLE_PRESETS.map(p => (
+                      <Button key={p.name} type="button" size="sm" variant="outline" onClick={() => setStyle(p.style)} className="text-xs">
+                        {p.name}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
                 <div><Label>Font</Label>
                   <Select value={style.font} onValueChange={(v) => setStyle({...style, font: v})}>
                     <SelectTrigger className="bg-secondary/50 mt-1.5"><SelectValue/></SelectTrigger>
