@@ -271,7 +271,7 @@ const Editor = () => {
             </TabsList>
 
             <TabsContent value="captions">
-              <GlassCard className="max-h-[70vh] overflow-y-auto space-y-2">
+              <GlassCard className="max-h-[75vh] overflow-y-auto space-y-2">
                 {captions.length === 0 ? (
                   <div className="text-center py-10 space-y-4">
                     <p className="text-sm text-muted-foreground">No captions yet. Pick a language and generate.</p>
@@ -285,19 +285,46 @@ const Editor = () => {
                       {project.status === "transcribing" ? <><Loader2 className="w-4 h-4 mr-2 animate-spin"/>Generating…</> : <><Sparkles className="w-4 h-4 mr-2"/>Generate Captions</>}
                     </Button>
                   </div>
-                ) : captions.map(c => {
-                  const active = activeCap?.idx === c.idx;
-                  return (
-                    <div key={c.idx} className={`p-3 rounded-lg border ${active ? "border-primary bg-primary/5" : "border-border"} cursor-pointer transition`}
-                      onClick={() => { if (videoRef.current) videoRef.current.currentTime = c.start_ms/1000; }}>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1.5">
-                        <Play className="w-3 h-3"/> {(c.start_ms/1000).toFixed(1)}s → {(c.end_ms/1000).toFixed(1)}s
+                ) : (
+                  <>
+                    {/* Editing toolbar */}
+                    <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-border sticky top-0 bg-card/80 backdrop-blur z-10">
+                      <Button size="sm" variant="outline" onClick={addCaption}><Plus className="w-3.5 h-3.5 mr-1"/>Add at playhead</Button>
+                      <div className="flex items-center gap-1 ml-auto">
+                        <span className="text-xs text-muted-foreground mr-1">Shift all:</span>
+                        <Button size="sm" variant="outline" onClick={() => shiftAll(-500)}><ChevronLeft className="w-3.5 h-3.5"/>-0.5s</Button>
+                        <Button size="sm" variant="outline" onClick={() => shiftAll(500)}>+0.5s<ChevronRight className="w-3.5 h-3.5"/></Button>
                       </div>
-                      <Textarea rows={2} value={c.text} onChange={(e) => updateCap(c.idx, e.target.value)}
-                        onClick={(e) => e.stopPropagation()} className="bg-secondary/30 border-0 resize-none text-sm"/>
                     </div>
-                  );
-                })}
+                    {captions.map((c, i) => {
+                      const active = activeCap?.idx === c.idx;
+                      return (
+                        <div key={`${c.idx}-${i}`} className={`p-3 rounded-lg border ${active ? "border-primary bg-primary/5" : "border-border"} transition`}>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                            <button onClick={() => { if (videoRef.current) { videoRef.current.currentTime = c.start_ms/1000; videoRef.current.play(); } }} className="hover:text-primary">
+                              <Play className="w-3 h-3"/>
+                            </button>
+                            <Input type="number" step="0.1" value={(c.start_ms/1000).toFixed(1)}
+                              onChange={(e) => updateCapTime(c.idx, "start_ms", Math.round(parseFloat(e.target.value)*1000))}
+                              className="h-6 w-16 text-xs px-1.5 bg-secondary/40"/>
+                            <span>→</span>
+                            <Input type="number" step="0.1" value={(c.end_ms/1000).toFixed(1)}
+                              onChange={(e) => updateCapTime(c.idx, "end_ms", Math.round(parseFloat(e.target.value)*1000))}
+                              className="h-6 w-16 text-xs px-1.5 bg-secondary/40"/>
+                            <span className="text-[10px] opacity-70">s</span>
+                            <div className="ml-auto flex items-center gap-1">
+                              <button title="Split" onClick={() => splitCap(c.idx)} className="p-1 hover:text-primary rounded"><Scissors className="w-3.5 h-3.5"/></button>
+                              <button title="Merge with next" onClick={() => mergeWithNext(c.idx)} className="p-1 hover:text-primary rounded"><ChevronsLeftRight className="w-3.5 h-3.5"/></button>
+                              <button title="Delete" onClick={() => deleteCap(c.idx)} className="p-1 hover:text-destructive rounded"><Trash2 className="w-3.5 h-3.5"/></button>
+                            </div>
+                          </div>
+                          <Textarea rows={2} value={c.text} onChange={(e) => updateCap(c.idx, e.target.value)}
+                            className="bg-secondary/30 border-0 resize-none text-sm"/>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
               </GlassCard>
             </TabsContent>
 
