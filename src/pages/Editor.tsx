@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Download, Sparkles, Type, Palette, Youtube, Play, Flame } from "lucide-react";
+import { Loader2, Download, Sparkles, Type, Palette, Youtube, Play, Flame, Plus, Trash2, Scissors, ArrowDown, ChevronsLeftRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { toSRT, toVTT, toTXT, download, Caption } from "@/lib/captionUtils";
 import { LANGS } from "@/components/UploadDropzone";
@@ -78,6 +78,63 @@ const Editor = () => {
   const updateCap = async (idx: number, text: string) => {
     setCaptions(cs => cs.map(c => c.idx === idx ? { ...c, text } : c));
     await supabase.from("captions").update({ text }).eq("project_id", id!).eq("idx", idx);
+  };
+
+  const updateCapTime = async (idx: number, field: "start_ms" | "end_ms", ms: number) => {
+    setCaptions(cs => cs.map(c => c.idx === idx ? { ...c, [field]: ms } : c));
+    const patch: { start_ms?: number; end_ms?: number } = { [field]: ms };
+    await supabase.from("captions").update(patch).eq("project_id", id!).eq("idx", idx);
+  };
+
+  const reindex = async (list: Caption[]) => {
+    // Rewrite indices to be sequential; delete-all + insert to keep it simple & safe.
+    const renumbered = list.map((c, i) => ({ ...c, idx: i }));
+    setCaptions(renumbered);
+    await supabase.from("captions").delete().eq("project_id", id!);
+    if (renumbered.length) {
+      await supabase.from("captions").insert(renumbered.map(c => ({ project_id: id!, idx: c.idx, start_ms: c.start_ms, end_ms: c.end_ms, text: c.text })));
+    }
+  };
+
+  const addCaption = async () => {
+    const now = Math.round((videoRef.current?.currentTime || 0) * 1000);
+    const newCap: Caption = { idx: 0, start_ms: now, end_ms: now + 2000, text: "New caption" };
+    const merged = [...captions, newCap].sort((a, b) => a.start_ms - b.start_ms);
+    await reindex(merged);
+    toast.success("Caption added at playhead");
+  };
+
+  const deleteCap = async (idx: number) => {
+    const filtered = captions.filter(c => c.idx !== idx);
+    await reindex(filtered);
+  };
+
+  const splitCap = async (idx: number) => {
+    const c = captions.find(x => x.idx === idx); if (!c) return;
+    const mid = Math.round((c.start_ms + c.end_ms) / 2);
+    const words = c.text.trim().split(/\s+/);
+    const half = Math.ceil(words.length / 2);
+    const a: Caption = { ...c, end_ms: mid, text: words.slice(0, half).join(" ") };
+    const b: Caption = { ...c, start_ms: mid, text: words.slice(half).join(" ") || "…" };
+    const rest = captions.filter(x => x.idx !== idx);
+    const merged = [...rest, a, b].sort((x, y) => x.start_ms - y.start_ms);
+    await reindex(merged);
+  };
+
+  const mergeWithNext = async (idx: number) => {
+    const sorted = [...captions].sort((a, b) => a.start_ms - b.start_ms);
+    const i = sorted.findIndex(c => c.idx === idx);
+    if (i < 0 || i >= sorted.length - 1) return;
+    const cur = sorted[i], nxt = sorted[i + 1];
+    const merged: Caption = { ...cur, end_ms: nxt.end_ms, text: `${cur.text} ${nxt.text}`.trim() };
+    const list = [...sorted.slice(0, i), merged, ...sorted.slice(i + 2)];
+    await reindex(list);
+  };
+
+  const shiftAll = async (deltaMs: number) => {
+    const shifted = captions.map(c => ({ ...c, start_ms: Math.max(0, c.start_ms + deltaMs), end_ms: Math.max(0, c.end_ms + deltaMs) }));
+    await reindex(shifted);
+    toast.success(`Shifted all captions by ${deltaMs > 0 ? "+" : ""}${deltaMs}ms`);
   };
 
   const retranscribe = async (lang?: string) => {
@@ -214,7 +271,7 @@ const Editor = () => {
             </TabsList>
 
             <TabsContent value="captions">
-              <GlassCard className="max-h-[70vh] overflow-y-auto space-y-2">
+              <GlassCard className="max-h-[75vh] overflow-y-auto space-y-2">
                 {captions.length === 0 ? (
                   <div className="text-center py-10 space-y-4">
                     <p className="text-sm text-muted-foreground">No captions yet. Pick a language and generate.</p>
@@ -228,19 +285,46 @@ const Editor = () => {
                       {project.status === "transcribing" ? <><Loader2 className="w-4 h-4 mr-2 animate-spin"/>Generating…</> : <><Sparkles className="w-4 h-4 mr-2"/>Generate Captions</>}
                     </Button>
                   </div>
-                ) : captions.map(c => {
-                  const active = activeCap?.idx === c.idx;
-                  return (
-                    <div key={c.idx} className={`p-3 rounded-lg border ${active ? "border-primary bg-primary/5" : "border-border"} cursor-pointer transition`}
-                      onClick={() => { if (videoRef.current) videoRef.current.currentTime = c.start_ms/1000; }}>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1.5">
-                        <Play className="w-3 h-3"/> {(c.start_ms/1000).toFixed(1)}s → {(c.end_ms/1000).toFixed(1)}s
+                ) : (
+                  <>
+                    {/* Editing toolbar */}
+                    <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-border sticky top-0 bg-card/80 backdrop-blur z-10">
+                      <Button size="sm" variant="outline" onClick={addCaption}><Plus className="w-3.5 h-3.5 mr-1"/>Add at playhead</Button>
+                      <div className="flex items-center gap-1 ml-auto">
+                        <span className="text-xs text-muted-foreground mr-1">Shift all:</span>
+                        <Button size="sm" variant="outline" onClick={() => shiftAll(-500)}><ChevronLeft className="w-3.5 h-3.5"/>-0.5s</Button>
+                        <Button size="sm" variant="outline" onClick={() => shiftAll(500)}>+0.5s<ChevronRight className="w-3.5 h-3.5"/></Button>
                       </div>
-                      <Textarea rows={2} value={c.text} onChange={(e) => updateCap(c.idx, e.target.value)}
-                        onClick={(e) => e.stopPropagation()} className="bg-secondary/30 border-0 resize-none text-sm"/>
                     </div>
-                  );
-                })}
+                    {captions.map((c, i) => {
+                      const active = activeCap?.idx === c.idx;
+                      return (
+                        <div key={`${c.idx}-${i}`} className={`p-3 rounded-lg border ${active ? "border-primary bg-primary/5" : "border-border"} transition`}>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                            <button onClick={() => { if (videoRef.current) { videoRef.current.currentTime = c.start_ms/1000; videoRef.current.play(); } }} className="hover:text-primary">
+                              <Play className="w-3 h-3"/>
+                            </button>
+                            <Input type="number" step="0.1" value={(c.start_ms/1000).toFixed(1)}
+                              onChange={(e) => updateCapTime(c.idx, "start_ms", Math.round(parseFloat(e.target.value)*1000))}
+                              className="h-6 w-16 text-xs px-1.5 bg-secondary/40"/>
+                            <span>→</span>
+                            <Input type="number" step="0.1" value={(c.end_ms/1000).toFixed(1)}
+                              onChange={(e) => updateCapTime(c.idx, "end_ms", Math.round(parseFloat(e.target.value)*1000))}
+                              className="h-6 w-16 text-xs px-1.5 bg-secondary/40"/>
+                            <span className="text-[10px] opacity-70">s</span>
+                            <div className="ml-auto flex items-center gap-1">
+                              <button title="Split" onClick={() => splitCap(c.idx)} className="p-1 hover:text-primary rounded"><Scissors className="w-3.5 h-3.5"/></button>
+                              <button title="Merge with next" onClick={() => mergeWithNext(c.idx)} className="p-1 hover:text-primary rounded"><ChevronsLeftRight className="w-3.5 h-3.5"/></button>
+                              <button title="Delete" onClick={() => deleteCap(c.idx)} className="p-1 hover:text-destructive rounded"><Trash2 className="w-3.5 h-3.5"/></button>
+                            </div>
+                          </div>
+                          <Textarea rows={2} value={c.text} onChange={(e) => updateCap(c.idx, e.target.value)}
+                            className="bg-secondary/30 border-0 resize-none text-sm"/>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
               </GlassCard>
             </TabsContent>
 

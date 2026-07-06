@@ -53,15 +53,20 @@ serve(async (req) => {
     const ext = proj.video_path.split(".").pop() || "mp4";
     form.append("file", new File([fileData], `audio.${ext}`, { type: fileData.type || "video/mp4" }));
 
-    // Language hint: Whisper accepts ISO code; Hinglish/multi -> let it auto-detect with prompt guidance.
-    if (language === "hi") form.append("language", "hi");
-    else if (language === "en") form.append("language", "en");
-    if (language === "hinglish") {
-      form.append("prompt", "Transcribe as Hinglish: mix of Hindi and English words, written in Roman/Latin script when spoken casually. Preserve code-switching.");
+    // Force language — Whisper often misdetects Hindi as Urdu, so ALWAYS pass an ISO code
+    // for hi/hinglish/auto (default to hi), and use prompt to steer script.
+    if (language === "en") {
+      form.append("language", "en");
+      form.append("prompt", "Transcribe spoken English accurately with proper punctuation.");
+    } else if (language === "hinglish") {
+      form.append("language", "hi");
+      form.append("prompt", "Yeh Hinglish hai — Hindi aur English mixed. Roman/Latin script mein likho, Urdu ya Arabic script bilkul mat use karo. Example: 'aaj main market gaya tha aur shopping ki'. Never use Urdu.");
     } else if (language === "multi") {
-      form.append("prompt", "Transcribe multilingual speech accurately in the original language(s) spoken.");
-    } else if (language === "hi") {
-      form.append("prompt", "हिंदी में लिप्यंतरण करें, देवनागरी लिपि का उपयोग करें।");
+      form.append("prompt", "Transcribe multilingual speech in the original language spoken. If Hindi, use Devanagari script only, never Urdu/Arabic script.");
+    } else {
+      // "hi" or "auto" — force Hindi to prevent Urdu misdetection
+      form.append("language", "hi");
+      form.append("prompt", "हिंदी भाषा को देवनागरी लिपि में लिखें। उर्दू या अरबी लिपि का उपयोग बिल्कुल न करें। This is Hindi, not Urdu — use Devanagari script only.");
     }
 
     const LOVABLE_KEY = Deno.env.get("LOVABLE_API_KEY");
