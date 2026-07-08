@@ -277,7 +277,12 @@ const Editor = () => {
               <div className="relative aspect-video bg-black">
                 {videoUrl && (
                   <video ref={videoRef} src={videoUrl} controls className="w-full h-full"
+                    style={{ filter: fxToCss(fx) }}
                     onTimeUpdate={(e) => setCurrentMs(Math.round(e.currentTarget.currentTime * 1000))}/>
+                )}
+                {fx.vignette > 0 && (
+                  <div className="absolute inset-0 pointer-events-none"
+                    style={{ boxShadow: `inset 0 0 ${80 + fx.vignette * 3}px ${20 + fx.vignette}px rgba(0,0,0,${fx.vignette / 100})` }}/>
                 )}
                 {activeCap && (
                   <div className={`absolute left-1/2 -translate-x-1/2 ${posClass} px-4 py-2 rounded max-w-[90%] text-center pointer-events-none`}
