@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Download, Sparkles, Type, Palette, Youtube, Play, Flame, Plus, Trash2, Scissors, ArrowDown, ChevronsLeftRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, Download, Sparkles, Type, Palette, Youtube, Play, Flame, Plus, Trash2, Scissors, ArrowDown, ChevronsLeftRight, ChevronLeft, ChevronRight, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { toSRT, toVTT, toTXT, download, Caption } from "@/lib/captionUtils";
 import { LANGS } from "@/components/UploadDropzone";
@@ -30,6 +30,24 @@ const STYLE_PRESETS: { name: string; style: StyleState }[] = [
   { name: "Podcast Top", style: { font: "Georgia", size: 26, color: "#ffffff", bg: "#111827", bgOpacity: 0.8, position: "top" } },
 ];
 
+type FxState = { brightness: number; contrast: number; saturation: number; hue: number; blur: number; grayscale: number; sepia: number; vignette: number };
+const FX_DEFAULT: FxState = { brightness: 100, contrast: 100, saturation: 100, hue: 0, blur: 0, grayscale: 0, sepia: 0, vignette: 0 };
+
+const FX_PRESETS: { name: string; fx: FxState }[] = [
+  { name: "None", fx: FX_DEFAULT },
+  { name: "Cinematic", fx: { ...FX_DEFAULT, contrast: 115, saturation: 90, brightness: 95, vignette: 45 } },
+  { name: "Vintage", fx: { ...FX_DEFAULT, sepia: 45, contrast: 105, saturation: 80, vignette: 30 } },
+  { name: "B&W", fx: { ...FX_DEFAULT, grayscale: 100, contrast: 115 } },
+  { name: "Warm", fx: { ...FX_DEFAULT, hue: -10, saturation: 120, brightness: 105 } },
+  { name: "Cool", fx: { ...FX_DEFAULT, hue: 15, saturation: 110, brightness: 100 } },
+  { name: "Vivid", fx: { ...FX_DEFAULT, saturation: 145, contrast: 115 } },
+  { name: "Dreamy", fx: { ...FX_DEFAULT, blur: 1, brightness: 110, saturation: 115 } },
+  { name: "Noir", fx: { ...FX_DEFAULT, grayscale: 100, contrast: 130, brightness: 90, vignette: 55 } },
+];
+
+const fxToCss = (f: FxState) =>
+  `brightness(${f.brightness}%) contrast(${f.contrast}%) saturate(${f.saturation}%) hue-rotate(${f.hue}deg) blur(${f.blur}px) grayscale(${f.grayscale}%) sepia(${f.sepia}%)`;
+
 const Editor = () => {
   const { id } = useParams();
   const { user, loading } = useAuth();
@@ -43,6 +61,7 @@ const Editor = () => {
   const [yt, setYt] = useState<any>(null);
   const [ytBusy, setYtBusy] = useState(false);
   const [burning, setBurning] = useState(false);
+  const [fx, setFx] = useState<FxState>(FX_DEFAULT);
 
   useEffect(() => { if (!loading && !user) nav("/auth"); }, [user, loading, nav]);
 
@@ -186,7 +205,23 @@ const Editor = () => {
       await ff.writeFile("in.mp4", videoData);
       await ff.writeFile("subs.srt", new TextEncoder().encode(toSRT(captions)));
       const styleStr = `Fontname=${style.font},Fontsize=${Math.round(style.size/2)},PrimaryColour=&H${style.color.slice(5,7)}${style.color.slice(3,5)}${style.color.slice(1,3)}&,BorderStyle=3,Outline=1,BackColour=&H80000000&,Alignment=${style.position==='top'?8:style.position==='middle'?5:2}`;
-      await ff.exec(["-i", "in.mp4", "-vf", `subtitles=subs.srt:force_style='${styleStr}'`, "-c:a", "copy", "out.mp4"]);
+      // Build ffmpeg filter chain: color effects → vignette → subtitles
+      const eqParts: string[] = [];
+      const brightnessAdj = (fx.brightness - 100) / 100; // -1..1
+      const contrastAdj = fx.contrast / 100;
+      const satAdj = fx.saturation / 100;
+      eqParts.push(`eq=brightness=${brightnessAdj.toFixed(2)}:contrast=${contrastAdj.toFixed(2)}:saturation=${satAdj.toFixed(2)}`);
+      if (fx.hue !== 0) eqParts.push(`hue=h=${fx.hue}`);
+      if (fx.blur > 0) eqParts.push(`gblur=sigma=${fx.blur}`);
+      if (fx.grayscale > 0) eqParts.push(`hue=s=${1 - fx.grayscale / 100}`);
+      if (fx.sepia > 0) {
+        const s = fx.sepia / 100;
+        eqParts.push(`colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131`);
+        if (s < 1) eqParts.push(`eq=saturation=${(1 - s * 0.5).toFixed(2)}`);
+      }
+      if (fx.vignette > 0) eqParts.push(`vignette=PI/${(5 - fx.vignette / 30).toFixed(2)}`);
+      eqParts.push(`subtitles=subs.srt:force_style='${styleStr}'`);
+      await ff.exec(["-i", "in.mp4", "-vf", eqParts.join(","), "-c:a", "copy", "out.mp4"]);
       const out = await ff.readFile("out.mp4");
       const blob = new Blob([out as unknown as BlobPart], { type: "video/mp4" });
       const url = URL.createObjectURL(blob);
@@ -242,7 +277,12 @@ const Editor = () => {
               <div className="relative aspect-video bg-black">
                 {videoUrl && (
                   <video ref={videoRef} src={videoUrl} controls className="w-full h-full"
+                    style={{ filter: fxToCss(fx) }}
                     onTimeUpdate={(e) => setCurrentMs(Math.round(e.currentTarget.currentTime * 1000))}/>
+                )}
+                {fx.vignette > 0 && (
+                  <div className="absolute inset-0 pointer-events-none"
+                    style={{ boxShadow: `inset 0 0 ${80 + fx.vignette * 3}px ${20 + fx.vignette}px rgba(0,0,0,${fx.vignette / 100})` }}/>
                 )}
                 {activeCap && (
                   <div className={`absolute left-1/2 -translate-x-1/2 ${posClass} px-4 py-2 rounded max-w-[90%] text-center pointer-events-none`}
@@ -263,9 +303,10 @@ const Editor = () => {
 
           {/* PANEL */}
           <Tabs defaultValue="captions">
-            <TabsList className="grid grid-cols-4 mb-3 bg-secondary/50">
+            <TabsList className="grid grid-cols-5 mb-3 bg-secondary/50">
               <TabsTrigger value="captions"><Type className="w-3.5 h-3.5 mr-1"/>Captions</TabsTrigger>
               <TabsTrigger value="style"><Palette className="w-3.5 h-3.5 mr-1"/>Style</TabsTrigger>
+              <TabsTrigger value="effects"><Wand2 className="w-3.5 h-3.5 mr-1"/>Effects</TabsTrigger>
               <TabsTrigger value="youtube"><Youtube className="w-3.5 h-3.5 mr-1"/>YouTube</TabsTrigger>
               <TabsTrigger value="export"><Download className="w-3.5 h-3.5 mr-1"/>Export</TabsTrigger>
             </TabsList>
@@ -363,6 +404,39 @@ const Editor = () => {
                     ))}
                   </div>
                 </div>
+              </GlassCard>
+            </TabsContent>
+
+            <TabsContent value="effects">
+              <GlassCard className="space-y-4">
+                <div>
+                  <Label>Filter presets</Label>
+                  <div className="grid grid-cols-3 gap-2 mt-1.5">
+                    {FX_PRESETS.map(p => (
+                      <Button key={p.name} type="button" size="sm" variant="outline" onClick={() => setFx(p.fx)} className="text-xs">{p.name}</Button>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Brightness · {fx.brightness}%</Label>
+                    <Slider min={20} max={200} step={1} value={[fx.brightness]} onValueChange={([v]) => setFx({...fx, brightness: v})} className="mt-3"/></div>
+                  <div><Label>Contrast · {fx.contrast}%</Label>
+                    <Slider min={20} max={200} step={1} value={[fx.contrast]} onValueChange={([v]) => setFx({...fx, contrast: v})} className="mt-3"/></div>
+                  <div><Label>Saturation · {fx.saturation}%</Label>
+                    <Slider min={0} max={200} step={1} value={[fx.saturation]} onValueChange={([v]) => setFx({...fx, saturation: v})} className="mt-3"/></div>
+                  <div><Label>Hue · {fx.hue}°</Label>
+                    <Slider min={-180} max={180} step={1} value={[fx.hue]} onValueChange={([v]) => setFx({...fx, hue: v})} className="mt-3"/></div>
+                  <div><Label>Blur · {fx.blur}px</Label>
+                    <Slider min={0} max={10} step={0.5} value={[fx.blur]} onValueChange={([v]) => setFx({...fx, blur: v})} className="mt-3"/></div>
+                  <div><Label>Grayscale · {fx.grayscale}%</Label>
+                    <Slider min={0} max={100} step={1} value={[fx.grayscale]} onValueChange={([v]) => setFx({...fx, grayscale: v})} className="mt-3"/></div>
+                  <div><Label>Sepia · {fx.sepia}%</Label>
+                    <Slider min={0} max={100} step={1} value={[fx.sepia]} onValueChange={([v]) => setFx({...fx, sepia: v})} className="mt-3"/></div>
+                  <div><Label>Vignette · {fx.vignette}%</Label>
+                    <Slider min={0} max={100} step={1} value={[fx.vignette]} onValueChange={([v]) => setFx({...fx, vignette: v})} className="mt-3"/></div>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setFx(FX_DEFAULT)} className="w-full">Reset effects</Button>
+                <p className="text-xs text-muted-foreground">Effects are applied to the preview instantly and burned into the exported video.</p>
               </GlassCard>
             </TabsContent>
 
