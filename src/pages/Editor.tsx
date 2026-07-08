@@ -30,6 +30,24 @@ const STYLE_PRESETS: { name: string; style: StyleState }[] = [
   { name: "Podcast Top", style: { font: "Georgia", size: 26, color: "#ffffff", bg: "#111827", bgOpacity: 0.8, position: "top" } },
 ];
 
+type FxState = { brightness: number; contrast: number; saturation: number; hue: number; blur: number; grayscale: number; sepia: number; vignette: number };
+const FX_DEFAULT: FxState = { brightness: 100, contrast: 100, saturation: 100, hue: 0, blur: 0, grayscale: 0, sepia: 0, vignette: 0 };
+
+const FX_PRESETS: { name: string; fx: FxState }[] = [
+  { name: "None", fx: FX_DEFAULT },
+  { name: "Cinematic", fx: { ...FX_DEFAULT, contrast: 115, saturation: 90, brightness: 95, vignette: 45 } },
+  { name: "Vintage", fx: { ...FX_DEFAULT, sepia: 45, contrast: 105, saturation: 80, vignette: 30 } },
+  { name: "B&W", fx: { ...FX_DEFAULT, grayscale: 100, contrast: 115 } },
+  { name: "Warm", fx: { ...FX_DEFAULT, hue: -10, saturation: 120, brightness: 105 } },
+  { name: "Cool", fx: { ...FX_DEFAULT, hue: 15, saturation: 110, brightness: 100 } },
+  { name: "Vivid", fx: { ...FX_DEFAULT, saturation: 145, contrast: 115 } },
+  { name: "Dreamy", fx: { ...FX_DEFAULT, blur: 1, brightness: 110, saturation: 115 } },
+  { name: "Noir", fx: { ...FX_DEFAULT, grayscale: 100, contrast: 130, brightness: 90, vignette: 55 } },
+];
+
+const fxToCss = (f: FxState) =>
+  `brightness(${f.brightness}%) contrast(${f.contrast}%) saturate(${f.saturation}%) hue-rotate(${f.hue}deg) blur(${f.blur}px) grayscale(${f.grayscale}%) sepia(${f.sepia}%)`;
+
 const Editor = () => {
   const { id } = useParams();
   const { user, loading } = useAuth();
