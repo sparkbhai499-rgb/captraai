@@ -303,9 +303,10 @@ const Editor = () => {
 
           {/* PANEL */}
           <Tabs defaultValue="captions">
-            <TabsList className="grid grid-cols-4 mb-3 bg-secondary/50">
+            <TabsList className="grid grid-cols-5 mb-3 bg-secondary/50">
               <TabsTrigger value="captions"><Type className="w-3.5 h-3.5 mr-1"/>Captions</TabsTrigger>
               <TabsTrigger value="style"><Palette className="w-3.5 h-3.5 mr-1"/>Style</TabsTrigger>
+              <TabsTrigger value="effects"><Wand2 className="w-3.5 h-3.5 mr-1"/>Effects</TabsTrigger>
               <TabsTrigger value="youtube"><Youtube className="w-3.5 h-3.5 mr-1"/>YouTube</TabsTrigger>
               <TabsTrigger value="export"><Download className="w-3.5 h-3.5 mr-1"/>Export</TabsTrigger>
             </TabsList>
