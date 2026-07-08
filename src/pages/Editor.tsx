@@ -61,6 +61,7 @@ const Editor = () => {
   const [yt, setYt] = useState<any>(null);
   const [ytBusy, setYtBusy] = useState(false);
   const [burning, setBurning] = useState(false);
+  const [fx, setFx] = useState<FxState>(FX_DEFAULT);
 
   useEffect(() => { if (!loading && !user) nav("/auth"); }, [user, loading, nav]);
 
