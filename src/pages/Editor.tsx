@@ -205,7 +205,23 @@ const Editor = () => {
       await ff.writeFile("in.mp4", videoData);
       await ff.writeFile("subs.srt", new TextEncoder().encode(toSRT(captions)));
       const styleStr = `Fontname=${style.font},Fontsize=${Math.round(style.size/2)},PrimaryColour=&H${style.color.slice(5,7)}${style.color.slice(3,5)}${style.color.slice(1,3)}&,BorderStyle=3,Outline=1,BackColour=&H80000000&,Alignment=${style.position==='top'?8:style.position==='middle'?5:2}`;
-      await ff.exec(["-i", "in.mp4", "-vf", `subtitles=subs.srt:force_style='${styleStr}'`, "-c:a", "copy", "out.mp4"]);
+      // Build ffmpeg filter chain: color effects → vignette → subtitles
+      const eqParts: string[] = [];
+      const brightnessAdj = (fx.brightness - 100) / 100; // -1..1
+      const contrastAdj = fx.contrast / 100;
+      const satAdj = fx.saturation / 100;
+      eqParts.push(`eq=brightness=${brightnessAdj.toFixed(2)}:contrast=${contrastAdj.toFixed(2)}:saturation=${satAdj.toFixed(2)}`);
+      if (fx.hue !== 0) eqParts.push(`hue=h=${fx.hue}`);
+      if (fx.blur > 0) eqParts.push(`gblur=sigma=${fx.blur}`);
+      if (fx.grayscale > 0) eqParts.push(`hue=s=${1 - fx.grayscale / 100}`);
+      if (fx.sepia > 0) {
+        const s = fx.sepia / 100;
+        eqParts.push(`colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131`);
+        if (s < 1) eqParts.push(`eq=saturation=${(1 - s * 0.5).toFixed(2)}`);
+      }
+      if (fx.vignette > 0) eqParts.push(`vignette=PI/${(5 - fx.vignette / 30).toFixed(2)}`);
+      eqParts.push(`subtitles=subs.srt:force_style='${styleStr}'`);
+      await ff.exec(["-i", "in.mp4", "-vf", eqParts.join(","), "-c:a", "copy", "out.mp4"]);
       const out = await ff.readFile("out.mp4");
       const blob = new Blob([out as unknown as BlobPart], { type: "video/mp4" });
       const url = URL.createObjectURL(blob);
