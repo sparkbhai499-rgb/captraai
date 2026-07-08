@@ -407,6 +407,39 @@ const Editor = () => {
               </GlassCard>
             </TabsContent>
 
+            <TabsContent value="effects">
+              <GlassCard className="space-y-4">
+                <div>
+                  <Label>Filter presets</Label>
+                  <div className="grid grid-cols-3 gap-2 mt-1.5">
+                    {FX_PRESETS.map(p => (
+                      <Button key={p.name} type="button" size="sm" variant="outline" onClick={() => setFx(p.fx)} className="text-xs">{p.name}</Button>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Brightness · {fx.brightness}%</Label>
+                    <Slider min={20} max={200} step={1} value={[fx.brightness]} onValueChange={([v]) => setFx({...fx, brightness: v})} className="mt-3"/></div>
+                  <div><Label>Contrast · {fx.contrast}%</Label>
+                    <Slider min={20} max={200} step={1} value={[fx.contrast]} onValueChange={([v]) => setFx({...fx, contrast: v})} className="mt-3"/></div>
+                  <div><Label>Saturation · {fx.saturation}%</Label>
+                    <Slider min={0} max={200} step={1} value={[fx.saturation]} onValueChange={([v]) => setFx({...fx, saturation: v})} className="mt-3"/></div>
+                  <div><Label>Hue · {fx.hue}°</Label>
+                    <Slider min={-180} max={180} step={1} value={[fx.hue]} onValueChange={([v]) => setFx({...fx, hue: v})} className="mt-3"/></div>
+                  <div><Label>Blur · {fx.blur}px</Label>
+                    <Slider min={0} max={10} step={0.5} value={[fx.blur]} onValueChange={([v]) => setFx({...fx, blur: v})} className="mt-3"/></div>
+                  <div><Label>Grayscale · {fx.grayscale}%</Label>
+                    <Slider min={0} max={100} step={1} value={[fx.grayscale]} onValueChange={([v]) => setFx({...fx, grayscale: v})} className="mt-3"/></div>
+                  <div><Label>Sepia · {fx.sepia}%</Label>
+                    <Slider min={0} max={100} step={1} value={[fx.sepia]} onValueChange={([v]) => setFx({...fx, sepia: v})} className="mt-3"/></div>
+                  <div><Label>Vignette · {fx.vignette}%</Label>
+                    <Slider min={0} max={100} step={1} value={[fx.vignette]} onValueChange={([v]) => setFx({...fx, vignette: v})} className="mt-3"/></div>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setFx(FX_DEFAULT)} className="w-full">Reset effects</Button>
+                <p className="text-xs text-muted-foreground">Effects are applied to the preview instantly and burned into the exported video.</p>
+              </GlassCard>
+            </TabsContent>
+
             <TabsContent value="youtube">
               <GlassCard className="space-y-4">
                 <div className="flex items-center justify-between">
