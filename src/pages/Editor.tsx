@@ -365,15 +365,15 @@ const Editor = () => {
               <>
                 <div className="aspect-video rounded-lg bg-black/40 border border-white/5 overflow-hidden relative group">
                   {videoUrl && <video src={videoUrl} className="w-full h-full object-cover" muted/>}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-xs">Source video</div>
                 </div>
                 <p className="text-xs font-medium truncate">{project.title}</p>
                 <p className="text-[11px] text-muted-foreground">{project.duration_sec ? `${project.duration_sec.toFixed(1)}s` : "—"} · {project.language || "auto"}</p>
-                <div className="grid grid-cols-4 gap-2 pt-3 border-t border-white/5">
-                  {[{c:"#4285F4"},{c:"#0061FF"},{c:"#EA4335"},{c:"#7c3aed"}].map((x,i) => (
-                    <div key={i} className="aspect-square rounded-lg flex items-center justify-center text-xs font-bold text-white" style={{background:x.c}}>{["G","D","•","+"][i]}</div>
-                  ))}
-                </div>
+                <input ref={mediaInputRef} type="file" accept="video/*,.mp4,.mov,.avi,.mkv" hidden
+                  onChange={(e) => e.target.files?.[0] && importVideo(e.target.files[0])}/>
+                <Button onClick={() => mediaInputRef.current?.click()} className="w-full gradient-primary text-white border-0">
+                  <Upload className="w-4 h-4 mr-2"/>Import / replace video
+                </Button>
+                <p className="text-[11px] text-muted-foreground">MP4, MOV, AVI, MKV up to 200 MB. New captions can be generated after import.</p>
               </>
             )}
 
