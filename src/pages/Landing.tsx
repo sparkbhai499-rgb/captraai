@@ -61,30 +61,31 @@ const Landing = () => {
       <Navbar />
 
       {/* HERO */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
-        <div className="blob absolute -top-40 -left-20 w-96 h-96 rounded-full bg-primary animate-float"/>
-        <div className="blob absolute top-20 right-0 w-96 h-96 rounded-full bg-accent animate-float" style={{ animationDelay: "-4s" }}/>
+      <section className="relative pt-40 pb-24 overflow-hidden">
+        <div className="blob absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-primary/60"/>
 
         <div className="container relative">
-          <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.6}} className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 text-xs mb-6">
-              <Sparkles className="w-3.5 h-3.5 text-primary"/> AI-powered · Multilingual · Blazing fast
-            </div>
-            <h1 className="font-display text-5xl md:text-7xl font-bold leading-[1.05] mb-6">
-              Create <span className="gradient-text">Professional AI Captions</span> in Seconds.
+          <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.7}} className="max-w-5xl mx-auto text-center">
+            <h1 className="font-display font-black tracking-tight leading-[0.95] text-6xl md:text-8xl lg:text-9xl mb-8">
+              Captions that get
+              <br/>
+              <span className="text-primary">Hinglish</span> right.
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Upload a video, get accurate captions in Hindi, English, Hinglish and 40+ languages — then style, edit and export in one click.
+            <p className="text-base md:text-lg text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
+              Most caption tools mangle code-mixed speech. Captra transcribes Hindi, Hinglish and 20+ Indian languages, then lets you edit every word before you export, up to 4K.
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
-              <Button size="lg" className="gradient-primary text-white border-0 glow" asChild>
-                <Link to="/auth">Start Free — No Card</Link>
+              <Button size="lg" className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground border-0 glow px-7 h-12 text-base font-semibold" asChild>
+                <Link to="/auth">Try it free →</Link>
               </Button>
-              <Button size="lg" variant="outline" asChild><a href="#upload">Try Demo</a></Button>
+              <Button size="lg" variant="outline" className="rounded-full border-white/15 hover:bg-white/5 px-7 h-12 text-base font-semibold" asChild>
+                <a href="#features">See the styles</a>
+              </Button>
             </div>
+            <p className="text-xs text-muted-foreground mt-6">No card needed · first watermark-free export ₹9</p>
           </motion.div>
 
-          <motion.div id="upload" initial={{opacity:0,y:30}} animate={{opacity:1,y:0}} transition={{delay:0.2, duration:0.6}} className="max-w-2xl mx-auto mt-14">
+          <motion.div id="upload" initial={{opacity:0,y:30}} animate={{opacity:1,y:0}} transition={{delay:0.25, duration:0.6}} className="max-w-2xl mx-auto mt-20">
             <UploadDropzone />
           </motion.div>
         </div>
