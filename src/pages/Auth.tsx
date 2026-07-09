@@ -55,7 +55,7 @@ const Auth = () => {
           <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-4 glow">
             <Sparkles className="w-7 h-7 text-white"/>
           </div>
-          <h1 className="font-display text-3xl font-bold">Welcome to RXP Caption AI</h1>
+          <h1 className="font-display text-3xl font-bold">Welcome to Captra AI</h1>
           <p className="text-muted-foreground mt-2 text-sm">Sign in to start captioning your videos.</p>
         </div>
 
