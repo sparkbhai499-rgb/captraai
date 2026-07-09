@@ -25,7 +25,7 @@ const features = [
 const testimonials = [
   { name: "Riya Sharma", role: "YouTuber, 340K subs", text: "Went from 3 hours per video to 3 minutes. Hindi transcription is scary good." },
   { name: "Arjun Mehta", role: "Podcast Editor", text: "The style panel + burn-in export replaced 4 tools in my workflow." },
-  { name: "Sarah Chen", role: "Marketing Lead", text: "Our team ships 20+ short-form videos a week. RXP made captions a non-issue." },
+  { name: "Sarah Chen", role: "Marketing Lead", text: "Our team ships 20+ short-form videos a week. Captra made captions a non-issue." },
   { name: "Karan Patel", role: "Creator, 1M+ views", text: "Hinglish detection actually works. Nothing else I tried came close." },
 ];
 

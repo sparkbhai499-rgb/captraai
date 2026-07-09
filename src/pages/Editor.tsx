@@ -86,6 +86,49 @@ const Editor = () => {
   const [history, setHistory] = useState<Caption[][]>([]);
   const [future, setFuture] = useState<Caption[][]>([]);
   const timelineRef = useRef<HTMLDivElement>(null);
+  const mediaInputRef = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState<{ idx: number; mode: "move" | "left" | "right"; startX: number; origStart: number; origEnd: number } | null>(null);
+
+  const importVideo = async (file: File) => {
+    if (!file || !id || !user) return;
+    if (!/^video\//.test(file.type) && !/\.(mp4|mov|avi|mkv)$/i.test(file.name)) return toast.error("Video files only");
+    if (file.size > 200 * 1024 * 1024) return toast.error("Max 200 MB");
+    toast.loading("Importing video…", { id: "imp" });
+    try {
+      const ext = file.name.split(".").pop() || "mp4";
+      const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("videos").upload(path, file, { contentType: file.type || "video/mp4" });
+      if (upErr) throw upErr;
+      await supabase.from("projects").update({ video_path: path, status: "uploaded", title: file.name.replace(/\.[^.]+$/, "") }).eq("id", id);
+      toast.success("Video imported!", { id: "imp" });
+      await loadProj();
+    } catch (e: any) { toast.error(e.message || "Import failed", { id: "imp" }); }
+  };
+
+  useEffect(() => {
+    if (!dragging) return;
+    const onMove = (e: PointerEvent) => {
+      const deltaMs = ((e.clientX - dragging.startX) / zoom) * 1000;
+      setCaptions(cs => cs.map(c => {
+        if (c.idx !== dragging.idx) return c;
+        if (dragging.mode === "move") {
+          const dur = dragging.origEnd - dragging.origStart;
+          const ns = Math.max(0, dragging.origStart + deltaMs);
+          return { ...c, start_ms: ns, end_ms: ns + dur };
+        }
+        if (dragging.mode === "left") return { ...c, start_ms: Math.max(0, Math.min(dragging.origEnd - 200, dragging.origStart + deltaMs)) };
+        return { ...c, end_ms: Math.max(dragging.origStart + 200, dragging.origEnd + deltaMs) };
+      }));
+    };
+    const onUp = async () => {
+      const cur = captions.find(c => c.idx === dragging.idx);
+      if (cur) await supabase.from("captions").update({ start_ms: cur.start_ms, end_ms: cur.end_ms }).eq("project_id", id!).eq("idx", cur.idx);
+      setDragging(null);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
+  }, [dragging, zoom, captions, id]);
 
   useEffect(() => { if (!loading && !user) nav("/auth"); }, [user, loading, nav]);
 
@@ -322,15 +365,15 @@ const Editor = () => {
               <>
                 <div className="aspect-video rounded-lg bg-black/40 border border-white/5 overflow-hidden relative group">
                   {videoUrl && <video src={videoUrl} className="w-full h-full object-cover" muted/>}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-xs">Source video</div>
                 </div>
                 <p className="text-xs font-medium truncate">{project.title}</p>
                 <p className="text-[11px] text-muted-foreground">{project.duration_sec ? `${project.duration_sec.toFixed(1)}s` : "—"} · {project.language || "auto"}</p>
-                <div className="grid grid-cols-4 gap-2 pt-3 border-t border-white/5">
-                  {[{c:"#4285F4"},{c:"#0061FF"},{c:"#EA4335"},{c:"#7c3aed"}].map((x,i) => (
-                    <div key={i} className="aspect-square rounded-lg flex items-center justify-center text-xs font-bold text-white" style={{background:x.c}}>{["G","D","•","+"][i]}</div>
-                  ))}
-                </div>
+                <input ref={mediaInputRef} type="file" accept="video/*,.mp4,.mov,.avi,.mkv" hidden
+                  onChange={(e) => e.target.files?.[0] && importVideo(e.target.files[0])}/>
+                <Button onClick={() => mediaInputRef.current?.click()} className="w-full gradient-primary text-white border-0">
+                  <Upload className="w-4 h-4 mr-2"/>Import / replace video
+                </Button>
+                <p className="text-[11px] text-muted-foreground">MP4, MOV, AVI, MKV up to 200 MB. New captions can be generated after import.</p>
               </>
             )}
 
@@ -581,12 +624,20 @@ const Editor = () => {
                     const left = (c.start_ms / 1000) * zoom;
                     const width = ((c.end_ms - c.start_ms) / 1000) * zoom;
                     const active = activeCap?.idx === c.idx;
+                    const startDrag = (e: React.PointerEvent, mode: "move" | "left" | "right") => {
+                      e.stopPropagation(); e.preventDefault();
+                      setDragging({ idx: c.idx, mode, startX: e.clientX, origStart: c.start_ms, origEnd: c.end_ms });
+                    };
                     return (
-                      <div key={c.idx} onClick={() => seek(c.start_ms)}
-                        title={c.text}
-                        className={`absolute top-1 bottom-1 rounded px-1.5 flex items-center text-[10px] truncate cursor-pointer transition ${active ? "bg-primary text-primary-foreground ring-2 ring-primary-glow" : "bg-accent/70 text-accent-foreground hover:bg-accent"}`}
-                        style={{ left: `${left}px`, width: `${Math.max(20, width)}px` }}>
-                        {c.text}
+                      <div key={c.idx}
+                        onDoubleClick={() => seek(c.start_ms)}
+                        onPointerDown={(e) => startDrag(e, "move")}
+                        title={`${c.text}\n(drag to move · edges to resize · double-click to seek)`}
+                        className={`absolute top-1 bottom-1 rounded px-2 flex items-center text-[10px] truncate select-none group/cap ${dragging?.idx === c.idx ? "cursor-grabbing" : "cursor-grab"} ${active ? "bg-primary text-primary-foreground ring-2 ring-primary-glow" : "bg-accent/70 text-accent-foreground hover:bg-accent"}`}
+                        style={{ left: `${left}px`, width: `${Math.max(30, width)}px` }}>
+                        <div onPointerDown={(e) => startDrag(e, "left")} className="absolute left-0 top-0 bottom-0 w-1.5 cursor-ew-resize bg-white/30 opacity-0 group-hover/cap:opacity-100 rounded-l"/>
+                        <span className="truncate pointer-events-none flex-1">{c.text}</span>
+                        <div onPointerDown={(e) => startDrag(e, "right")} className="absolute right-0 top-0 bottom-0 w-1.5 cursor-ew-resize bg-white/30 opacity-0 group-hover/cap:opacity-100 rounded-r"/>
                       </div>
                     );
                   })}

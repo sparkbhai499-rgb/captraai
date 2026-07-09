@@ -29,9 +29,9 @@ const Contact = () => {
           <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">Contact us</h1>
           <p className="text-muted-foreground mb-8">We usually respond within a few hours. For urgent issues, use email.</p>
           <div className="space-y-4">
-            <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-lg glass flex items-center justify-center"><Mail className="w-4 h-4"/></div><div><p className="font-medium text-sm">Email</p><p className="text-xs text-muted-foreground">support@rxpcaption.ai</p></div></div>
+            <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-lg glass flex items-center justify-center"><Mail className="w-4 h-4"/></div><div><p className="font-medium text-sm">Email</p><p className="text-xs text-muted-foreground">hello@captra.ai</p></div></div>
             <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-lg glass flex items-center justify-center"><MessageCircle className="w-4 h-4"/></div><div><p className="font-medium text-sm">Live chat</p><p className="text-xs text-muted-foreground">In-app, Mon–Sat 10am–8pm IST</p></div></div>
-            <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-lg glass flex items-center justify-center"><Twitter className="w-4 h-4"/></div><div><p className="font-medium text-sm">Twitter</p><p className="text-xs text-muted-foreground">@rxpcaptionai</p></div></div>
+            <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-lg glass flex items-center justify-center"><Twitter className="w-4 h-4"/></div><div><p className="font-medium text-sm">Twitter</p><p className="text-xs text-muted-foreground">@captra_ai</p></div></div>
           </div>
         </div>
         <GlassCard>

@@ -41,7 +41,7 @@ export const Navbar = () => {
           <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center glow">
             <Sparkles className="w-4 h-4 text-white" />
           </div>
-          <span>RXP <span className="gradient-text">Caption AI</span></span>
+          <span><span className="gradient-text">Captra</span> AI</span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">

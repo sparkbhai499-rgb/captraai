@@ -9,7 +9,7 @@ export const Footer = () => (
           <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
             <Sparkles className="w-4 h-4 text-white" />
           </div>
-          RXP <span className="gradient-text">Caption AI</span>
+          <span className="gradient-text">Captra</span> AI
         </Link>
         <p className="text-sm text-muted-foreground mt-3 max-w-sm">
           Create professional AI captions in seconds. Multilingual, editable, exportable.
@@ -40,7 +40,7 @@ export const Footer = () => (
     </div>
     <div className="border-t border-border py-5">
       <div className="container flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
-        <p>© {new Date().getFullYear()} RXP Caption AI. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} Captra AI. All rights reserved.</p>
         <p>Built for creators worldwide.</p>
       </div>
     </div>
