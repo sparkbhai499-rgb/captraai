@@ -86,6 +86,49 @@ const Editor = () => {
   const [history, setHistory] = useState<Caption[][]>([]);
   const [future, setFuture] = useState<Caption[][]>([]);
   const timelineRef = useRef<HTMLDivElement>(null);
+  const mediaInputRef = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState<{ idx: number; mode: "move" | "left" | "right"; startX: number; origStart: number; origEnd: number } | null>(null);
+
+  const importVideo = async (file: File) => {
+    if (!file || !id || !user) return;
+    if (!/^video\//.test(file.type) && !/\.(mp4|mov|avi|mkv)$/i.test(file.name)) return toast.error("Video files only");
+    if (file.size > 200 * 1024 * 1024) return toast.error("Max 200 MB");
+    toast.loading("Importing video…", { id: "imp" });
+    try {
+      const ext = file.name.split(".").pop() || "mp4";
+      const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("videos").upload(path, file, { contentType: file.type || "video/mp4" });
+      if (upErr) throw upErr;
+      await supabase.from("projects").update({ video_path: path, status: "uploaded", title: file.name.replace(/\.[^.]+$/, "") }).eq("id", id);
+      toast.success("Video imported!", { id: "imp" });
+      await loadProj();
+    } catch (e: any) { toast.error(e.message || "Import failed", { id: "imp" }); }
+  };
+
+  useEffect(() => {
+    if (!dragging) return;
+    const onMove = (e: PointerEvent) => {
+      const deltaMs = ((e.clientX - dragging.startX) / zoom) * 1000;
+      setCaptions(cs => cs.map(c => {
+        if (c.idx !== dragging.idx) return c;
+        if (dragging.mode === "move") {
+          const dur = dragging.origEnd - dragging.origStart;
+          const ns = Math.max(0, dragging.origStart + deltaMs);
+          return { ...c, start_ms: ns, end_ms: ns + dur };
+        }
+        if (dragging.mode === "left") return { ...c, start_ms: Math.max(0, Math.min(dragging.origEnd - 200, dragging.origStart + deltaMs)) };
+        return { ...c, end_ms: Math.max(dragging.origStart + 200, dragging.origEnd + deltaMs) };
+      }));
+    };
+    const onUp = async () => {
+      const cur = captions.find(c => c.idx === dragging.idx);
+      if (cur) await supabase.from("captions").update({ start_ms: cur.start_ms, end_ms: cur.end_ms }).eq("project_id", id!).eq("idx", cur.idx);
+      setDragging(null);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
+  }, [dragging, zoom, captions, id]);
 
   useEffect(() => { if (!loading && !user) nav("/auth"); }, [user, loading, nav]);
 
