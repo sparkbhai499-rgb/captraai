@@ -624,12 +624,20 @@ const Editor = () => {
                     const left = (c.start_ms / 1000) * zoom;
                     const width = ((c.end_ms - c.start_ms) / 1000) * zoom;
                     const active = activeCap?.idx === c.idx;
+                    const startDrag = (e: React.PointerEvent, mode: "move" | "left" | "right") => {
+                      e.stopPropagation(); e.preventDefault();
+                      setDragging({ idx: c.idx, mode, startX: e.clientX, origStart: c.start_ms, origEnd: c.end_ms });
+                    };
                     return (
-                      <div key={c.idx} onClick={() => seek(c.start_ms)}
-                        title={c.text}
-                        className={`absolute top-1 bottom-1 rounded px-1.5 flex items-center text-[10px] truncate cursor-pointer transition ${active ? "bg-primary text-primary-foreground ring-2 ring-primary-glow" : "bg-accent/70 text-accent-foreground hover:bg-accent"}`}
-                        style={{ left: `${left}px`, width: `${Math.max(20, width)}px` }}>
-                        {c.text}
+                      <div key={c.idx}
+                        onDoubleClick={() => seek(c.start_ms)}
+                        onPointerDown={(e) => startDrag(e, "move")}
+                        title={`${c.text}\n(drag to move · edges to resize · double-click to seek)`}
+                        className={`absolute top-1 bottom-1 rounded px-2 flex items-center text-[10px] truncate select-none group/cap ${dragging?.idx === c.idx ? "cursor-grabbing" : "cursor-grab"} ${active ? "bg-primary text-primary-foreground ring-2 ring-primary-glow" : "bg-accent/70 text-accent-foreground hover:bg-accent"}`}
+                        style={{ left: `${left}px`, width: `${Math.max(30, width)}px` }}>
+                        <div onPointerDown={(e) => startDrag(e, "left")} className="absolute left-0 top-0 bottom-0 w-1.5 cursor-ew-resize bg-white/30 opacity-0 group-hover/cap:opacity-100 rounded-l"/>
+                        <span className="truncate pointer-events-none flex-1">{c.text}</span>
+                        <div onPointerDown={(e) => startDrag(e, "right")} className="absolute right-0 top-0 bottom-0 w-1.5 cursor-ew-resize bg-white/30 opacity-0 group-hover/cap:opacity-100 rounded-r"/>
                       </div>
                     );
                   })}
