@@ -38,13 +38,23 @@ export const UploadDropzone = ({ compact = false }: { compact?: boolean }) => {
       const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
       const { error: upErr } = await supabase.storage.from("videos").upload(path, file, { contentType: file.type || "video/mp4" });
       if (upErr) throw upErr;
-      setProgress(60);
+      setProgress(50);
+      // Extract real duration client-side so caption timings sync accurately
+      const duration_sec = await new Promise<number | null>((resolve) => {
+        const v = document.createElement("video");
+        v.preload = "metadata";
+        v.onloadedmetadata = () => { resolve(Math.round(v.duration) || null); URL.revokeObjectURL(v.src); };
+        v.onerror = () => resolve(null);
+        v.src = URL.createObjectURL(file);
+      });
+      setProgress(65);
       const { data: proj, error: pErr } = await supabase.from("projects").insert({
         user_id: user.id,
         title: file.name.replace(/\.[^.]+$/, ""),
         video_path: path,
         status: "uploaded",
         language,
+        duration_sec,
       }).select().single();
       if (pErr) throw pErr;
       setProgress(85);
