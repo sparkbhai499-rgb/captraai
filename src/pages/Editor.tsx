@@ -627,13 +627,34 @@ const Editor = () => {
                 ))}
               </div>
 
-              {/* Video track */}
+              {/* Video track — drag to shift all captions in sync */}
               <div className="mx-2 mt-2">
-                <div className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1"><Film className="w-3 h-3"/>Video</div>
-                <div className="h-14 rounded-md bg-gradient-to-r from-primary/40 via-accent/30 to-primary/40 border border-white/10 relative overflow-hidden"
+                <div className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1"><Film className="w-3 h-3"/>Video <span className="opacity-60">· drag to shift captions</span></div>
+                <div
+                  onPointerDown={(e) => {
+                    const startX = e.clientX;
+                    const startCaps = captions.map(c => ({ ...c }));
+                    let lastDelta = 0;
+                    const move = (ev: PointerEvent) => {
+                      lastDelta = Math.round(((ev.clientX - startX) / zoom) * 1000);
+                      setCaptions(startCaps.map(c => ({ ...c, start_ms: Math.max(0, c.start_ms + lastDelta), end_ms: Math.max(0, c.end_ms + lastDelta) })));
+                    };
+                    const up = async () => {
+                      window.removeEventListener("pointermove", move);
+                      window.removeEventListener("pointerup", up);
+                      if (Math.abs(lastDelta) < 30 || !id) return;
+                      pushHistory(startCaps);
+                      const shifted = startCaps.map(c => ({ ...c, start_ms: Math.max(0, c.start_ms + lastDelta), end_ms: Math.max(0, c.end_ms + lastDelta) }));
+                      await Promise.all(shifted.map(c => supabase.from("captions").update({ start_ms: c.start_ms, end_ms: c.end_ms }).eq("project_id", id).eq("idx", c.idx)));
+                      toast.success(`Shifted ${lastDelta > 0 ? "+" : ""}${(lastDelta / 1000).toFixed(2)}s`);
+                    };
+                    window.addEventListener("pointermove", move);
+                    window.addEventListener("pointerup", up);
+                  }}
+                  className="h-14 rounded-md bg-gradient-to-r from-primary/40 via-accent/30 to-primary/40 border border-white/10 relative overflow-hidden cursor-grab active:cursor-grabbing select-none"
                   style={{ width: `${(totalMs / 1000) * zoom - 8}px` }}>
-                  <div className="absolute inset-0 flex items-center px-2 text-[11px] font-medium truncate">{project.title}</div>
-                  <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "repeating-linear-gradient(90deg, transparent 0 20px, rgba(255,255,255,0.06) 20px 21px)" }}/>
+                  <div className="absolute inset-0 flex items-center px-2 text-[11px] font-medium truncate pointer-events-none">{project.title}</div>
+                  <div className="absolute inset-0 opacity-30 pointer-events-none" style={{ backgroundImage: "repeating-linear-gradient(90deg, transparent 0 20px, rgba(255,255,255,0.06) 20px 21px)" }}/>
                 </div>
               </div>
 
