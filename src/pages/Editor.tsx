@@ -19,15 +19,17 @@ import { LANGS } from "@/components/UploadDropzone";
 
 const fontOptions = ["Inter", "Space Grotesk", "Arial", "Georgia", "Impact", "Courier New"];
 const positions = ["bottom", "top", "middle"] as const;
-type StyleState = { font: string; size: number; color: string; bg: string; bgOpacity: number; position: typeof positions[number] };
+type StyleState = { font: string; size: number; color: string; bg: string; bgOpacity: number; position: typeof positions[number]; glow: string };
 
 const STYLE_PRESETS: { name: string; style: StyleState }[] = [
-  { name: "Classic", style: { font: "Inter", size: 28, color: "#ffffff", bg: "#000000", bgOpacity: 0.6, position: "bottom" } },
-  { name: "YT Bold", style: { font: "Impact", size: 40, color: "#ffff00", bg: "#000000", bgOpacity: 0.7, position: "bottom" } },
-  { name: "Reels", style: { font: "Space Grotesk", size: 44, color: "#ffffff", bg: "#7c3aed", bgOpacity: 0.85, position: "middle" } },
-  { name: "Minimal", style: { font: "Inter", size: 24, color: "#ffffff", bg: "#000000", bgOpacity: 0, position: "bottom" } },
-  { name: "Neon", style: { font: "Space Grotesk", size: 36, color: "#00ffe0", bg: "#000000", bgOpacity: 0.4, position: "bottom" } },
-  { name: "Podcast", style: { font: "Georgia", size: 26, color: "#ffffff", bg: "#111827", bgOpacity: 0.8, position: "top" } },
+  { name: "Glow ✨", style: { font: "Space Grotesk", size: 42, color: "#ffffff", bg: "#000000", bgOpacity: 0, position: "bottom", glow: "#ff8a1a" } },
+  { name: "Neon Cyan", style: { font: "Space Grotesk", size: 40, color: "#e6feff", bg: "#000000", bgOpacity: 0, position: "bottom", glow: "#00ffe0" } },
+  { name: "Hot Pink", style: { font: "Space Grotesk", size: 40, color: "#ffffff", bg: "#000000", bgOpacity: 0, position: "bottom", glow: "#ff2d95" } },
+  { name: "Classic", style: { font: "Inter", size: 28, color: "#ffffff", bg: "#000000", bgOpacity: 0.6, position: "bottom", glow: "" } },
+  { name: "YT Bold", style: { font: "Impact", size: 40, color: "#ffff00", bg: "#000000", bgOpacity: 0.7, position: "bottom", glow: "" } },
+  { name: "Reels", style: { font: "Space Grotesk", size: 44, color: "#ffffff", bg: "#7c3aed", bgOpacity: 0.85, position: "middle", glow: "" } },
+  { name: "Minimal", style: { font: "Inter", size: 24, color: "#ffffff", bg: "#000000", bgOpacity: 0, position: "bottom", glow: "" } },
+  { name: "Podcast", style: { font: "Georgia", size: 26, color: "#ffffff", bg: "#111827", bgOpacity: 0.8, position: "top", glow: "" } },
 ];
 
 type FxState = { brightness: number; contrast: number; saturation: number; hue: number; blur: number; grayscale: number; sepia: number; vignette: number };
@@ -76,7 +78,7 @@ const Editor = () => {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [currentMs, setCurrentMs] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [style, setStyle] = useState<StyleState>({ font: "Inter", size: 28, color: "#ffffff", bg: "#000000", bgOpacity: 0.6, position: "bottom" });
+  const [style, setStyle] = useState<StyleState>({ font: "Space Grotesk", size: 42, color: "#ffffff", bg: "#000000", bgOpacity: 0, position: "bottom", glow: "#ff8a1a" });
   const [fx, setFx] = useState<FxState>(FX_DEFAULT);
   const [yt, setYt] = useState<any>(null);
   const [ytBusy, setYtBusy] = useState(false);
@@ -447,6 +449,15 @@ const Editor = () => {
                 <div><Label className="text-xs">BG opacity · {Math.round(style.bgOpacity*100)}%</Label>
                   <Slider min={0} max={100} step={5} value={[style.bgOpacity*100]} onValueChange={([v]) => setStyle({...style, bgOpacity: v/100})} className="mt-3"/>
                 </div>
+                <div className="grid grid-cols-[1fr_auto] gap-2 items-end">
+                  <div>
+                    <Label className="text-xs">Glow color</Label>
+                    <Input type="color" value={style.glow || "#ff8a1a"} onChange={(e) => setStyle({...style, glow: e.target.value})} className="bg-white/5 mt-1.5 h-9 p-1"/>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => setStyle({...style, glow: style.glow ? "" : "#ff8a1a"})} className="h-9 text-xs">
+                    {style.glow ? "Glow off" : "Glow on"}
+                  </Button>
+                </div>
                 <div><Label className="text-xs">Position</Label>
                   <div className="grid grid-cols-3 gap-1.5 mt-1.5">
                     {positions.map(p => (
@@ -553,6 +564,13 @@ const Editor = () => {
                 {videoUrl ? (
                   <video ref={videoRef} src={videoUrl} className="w-full h-full object-contain"
                     style={{ filter: fxToCss(fx) }}
+                    onLoadedMetadata={async (e) => {
+                      const d = Math.round(e.currentTarget.duration);
+                      if (d && id && (!project?.duration_sec || Math.abs(project.duration_sec - d) > 1)) {
+                        await supabase.from("projects").update({ duration_sec: d }).eq("id", id);
+                        setProject((p: any) => ({ ...p, duration_sec: d }));
+                      }
+                    }}
                     onTimeUpdate={(e) => setCurrentMs(Math.round(e.currentTarget.currentTime * 1000))}
                     onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}/>
                 ) : (
@@ -565,8 +583,11 @@ const Editor = () => {
                   <div className={`absolute left-1/2 -translate-x-1/2 ${posClass} px-4 py-2 rounded max-w-[90%] text-center pointer-events-none`}
                     style={{
                       fontFamily: style.font, fontSize: `${style.size}px`, color: style.color,
-                      background: `${style.bg}${Math.round(style.bgOpacity*255).toString(16).padStart(2,"0")}`,
-                      textShadow: "0 2px 4px rgba(0,0,0,0.8)", fontWeight: 600,
+                      background: style.bgOpacity > 0 ? `${style.bg}${Math.round(style.bgOpacity*255).toString(16).padStart(2,"0")}` : "transparent",
+                      textShadow: style.glow
+                        ? `0 0 8px ${style.glow}, 0 0 20px ${style.glow}, 0 0 32px ${style.glow}, 0 2px 4px rgba(0,0,0,0.9)`
+                        : "0 2px 4px rgba(0,0,0,0.8)",
+                      fontWeight: 700, letterSpacing: "0.01em",
                     }}>{activeCap.text}</div>
                 )}
               </div>
