@@ -56,6 +56,7 @@ export const Navbar = () => {
         </nav>
 
         <div className="hidden md:flex items-center gap-2">
+          <InstallButton />
           {user ? (
             <>
               <span className="text-xs text-muted-foreground max-w-[160px] truncate">{user.email}</span>
