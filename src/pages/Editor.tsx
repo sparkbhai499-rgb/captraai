@@ -78,7 +78,7 @@ const Editor = () => {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [currentMs, setCurrentMs] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [style, setStyle] = useState<StyleState>({ font: "Inter", size: 28, color: "#ffffff", bg: "#000000", bgOpacity: 0.6, position: "bottom" });
+  const [style, setStyle] = useState<StyleState>({ font: "Space Grotesk", size: 42, color: "#ffffff", bg: "#000000", bgOpacity: 0, position: "bottom", glow: "#ff8a1a" });
   const [fx, setFx] = useState<FxState>(FX_DEFAULT);
   const [yt, setYt] = useState<any>(null);
   const [ytBusy, setYtBusy] = useState(false);
