@@ -9,20 +9,28 @@ const corsHeaders = {
 
 const LOVABLE = "https://ai.gateway.lovable.dev/v1/audio/transcriptions";
 
-// Chunk transcript into 4-6 second caption segments by punctuation/word groups.
-function splitToCaptions(text: string, durationMs: number) {
+// Split a segment's text into ~5-word caption chunks, distributing time proportionally by word count
+function chunkSegment(text: string, startMs: number, endMs: number, perCap = 5) {
   const words = text.trim().split(/\s+/).filter(Boolean);
   if (!words.length) return [];
-  const perCap = 10; // ~10 words per caption
   const groups: string[] = [];
   for (let i = 0; i < words.length; i += perCap) groups.push(words.slice(i, i + perCap).join(" "));
-  const step = durationMs / groups.length;
-  return groups.map((t, i) => ({
-    idx: i,
-    start_ms: Math.round(i * step),
-    end_ms: Math.round(Math.min((i + 1) * step, durationMs)),
-    text: t,
-  }));
+  const dur = endMs - startMs;
+  return groups.map((t, i) => {
+    const wStart = i * perCap;
+    const wEnd = Math.min((i + 1) * perCap, words.length);
+    return {
+      text: t,
+      start_ms: Math.round(startMs + (wStart / words.length) * dur),
+      end_ms: Math.round(startMs + (wEnd / words.length) * dur),
+    };
+  });
+}
+
+// Fallback: chunk full transcript over an estimated duration
+function splitToCaptions(text: string, durationMs: number) {
+  const caps = chunkSegment(text, 0, durationMs, 5);
+  return caps.map((c, i) => ({ idx: i, ...c }));
 }
 
 serve(async (req) => {
