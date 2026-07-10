@@ -555,6 +555,13 @@ const Editor = () => {
                 {videoUrl ? (
                   <video ref={videoRef} src={videoUrl} className="w-full h-full object-contain"
                     style={{ filter: fxToCss(fx) }}
+                    onLoadedMetadata={async (e) => {
+                      const d = Math.round(e.currentTarget.duration);
+                      if (d && id && (!project?.duration_sec || Math.abs(project.duration_sec - d) > 1)) {
+                        await supabase.from("projects").update({ duration_sec: d }).eq("id", id);
+                        setProject((p: any) => ({ ...p, duration_sec: d }));
+                      }
+                    }}
                     onTimeUpdate={(e) => setCurrentMs(Math.round(e.currentTarget.currentTime * 1000))}
                     onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}/>
                 ) : (
@@ -567,8 +574,11 @@ const Editor = () => {
                   <div className={`absolute left-1/2 -translate-x-1/2 ${posClass} px-4 py-2 rounded max-w-[90%] text-center pointer-events-none`}
                     style={{
                       fontFamily: style.font, fontSize: `${style.size}px`, color: style.color,
-                      background: `${style.bg}${Math.round(style.bgOpacity*255).toString(16).padStart(2,"0")}`,
-                      textShadow: "0 2px 4px rgba(0,0,0,0.8)", fontWeight: 600,
+                      background: style.bgOpacity > 0 ? `${style.bg}${Math.round(style.bgOpacity*255).toString(16).padStart(2,"0")}` : "transparent",
+                      textShadow: style.glow
+                        ? `0 0 8px ${style.glow}, 0 0 20px ${style.glow}, 0 0 32px ${style.glow}, 0 2px 4px rgba(0,0,0,0.9)`
+                        : "0 2px 4px rgba(0,0,0,0.8)",
+                      fontWeight: 700, letterSpacing: "0.01em",
                     }}>{activeCap.text}</div>
                 )}
               </div>
