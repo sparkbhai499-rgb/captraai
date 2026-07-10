@@ -1,0 +1,15 @@
+{
+  "name": "Captra AI — Video Caption Studio",
+  "short_name": "Captra AI",
+  "description": "AI Video Caption & Editing Studio for Creators",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0a0a",
+  "theme_color": "#ff8a1a",
+  "icons": [
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

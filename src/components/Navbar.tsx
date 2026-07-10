@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, LogOut, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { InstallButton } from "@/components/InstallButton";
 
 export const Navbar = () => {
   const { user } = useAuth();
@@ -55,6 +56,7 @@ export const Navbar = () => {
         </nav>
 
         <div className="hidden md:flex items-center gap-2">
+          <InstallButton />
           {user ? (
             <>
               <span className="text-xs text-muted-foreground max-w-[160px] truncate">{user.email}</span>
