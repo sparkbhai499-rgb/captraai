@@ -449,6 +449,15 @@ const Editor = () => {
                 <div><Label className="text-xs">BG opacity · {Math.round(style.bgOpacity*100)}%</Label>
                   <Slider min={0} max={100} step={5} value={[style.bgOpacity*100]} onValueChange={([v]) => setStyle({...style, bgOpacity: v/100})} className="mt-3"/>
                 </div>
+                <div className="grid grid-cols-[1fr_auto] gap-2 items-end">
+                  <div>
+                    <Label className="text-xs">Glow color</Label>
+                    <Input type="color" value={style.glow || "#ff8a1a"} onChange={(e) => setStyle({...style, glow: e.target.value})} className="bg-white/5 mt-1.5 h-9 p-1"/>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => setStyle({...style, glow: style.glow ? "" : "#ff8a1a"})} className="h-9 text-xs">
+                    {style.glow ? "Glow off" : "Glow on"}
+                  </Button>
+                </div>
                 <div><Label className="text-xs">Position</Label>
                   <div className="grid grid-cols-3 gap-1.5 mt-1.5">
                     {positions.map(p => (
