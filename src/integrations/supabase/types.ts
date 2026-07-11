@@ -82,6 +82,53 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_requests: {
+        Row: {
+          admin_note: string | null
+          amount_inr: number
+          created_at: string
+          id: string
+          plan_id: string
+          screenshot_path: string | null
+          status: string
+          updated_at: string
+          upi_ref: string | null
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          amount_inr: number
+          created_at?: string
+          id?: string
+          plan_id: string
+          screenshot_path?: string | null
+          status?: string
+          updated_at?: string
+          upi_ref?: string | null
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          amount_inr?: number
+          created_at?: string
+          id?: string
+          plan_id?: string
+          screenshot_path?: string | null
+          status?: string
+          updated_at?: string
+          upi_ref?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_requests_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plans: {
         Row: {
           created_at: string
@@ -321,6 +368,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      approve_payment_request: { Args: { _id: string }; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -328,6 +376,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      user_has_active_plan: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user" | "delivery"

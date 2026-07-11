@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { checkUploadQuota, FREE_PROJECT_LIMIT } from "@/lib/quota";
 
 const ALLOWED = ["video/mp4", "video/quicktime", "video/x-msvideo", "video/x-matroska"];
 const MAX_MB = 200;
@@ -32,6 +33,11 @@ export const UploadDropzone = ({ compact = false }: { compact?: boolean }) => {
       toast.error("Only MP4, MOV, AVI, MKV allowed"); return;
     }
     if (file.size > MAX_MB * 1024 * 1024) { toast.error(`Max ${MAX_MB} MB`); return; }
+    const q = await checkUploadQuota(user.id);
+    if (!q.allowed) {
+      toast.error(`Free limit reached (${FREE_PROJECT_LIMIT} videos). Please upgrade your plan.`);
+      nav("/pricing"); return;
+    }
     setBusy(true); setProgress(10);
     try {
       const ext = file.name.split(".").pop() || "mp4";
