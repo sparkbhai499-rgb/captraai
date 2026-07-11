@@ -91,10 +91,48 @@ const AdminPage = () => {
         <div className="grid lg:grid-cols-2 gap-6">
           <GlassCard>
             <h2 className="font-display text-lg font-semibold mb-3">Grant admin</h2>
-            <p className="text-xs text-muted-foreground mb-3">Paste a user's UUID (from profiles table) to add admin role.</p>
+            <p className="text-xs text-muted-foreground mb-3">Type user's email or paste their UUID.</p>
             <div className="flex gap-2">
-              <Input placeholder="user_id UUID" value={newAdminEmail} onChange={(e) => setNewAdminEmail(e.target.value)} className="bg-secondary/50"/>
+              <Input placeholder="email or user_id UUID" value={newAdminEmail} onChange={(e) => setNewAdminEmail(e.target.value)} className="bg-secondary/50"/>
               <Button onClick={promote} className="gradient-primary text-white border-0">Add</Button>
+            </div>
+          </GlassCard>
+
+          <GlassCard className="lg:col-span-2">
+            <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+              <h2 className="font-display text-lg font-semibold">All users ({users.length})</h2>
+              <Input placeholder="Search name or email…" value={userSearch} onChange={(e) => setUserSearch(e.target.value)} className="bg-secondary/50 max-w-xs"/>
+            </div>
+            <div className="overflow-x-auto max-h-[420px]">
+              <table className="w-full text-sm">
+                <thead className="text-xs text-muted-foreground border-b border-border">
+                  <tr>
+                    <th className="text-left py-2 px-2">Name</th>
+                    <th className="text-left py-2 px-2">Email</th>
+                    <th className="text-left py-2 px-2">Phone</th>
+                    <th className="text-left py-2 px-2">Projects</th>
+                    <th className="text-left py-2 px-2">Joined</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users
+                    .filter(u => {
+                      const q = userSearch.toLowerCase().trim();
+                      if (!q) return true;
+                      return (u.email || "").toLowerCase().includes(q) || (u.display_name || "").toLowerCase().includes(q);
+                    })
+                    .map((u) => (
+                    <tr key={u.user_id} className="border-b border-border/50 hover:bg-secondary/30">
+                      <td className="py-2 px-2">{u.display_name || <span className="text-muted-foreground">—</span>}</td>
+                      <td className="py-2 px-2 font-mono text-xs">{u.email || <span className="text-muted-foreground">—</span>}</td>
+                      <td className="py-2 px-2">{u.phone || <span className="text-muted-foreground">—</span>}</td>
+                      <td className="py-2 px-2">{u.project_count}</td>
+                      <td className="py-2 px-2 text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                  {users.length === 0 && <tr><td colSpan={5} className="py-6 text-center text-muted-foreground">No users yet.</td></tr>}
+                </tbody>
+              </table>
             </div>
           </GlassCard>
 
