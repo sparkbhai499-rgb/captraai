@@ -30,22 +30,28 @@ const AdminPage = () => {
   useEffect(() => {
     if (!ok) return;
     (async () => {
-      const [{ count: uc }, { count: pc }, { count: mc }, { data: msgs }] = await Promise.all([
+      const [{ count: uc }, { count: pc }, { count: mc }, { data: msgs }, { data: ulist }] = await Promise.all([
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("projects").select("*", { count: "exact", head: true }),
         supabase.from("contact_messages").select("*", { count: "exact", head: true }),
         supabase.from("contact_messages").select("*").order("created_at", { ascending: false }).limit(20),
+        supabase.rpc("admin_list_users" as any),
       ]);
       setStats({ users: uc || 0, projects: pc || 0, messages: mc || 0 });
       setMessages(msgs || []);
+      setUsers((ulist as any) || []);
     })();
   }, [ok]);
 
   const promote = async () => {
     if (!newAdminEmail) return;
-    const { data: profs } = await supabase.from("profiles").select("user_id").eq("display_name", newAdminEmail).limit(1);
-    // Fallback: allow lookup by user_id UUID directly if display_name doesn't match
-    const uid = profs?.[0]?.user_id;
+    // Try match by email first (from admin_list_users), then display_name, then treat as raw UUID
+    let uid: string | undefined = users.find(u => u.email?.toLowerCase() === newAdminEmail.toLowerCase())?.user_id;
+    if (!uid) {
+      const { data: profs } = await supabase.from("profiles").select("user_id").eq("display_name", newAdminEmail).limit(1);
+      uid = profs?.[0]?.user_id;
+    }
+    if (!uid && /^[0-9a-f-]{36}$/i.test(newAdminEmail)) uid = newAdminEmail;
     if (!uid) return toast.error("User not found — paste their user_id UUID instead of email if needed");
     const { error } = await supabase.from("user_roles").insert({ user_id: uid, role: "admin" as any });
     if (error) return toast.error(error.message);
