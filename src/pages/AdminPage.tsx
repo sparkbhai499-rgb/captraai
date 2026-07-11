@@ -15,6 +15,8 @@ const AdminPage = () => {
   const [ok, setOk] = useState<boolean | null>(null);
   const [stats, setStats] = useState({ users: 0, projects: 0, messages: 0 });
   const [messages, setMessages] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [userSearch, setUserSearch] = useState("");
   const [newAdminEmail, setNewAdminEmail] = useState("");
 
   useEffect(() => { if (!loading && !user) nav("/auth"); }, [user, loading, nav]);
