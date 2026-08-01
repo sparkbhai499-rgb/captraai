@@ -46,10 +46,15 @@ const AdminPage = () => {
       supabase.from("contact_messages").select("*").order("created_at", { ascending: false }).limit(20),
       supabase.rpc("admin_list_users" as any),
       supabase.from("plans").select("*").order("sort_order"),
-      supabase.from("payment_requests").select("*,plans(name),profiles!inner(display_name,phone)").order("created_at", { ascending: false }).limit(50),
+      supabase.from("payment_requests").select("*,plans(name)").order("created_at", { ascending: false }).limit(50),
     ]);
+    const uMap = new Map(((ulist as any[]) || []).map((u: any) => [u.user_id, u]));
     setStats({ users: uc || 0, projects: pc || 0, messages: mc || 0, pending: pr || 0 });
-    setMessages(msgs || []); setUsers((ulist as any) || []); setPlans(pl || []); setPayments(pay || []);
+    setMessages(msgs || []); setUsers((ulist as any) || []); setPlans(pl || []);
+    setPayments(((pay as any[]) || []).map((p: any) => ({
+      ...p,
+      profiles: { display_name: uMap.get(p.user_id)?.display_name, phone: uMap.get(p.user_id)?.phone, email: uMap.get(p.user_id)?.email },
+    })));
   };
   useEffect(() => { if (ok) refresh(); }, [ok]);
 
