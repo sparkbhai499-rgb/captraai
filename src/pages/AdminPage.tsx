@@ -29,6 +29,17 @@ const AdminPage = () => {
   const [editPlan, setEditPlan] = useState<any | null>(null);
   const [proofUrl, setProofUrl] = useState<string | null>(null);
   const [rejectNote, setRejectNote] = useState<Record<string, string>>({});
+  const [settings, setSettings] = useState<any>({ upi_id: "", upi_name: "", note: "", qr_url: null });
+
+  const saveSettings = async () => {
+    const payload = { upi_id: settings.upi_id, upi_name: settings.upi_name, note: settings.note, qr_url: settings.qr_url, updated_at: new Date().toISOString() };
+    const { error } = settings.id
+      ? await supabase.from("payment_settings" as any).update(payload).eq("id", settings.id)
+      : await supabase.from("payment_settings" as any).insert(payload);
+    if (error) return toast.error(error.message);
+    toast.success("Payment settings saved"); refresh();
+  };
+
 
   useEffect(() => { if (!loading && !user) nav("/auth"); }, [user, loading, nav]);
   useEffect(() => {
@@ -48,9 +59,12 @@ const AdminPage = () => {
       supabase.from("plans").select("*").order("sort_order"),
       supabase.from("payment_requests").select("*,plans(name)").order("created_at", { ascending: false }).limit(50),
     ]);
+    const { data: ps } = await supabase.from("payment_settings" as any).select("*").limit(1).maybeSingle();
+    if (ps) setSettings(ps);
     const uMap = new Map(((ulist as any[]) || []).map((u: any) => [u.user_id, u]));
     setStats({ users: uc || 0, projects: pc || 0, messages: mc || 0, pending: pr || 0 });
     setMessages(msgs || []); setUsers((ulist as any) || []); setPlans(pl || []);
+
     setPayments(((pay as any[]) || []).map((p: any) => ({
       ...p,
       profiles: { display_name: uMap.get(p.user_id)?.display_name, phone: uMap.get(p.user_id)?.phone, email: uMap.get(p.user_id)?.email },
@@ -133,10 +147,37 @@ const AdminPage = () => {
         <Tabs defaultValue="payments">
           <TabsList className="mb-6">
             <TabsTrigger value="payments">Payments {stats.pending > 0 && <span className="ml-2 bg-primary text-white text-xs px-2 py-0.5 rounded-full">{stats.pending}</span>}</TabsTrigger>
+            <TabsTrigger value="upi">UPI / QR</TabsTrigger>
             <TabsTrigger value="plans">Plans</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="messages">Messages</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="upi">
+            <GlassCard className="max-w-xl">
+              <h2 className="font-display text-lg font-semibold mb-4">UPI & QR settings</h2>
+              <div className="space-y-3">
+                <div><Label className="text-xs">UPI ID</Label><Input value={settings.upi_id} onChange={(e) => setSettings({ ...settings, upi_id: e.target.value })} placeholder="name@bank" className="bg-secondary/50 mt-1"/></div>
+                <div><Label className="text-xs">Payee name</Label><Input value={settings.upi_name} onChange={(e) => setSettings({ ...settings, upi_name: e.target.value })} className="bg-secondary/50 mt-1"/></div>
+                <div><Label className="text-xs">Note for users</Label><Textarea rows={2} value={settings.note || ""} onChange={(e) => setSettings({ ...settings, note: e.target.value })} className="bg-secondary/50 mt-1"/></div>
+                <div>
+                  <Label className="text-xs">QR code image</Label>
+                  <label className="mt-1 flex items-center gap-2 p-3 rounded-lg border border-dashed border-border cursor-pointer hover:border-primary/50">
+                    <Plus className="w-4 h-4 text-primary"/><span className="text-sm">Upload QR image (max 1 MB)</span>
+                    <input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (!f) return; if (f.size > 1024 * 1024) return toast.error("Image too large (max 1 MB)"); const r = new FileReader(); r.onload = () => setSettings((s: any) => ({ ...s, qr_url: r.result as string })); r.readAsDataURL(f); }}/>
+                  </label>
+                  {settings.qr_url && (
+                    <div className="mt-3 p-3 rounded-xl bg-white w-fit">
+                      <img src={settings.qr_url} alt="UPI QR code preview" className="w-40 h-40 object-contain"/>
+                    </div>
+                  )}
+                  {settings.qr_url && <Button size="sm" variant="ghost" className="mt-2" onClick={() => setSettings({ ...settings, qr_url: null })}><Trash2 className="w-4 h-4 mr-1"/>Remove QR</Button>}
+                </div>
+                <Button onClick={saveSettings} className="gradient-primary text-white border-0">Save payment settings</Button>
+              </div>
+            </GlassCard>
+          </TabsContent>
+
 
           <TabsContent value="payments">
             <GlassCard>
