@@ -129,6 +129,33 @@ export type Database = {
           },
         ]
       }
+      payment_settings: {
+        Row: {
+          id: string
+          note: string | null
+          qr_url: string | null
+          updated_at: string
+          upi_id: string
+          upi_name: string
+        }
+        Insert: {
+          id?: string
+          note?: string | null
+          qr_url?: string | null
+          updated_at?: string
+          upi_id?: string
+          upi_name?: string
+        }
+        Update: {
+          id?: string
+          note?: string | null
+          qr_url?: string | null
+          updated_at?: string
+          upi_id?: string
+          upi_name?: string
+        }
+        Relationships: []
+      }
       plans: {
         Row: {
           created_at: string
