@@ -59,9 +59,12 @@ const AdminPage = () => {
       supabase.from("plans").select("*").order("sort_order"),
       supabase.from("payment_requests").select("*,plans(name)").order("created_at", { ascending: false }).limit(50),
     ]);
+    const { data: ps } = await supabase.from("payment_settings" as any).select("*").limit(1).maybeSingle();
+    if (ps) setSettings(ps);
     const uMap = new Map(((ulist as any[]) || []).map((u: any) => [u.user_id, u]));
     setStats({ users: uc || 0, projects: pc || 0, messages: mc || 0, pending: pr || 0 });
     setMessages(msgs || []); setUsers((ulist as any) || []); setPlans(pl || []);
+
     setPayments(((pay as any[]) || []).map((p: any) => ({
       ...p,
       profiles: { display_name: uMap.get(p.user_id)?.display_name, phone: uMap.get(p.user_id)?.phone, email: uMap.get(p.user_id)?.email },
