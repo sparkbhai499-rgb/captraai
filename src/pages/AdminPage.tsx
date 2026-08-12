@@ -29,6 +29,17 @@ const AdminPage = () => {
   const [editPlan, setEditPlan] = useState<any | null>(null);
   const [proofUrl, setProofUrl] = useState<string | null>(null);
   const [rejectNote, setRejectNote] = useState<Record<string, string>>({});
+  const [settings, setSettings] = useState<any>({ upi_id: "", upi_name: "", note: "", qr_url: null });
+
+  const saveSettings = async () => {
+    const payload = { upi_id: settings.upi_id, upi_name: settings.upi_name, note: settings.note, qr_url: settings.qr_url, updated_at: new Date().toISOString() };
+    const { error } = settings.id
+      ? await supabase.from("payment_settings" as any).update(payload).eq("id", settings.id)
+      : await supabase.from("payment_settings" as any).insert(payload);
+    if (error) return toast.error(error.message);
+    toast.success("Payment settings saved"); refresh();
+  };
+
 
   useEffect(() => { if (!loading && !user) nav("/auth"); }, [user, loading, nav]);
   useEffect(() => {
