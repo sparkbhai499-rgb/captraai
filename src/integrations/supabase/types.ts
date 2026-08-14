@@ -228,51 +228,110 @@ export type Database = {
         }
         Relationships: []
       }
+      project_assets: {
+        Row: {
+          created_at: string
+          duration_sec: number | null
+          height: number | null
+          id: string
+          kind: string
+          name: string
+          project_id: string
+          storage_path: string
+          user_id: string
+          width: number | null
+        }
+        Insert: {
+          created_at?: string
+          duration_sec?: number | null
+          height?: number | null
+          id?: string
+          kind?: string
+          name: string
+          project_id: string
+          storage_path: string
+          user_id: string
+          width?: number | null
+        }
+        Update: {
+          created_at?: string
+          duration_sec?: number | null
+          height?: number | null
+          id?: string
+          kind?: string
+          name?: string
+          project_id?: string
+          storage_path?: string
+          user_id?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_assets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           created_at: string
           duration_sec: number | null
           error_message: string | null
+          fps: number
+          height: number
           id: string
           language: string | null
           status: string
           thumbnail_url: string | null
+          timeline: Json | null
           title: string
           transcript_text: string | null
           updated_at: string
           user_id: string
           video_path: string | null
           video_url: string | null
+          width: number
         }
         Insert: {
           created_at?: string
           duration_sec?: number | null
           error_message?: string | null
+          fps?: number
+          height?: number
           id?: string
           language?: string | null
           status?: string
           thumbnail_url?: string | null
+          timeline?: Json | null
           title?: string
           transcript_text?: string | null
           updated_at?: string
           user_id: string
           video_path?: string | null
           video_url?: string | null
+          width?: number
         }
         Update: {
           created_at?: string
           duration_sec?: number | null
           error_message?: string | null
+          fps?: number
+          height?: number
           id?: string
           language?: string | null
           status?: string
           thumbnail_url?: string | null
+          timeline?: Json | null
           title?: string
           transcript_text?: string | null
           updated_at?: string
           user_id?: string
           video_path?: string | null
           video_url?: string | null
+          width?: number
         }
         Relationships: []
       }
