@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import Editor from "./pages/Editor";
+import Studio from "./pages/Studio";
 import Pricing from "./pages/Pricing";
 import Contact from "./pages/Contact";
 import AdminPage from "./pages/AdminPage";
