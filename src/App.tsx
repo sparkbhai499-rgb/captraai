@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import Editor from "./pages/Editor";
+import Studio from "./pages/Studio";
 import Pricing from "./pages/Pricing";
 import Contact from "./pages/Contact";
 import AdminPage from "./pages/AdminPage";
@@ -30,6 +31,7 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/editor/:id" element={<Editor />} />
+          <Route path="/studio/:id" element={<Studio />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/admin" element={<AdminPage />} />
