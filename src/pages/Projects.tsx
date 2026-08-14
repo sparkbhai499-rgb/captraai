@@ -62,7 +62,8 @@ const Projects = () => {
                   <p className="font-medium truncate">{p.title}</p>
                   <p className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString()} · {p.status}</p>
                   <div className="flex gap-2 mt-3">
-                    <Button size="sm" className="flex-1 gradient-primary text-white border-0" asChild><Link to={`/editor/${p.id}`}>Open</Link></Button>
+                    <Button size="sm" className="flex-1 gradient-primary text-white border-0" asChild><Link to={`/studio/${p.id}`}>Studio</Link></Button>
+                    <Button size="sm" variant="outline" asChild><Link to={`/editor/${p.id}`}>Captions</Link></Button>
                     <Button size="sm" variant="outline" onClick={() => remove(p.id, p.video_path)}><Trash2 className="w-4 h-4"/></Button>
                   </div>
                 </GlassCard>
