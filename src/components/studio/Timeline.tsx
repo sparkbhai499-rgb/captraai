@@ -1,19 +1,33 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStudio } from "@/lib/studio/store";
 import { Clip, Track } from "@/lib/studio/types";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
-  Copy, Eye, EyeOff, Lock, Magnet, Scissors, Trash2, Unlock, Volume2, VolumeX, ZoomIn, ZoomOut,
+  Copy, Eye, EyeOff, Lock, Magnet, MousePointer2, Scissors, Trash2, Unlock, Volume2, VolumeX, ZoomIn, ZoomOut,
 } from "lucide-react";
 
 const KIND_COLOR: Record<string, string> = {
-  video: "from-primary/70 to-primary/40",
-  overlay: "from-sky-500/70 to-sky-500/40",
-  text: "from-emerald-500/70 to-emerald-500/40",
-  sticker: "from-fuchsia-500/70 to-fuchsia-500/40",
-  audio: "from-amber-500/70 to-amber-500/40",
+  video: "from-primary/80 to-primary/45",
+  overlay: "from-sky-500/80 to-sky-500/45",
+  text: "from-emerald-500/80 to-emerald-500/45",
+  sticker: "from-fuchsia-500/80 to-fuchsia-500/45",
+  audio: "from-amber-500/80 to-amber-500/45",
 };
+
+const tc = (t: number) => {
+  const m = Math.floor(t / 60);
+  const s = Math.floor(t % 60);
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+};
+
+const TIP = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <Tooltip>
+    <TooltipTrigger asChild>{children as any}</TooltipTrigger>
+    <TooltipContent side="bottom" className="text-xs">{label}</TooltipContent>
+  </Tooltip>
+);
 
 export const Timeline = () => {
   const {
@@ -22,8 +36,10 @@ export const Timeline = () => {
   } = useStudio();
   const [zoom, setZoom] = useState(60); // px per second
   const [snap, setSnap] = useState(true);
+  const [hoverT, setHoverT] = useState<number | null>(null);
   const areaRef = useRef<HTMLDivElement>(null);
   const drag = useRef<any>(null);
+  const scrubbing = useRef(false);
 
   const total = Math.max(duration + 5, 20);
   const snapPoints = () => doc.tracks.flatMap((t) => t.clips.flatMap((c) => [c.start, c.start + c.duration])).concat([0, time]);
@@ -33,23 +49,35 @@ export const Timeline = () => {
     return p === undefined ? v : p;
   };
 
-  const scrub = (e: React.MouseEvent) => {
-    const rect = areaRef.current!.getBoundingClientRect();
-    const t = (e.clientX - rect.left + areaRef.current!.scrollLeft) / zoom;
-    setTime(Math.max(0, Math.min(total, t)));
+  const timeAt = (clientX: number) => {
+    const el = areaRef.current!;
+    const rect = el.getBoundingClientRect();
+    return Math.max(0, Math.min(total, (clientX - rect.left + el.scrollLeft) / zoom));
   };
+
+  const onRulerDown = (e: React.PointerEvent) => {
+    scrubbing.current = true;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    setTime(timeAt(e.clientX));
+  };
+  const onRulerMove = (e: React.PointerEvent) => {
+    if (scrubbing.current) setTime(timeAt(e.clientX));
+  };
+  const onRulerUp = () => { scrubbing.current = false; };
 
   const onClipDown = (e: React.PointerEvent, clip: Clip, track: Track, mode: "move" | "l" | "r") => {
     e.stopPropagation();
-    if (track.locked || clip.locked) return;
     select(clip.id);
-    drag.current = { clip, track, mode, x0: e.clientX, start0: clip.start, dur0: clip.duration, in0: clip.inPoint };
+    if (track.locked || clip.locked) return;
+    drag.current = { clip, track, mode, x0: e.clientX, start0: clip.start, dur0: clip.duration, in0: clip.inPoint, moved: false };
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
 
   const onMove = (e: React.PointerEvent) => {
+    setHoverT(timeAt(e.clientX));
     const d = drag.current; if (!d) return;
     const dt = (e.clientX - d.x0) / zoom;
+    if (Math.abs(e.clientX - d.x0) > 2) d.moved = true;
     if (d.mode === "move") {
       const rows = Array.from(areaRef.current!.querySelectorAll("[data-track]")) as HTMLElement[];
       const hit = rows.find((r) => { const b = r.getBoundingClientRect(); return e.clientY >= b.top && e.clientY <= b.bottom; });
@@ -60,101 +88,170 @@ export const Timeline = () => {
       const nd = Math.max(0.2, d.dur0 - (ns - d.start0));
       updateClip(d.clip.id, { start: applySnap(ns), duration: nd, inPoint: Math.max(0, d.in0 + (ns - d.start0)) }, false);
     } else {
-      updateClip(d.clip.id, { duration: Math.max(0.2, d.dur0 + dt) }, false);
+      updateClip(d.clip.id, { duration: Math.max(0.2, applySnap(d.start0 + d.dur0 + dt) - d.start0) }, false);
     }
   };
 
   const onUp = () => { drag.current = null; };
 
+  const splitAt = (clipId: string, at: number) => splitClip(clipId, at);
+
+  /* keyboard: S = split at playhead, arrows nudge selected clip */
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (!selectedId) return;
+      if (e.key.toLowerCase() === "s") { e.preventDefault(); splitAt(selectedId, time); }
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        const step = (e.shiftKey ? 1 : 0.1) * (e.key === "ArrowLeft" ? -1 : 1);
+        const c = selectedClip;
+        if (c) { e.preventDefault(); updateClip(c.id, { start: Math.max(0, c.start + step) }); }
+      }
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [selectedId, selectedClip, time, updateClip]);
+
   const toggleTrack = (id: string, key: "hidden" | "locked" | "muted") =>
     setDoc((dd) => ({ ...dd, tracks: dd.tracks.map((t) => (t.id === id ? { ...t, [key]: !t[key] } : t)) }));
 
+  const step = zoom < 30 ? 5 : zoom < 80 ? 2 : 1;
   const ticks = Math.ceil(total);
 
   return (
-    <div className="glass rounded-xl flex flex-col overflow-hidden">
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
-        <Button size="sm" variant="secondary" disabled={!selectedClip} onClick={() => selectedId && splitClip(selectedId, time)}>
-          <Scissors className="w-4 h-4 mr-1" /> Split
-        </Button>
-        <Button size="sm" variant="secondary" disabled={!selectedClip} onClick={() => selectedId && duplicateClip(selectedId)}>
-          <Copy className="w-4 h-4 mr-1" /> Duplicate
-        </Button>
-        <Button size="sm" variant="secondary" disabled={!selectedClip} onClick={() => selectedId && removeClip(selectedId)}>
-          <Trash2 className="w-4 h-4 mr-1" /> Delete
-        </Button>
-        <Button size="sm" variant={snap ? "default" : "secondary"} onClick={() => setSnap((s) => !s)}>
-          <Magnet className="w-4 h-4 mr-1" /> Snap
-        </Button>
-        <div className="ml-auto flex items-center gap-2 w-44">
-          <ZoomOut className="w-4 h-4 text-muted-foreground" />
-          <Slider value={[zoom]} min={16} max={220} step={2} onValueChange={([v]) => setZoom(v)} />
-          <ZoomIn className="w-4 h-4 text-muted-foreground" />
-        </div>
-      </div>
+    <TooltipProvider delayDuration={200}>
+      <div className="glass rounded-xl flex flex-col overflow-hidden">
+        {/* toolbar */}
+        <div className="flex items-center gap-1 px-2 py-1.5 border-b border-white/5 bg-black/30">
+          <TIP label="Select / drag clip">
+            <Button size="icon" variant="ghost" className="h-8 w-8"><MousePointer2 className="w-4 h-4" /></Button>
+          </TIP>
+          <div className="w-px h-5 bg-white/10 mx-1" />
+          <TIP label="Split at playhead (S)">
+            <Button size="icon" variant="ghost" className="h-8 w-8" disabled={!selectedClip}
+              onClick={() => selectedId && splitAt(selectedId, time)}><Scissors className="w-4 h-4" /></Button>
+          </TIP>
+          <TIP label="Duplicate">
+            <Button size="icon" variant="ghost" className="h-8 w-8" disabled={!selectedClip}
+              onClick={() => selectedId && duplicateClip(selectedId)}><Copy className="w-4 h-4" /></Button>
+          </TIP>
+          <TIP label="Delete (Del)">
+            <Button size="icon" variant="ghost" className="h-8 w-8" disabled={!selectedClip}
+              onClick={() => selectedId && removeClip(selectedId)}><Trash2 className="w-4 h-4" /></Button>
+          </TIP>
+          <div className="w-px h-5 bg-white/10 mx-1" />
+          <TIP label={snap ? "Snapping on" : "Snapping off"}>
+            <Button size="icon" variant={snap ? "default" : "ghost"} className="h-8 w-8"
+              onClick={() => setSnap((s) => !s)}><Magnet className="w-4 h-4" /></Button>
+          </TIP>
 
-      <div className="flex">
-        <div className="w-32 shrink-0 border-r border-white/5">
-          <div className="h-7 border-b border-white/5" />
-          {doc.tracks.map((t) => (
-            <div key={t.id} className="h-16 px-2 flex flex-col justify-center gap-1 border-b border-white/5">
-              <span className="text-xs font-medium truncate">{t.name}</span>
-              <div className="flex gap-1">
-                <button onClick={() => toggleTrack(t.id, "hidden")} className="p-1 rounded hover:bg-white/10">
-                  {t.hidden ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                </button>
-                <button onClick={() => toggleTrack(t.id, "locked")} className="p-1 rounded hover:bg-white/10">
-                  {t.locked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
-                </button>
-                <button onClick={() => toggleTrack(t.id, "muted")} className="p-1 rounded hover:bg-white/10">
-                  {t.muted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div ref={areaRef} className="relative flex-1 overflow-x-auto select-none"
-          onPointerMove={onMove} onPointerUp={onUp} onPointerLeave={onUp}>
-          <div style={{ width: total * zoom, minWidth: "100%" }} className="relative">
-            <div className="h-7 border-b border-white/5 relative cursor-pointer" onClick={scrub}>
-              {Array.from({ length: ticks + 1 }).map((_, i) => (
-                <div key={i} className="absolute top-0 h-full border-l border-white/10 text-[10px] text-muted-foreground pl-1"
-                  style={{ left: i * zoom }}>{i % (zoom < 40 ? 5 : 1) === 0 ? `${i}s` : ""}</div>
-              ))}
-            </div>
-
-            {doc.tracks.map((t) => (
-              <div key={t.id} data-track={t.id} className="h-16 relative border-b border-white/5" onClick={() => select(null)}>
-                {t.clips.map((c) => (
-                  <div key={c.id}
-                    onPointerDown={(e) => onClipDown(e, c, t, "move")}
-                    onClick={(e) => { e.stopPropagation(); select(c.id); }}
-                    className={`absolute top-2 h-12 rounded-lg bg-gradient-to-b ${KIND_COLOR[t.kind]} border cursor-grab active:cursor-grabbing overflow-hidden
-                      ${selectedId === c.id ? "border-white ring-2 ring-primary" : "border-white/20"} ${c.hidden ? "opacity-40" : ""}`}
-                    style={{ left: c.start * zoom, width: Math.max(14, c.duration * zoom) }}>
-                    <div onPointerDown={(e) => onClipDown(e, c, t, "l")} className="absolute left-0 top-0 h-full w-2 cursor-ew-resize bg-black/30" />
-                    <div onPointerDown={(e) => onClipDown(e, c, t, "r")} className="absolute right-0 top-0 h-full w-2 cursor-ew-resize bg-black/30" />
-                    <div className="px-3 py-1 text-[11px] font-medium truncate pointer-events-none">
-                      {c.kind === "text" || c.kind === "sticker" ? (c.text?.content || c.name) : c.name}
-                    </div>
-                    <div className="px-3 text-[10px] opacity-70 pointer-events-none">
-                      {c.duration.toFixed(1)}s{c.speed !== 1 ? ` · ${c.speed}x` : ""}{c.reverse ? " · rev" : ""}
-                    </div>
-                    {Object.entries(c.keyframes).flatMap(([, kfs]) => kfs || []).map((k, i) => (
-                      <div key={i} className="absolute bottom-0.5 w-1.5 h-1.5 rotate-45 bg-white" style={{ left: k.t * zoom }} />
-                    ))}
-                  </div>
-                ))}
-              </div>
-            ))}
-
-            <div className="absolute top-0 bottom-0 w-0.5 bg-primary pointer-events-none" style={{ left: time * zoom }}>
-              <div className="w-3 h-3 -ml-[5px] rounded-full bg-primary" />
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-[11px] tabular-nums text-muted-foreground hidden sm:block">
+              {tc(time)} / {tc(duration)}
+            </span>
+            <div className="flex items-center gap-2 w-40">
+              <ZoomOut className="w-4 h-4 text-muted-foreground shrink-0" />
+              <Slider value={[zoom]} min={16} max={220} step={2} onValueChange={([v]) => setZoom(v)} />
+              <ZoomIn className="w-4 h-4 text-muted-foreground shrink-0" />
             </div>
           </div>
         </div>
+
+        <div className="flex">
+          {/* track headers */}
+          <div className="w-28 md:w-36 shrink-0 border-r border-white/5 bg-black/20">
+            <div className="h-8 border-b border-white/5" />
+            {doc.tracks.map((t) => (
+              <div key={t.id} className="h-16 px-2 flex flex-col justify-center gap-1 border-b border-white/5">
+                <span className="text-[11px] font-medium truncate tracking-wide uppercase text-muted-foreground">{t.name}</span>
+                <div className="flex gap-0.5">
+                  <button onClick={() => toggleTrack(t.id, "hidden")} className="p-1 rounded hover:bg-white/10">
+                    {t.hidden ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                  <button onClick={() => toggleTrack(t.id, "locked")} className="p-1 rounded hover:bg-white/10">
+                    {t.locked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                  </button>
+                  <button onClick={() => toggleTrack(t.id, "muted")} className="p-1 rounded hover:bg-white/10">
+                    {t.muted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* scrollable area */}
+          <div ref={areaRef} className="relative flex-1 overflow-x-auto select-none"
+            onPointerMove={onMove} onPointerUp={onUp} onPointerLeave={() => { onUp(); setHoverT(null); }}>
+            <div style={{ width: total * zoom, minWidth: "100%" }} className="relative">
+              {/* ruler */}
+              <div className="h-8 border-b border-white/10 relative cursor-ew-resize bg-black/25"
+                onPointerDown={onRulerDown} onPointerMove={onRulerMove} onPointerUp={onRulerUp}>
+                {Array.from({ length: ticks + 1 }).map((_, i) => {
+                  const major = i % step === 0;
+                  return (
+                    <div key={i} className="absolute bottom-0" style={{ left: i * zoom }}>
+                      <div className={major ? "w-px h-3 bg-white/25" : "w-px h-1.5 bg-white/10"} />
+                      {major && <span className="absolute -top-4 left-1 text-[10px] tabular-nums text-muted-foreground">{tc(i)}</span>}
+                    </div>
+                  );
+                })}
+                {hoverT !== null && (
+                  <div className="absolute top-0 bottom-0 w-px bg-white/25 pointer-events-none" style={{ left: hoverT * zoom }} />
+                )}
+              </div>
+
+              {/* tracks */}
+              {doc.tracks.map((t) => (
+                <div key={t.id} data-track={t.id}
+                  className="h-16 relative border-b border-white/5 bg-[linear-gradient(90deg,hsl(0_0%_100%/0.02)_1px,transparent_1px)]"
+                  style={{ backgroundSize: `${zoom}px 100%` }}
+                  onClick={() => select(null)}>
+                  {t.clips.map((c) => (
+                    <div key={c.id}
+                      onPointerDown={(e) => onClipDown(e, c, t, "move")}
+                      onClick={(e) => { e.stopPropagation(); select(c.id); }}
+                      onDoubleClick={(e) => { e.stopPropagation(); splitAt(c.id, timeAt(e.clientX)); }}
+                      title="Drag to move · Double-click to split here"
+                      className={`group absolute top-2 h-12 rounded-md bg-gradient-to-b ${KIND_COLOR[t.kind]} border overflow-hidden shadow-lg transition-shadow
+                        ${t.locked || c.locked ? "cursor-not-allowed" : "cursor-grab active:cursor-grabbing"}
+                        ${selectedId === c.id ? "border-primary ring-2 ring-primary/70 ring-offset-1 ring-offset-background z-10" : "border-white/15 hover:border-white/40"} ${c.hidden ? "opacity-40" : ""}`}
+                      style={{ left: c.start * zoom, width: Math.max(14, c.duration * zoom) }}>
+                      <div onPointerDown={(e) => onClipDown(e, c, t, "l")}
+                        className="absolute left-0 top-0 h-full w-2.5 cursor-ew-resize bg-black/40 hover:bg-black/60 flex items-center justify-center">
+                        <div className="w-0.5 h-5 rounded bg-white/70 opacity-0 group-hover:opacity-100" />
+                      </div>
+                      <div onPointerDown={(e) => onClipDown(e, c, t, "r")}
+                        className="absolute right-0 top-0 h-full w-2.5 cursor-ew-resize bg-black/40 hover:bg-black/60 flex items-center justify-center">
+                        <div className="w-0.5 h-5 rounded bg-white/70 opacity-0 group-hover:opacity-100" />
+                      </div>
+                      <div className="px-3.5 pt-1 text-[11px] font-medium truncate pointer-events-none">
+                        {c.kind === "text" || c.kind === "sticker" ? (c.text?.content || c.name) : c.name}
+                      </div>
+                      <div className="px-3.5 text-[10px] opacity-70 tabular-nums pointer-events-none">
+                        {c.duration.toFixed(1)}s{c.speed !== 1 ? ` · ${c.speed}x` : ""}{c.reverse ? " · rev" : ""}
+                      </div>
+                      {Object.entries(c.keyframes).flatMap(([, kfs]) => kfs || []).map((k, i) => (
+                        <div key={i} className="absolute bottom-0.5 w-1.5 h-1.5 rotate-45 bg-white" style={{ left: k.t * zoom }} />
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              ))}
+
+              {/* playhead */}
+              <div className="absolute top-0 bottom-0 w-[2px] bg-primary pointer-events-none z-20 shadow-[0_0_10px_hsl(var(--primary)/0.8)]"
+                style={{ left: time * zoom }}>
+                <div className="w-3.5 h-3.5 -ml-[6px] -mt-0.5 rounded-sm rotate-45 bg-primary" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-3 py-1 text-[10px] text-muted-foreground border-t border-white/5 bg-black/20">
+          Drag clip = move · Edge drag = trim · Double-click clip = split at cursor · S = split at playhead · ←/→ nudge
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 };
