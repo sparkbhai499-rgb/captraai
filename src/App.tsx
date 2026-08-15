@@ -30,7 +30,8 @@ const AnimatedRoutes = () => {
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/projects" element={<Projects />} />
-          <Route path="/editor/:id" element={<Editor />} />
+          <Route path="/editor/:id" element={<EditorRedirect />} />
+          <Route path="/editor-classic/:id" element={<Editor />} />
           <Route path="/studio/:id" element={<Studio />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/contact" element={<Contact />} />
