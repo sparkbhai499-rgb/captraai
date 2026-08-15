@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -20,6 +20,12 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const EditorRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/studio/${id}`} replace />;
+};
+
+
 const AnimatedRoutes = () => {
   const location = useLocation();
   return (
@@ -30,7 +36,8 @@ const AnimatedRoutes = () => {
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/projects" element={<Projects />} />
-          <Route path="/editor/:id" element={<Editor />} />
+          <Route path="/editor/:id" element={<EditorRedirect />} />
+          <Route path="/editor-classic/:id" element={<Editor />} />
           <Route path="/studio/:id" element={<Studio />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/contact" element={<Contact />} />
