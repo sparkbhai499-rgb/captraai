@@ -20,6 +20,12 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const EditorRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/studio/${id}`} replace />;
+};
+
+
 const AnimatedRoutes = () => {
   const location = useLocation();
   return (
