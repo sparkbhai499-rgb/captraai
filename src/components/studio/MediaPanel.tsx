@@ -113,8 +113,13 @@ export const MediaPanel = ({ projectId, userId }: { projectId: string; userId: s
     toast.info("Tip: use Split on the timeline, then delete the silent piece — full AI silence removal is coming next.");
   };
 
-  const filtered = assets.filter((a) => a.name.toLowerCase().includes(q.toLowerCase()));
-  const musicAssets = filtered.filter((a) => a.kind === "audio");
+  const searched = assets.filter((a) => a.name.toLowerCase().includes(q.toLowerCase()));
+  const filtered = searched.filter((a) =>
+    kindFilter === "all" ? true
+      : kindFilter === "image" ? (a.kind === "image" || a.kind === "gif")
+      : a.kind === kindFilter);
+  const musicAssets = searched.filter((a) => a.kind === "audio");
+
 
   /* ---- music helpers (non-destructive) ---- */
   const addMusic = (a: Asset, opts?: { fromStart?: boolean }) => {
