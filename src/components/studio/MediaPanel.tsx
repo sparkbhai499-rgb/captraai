@@ -38,7 +38,9 @@ export const MediaPanel = ({ projectId, userId }: { projectId: string; userId: s
   const [q, setQ] = useState("");
   const [aiBusy, setAiBusy] = useState(false);
   const [lang, setLang] = useState("auto");
+  const [kindFilter, setKindFilter] = useState<"all" | "video" | "image" | "audio">("all");
   const fileRef = useRef<HTMLInputElement>(null);
+
 
   const load = async () => {
     const { data } = await supabase.from("project_assets").select("*").eq("project_id", projectId).order("created_at", { ascending: false });
