@@ -181,20 +181,32 @@ export const MediaPanel = ({ projectId, userId }: { projectId: string; userId: s
 
         <div className="overflow-y-auto px-3 pb-4 space-y-3">
           <TabsContent value="media" className="space-y-3 m-0">
-            <input ref={fileRef} type="file" hidden multiple accept="video/*,image/*,audio/*,.gif"
+            <input ref={fileRef} type="file" hidden multiple accept="video/*,image/*,audio/*,.gif,.mp3,.wav,.m4a,.aac,.mov,.mp4,.webm"
               onChange={(e) => e.target.files?.length && importFiles(e.target.files)} />
             <Button className="w-full gradient-primary text-white border-0" disabled={busy} onClick={() => fileRef.current?.click()}>
-              {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />} Import media
+              {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />} Add media
             </Button>
-            <p className="text-[11px] text-muted-foreground">Video, photos, GIFs and audio. Files stay in your library for every session.</p>
+            <p className="text-[11px] text-muted-foreground">Video, photo, GIF ya music — sab kuch yahin se add hota hai. Captions sirf tab banenge jab tum AI tab se generate karoge.</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {(["all", "video", "image", "audio"] as const).map((k) => (
+                <Button key={k} size="sm" variant={kindFilter === k ? "default" : "secondary"}
+                  className="text-[10px] px-1 capitalize" onClick={() => setKindFilter(k)}>
+                  {k === "image" ? "Photo" : k === "audio" ? "Music" : k}
+                </Button>
+              ))}
+            </div>
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search library…" className="pl-9 bg-secondary/50 h-9" />
             </div>
+            {filtered.length === 0 && (
+              <p className="text-[11px] text-muted-foreground">Library khaali hai — "Add media" se video, photo ya music import karo.</p>
+            )}
             <div className="grid grid-cols-2 gap-2">
               {filtered.map((a) => (
                 <button key={a.id} onClick={() => addAsset(a)}
                   className="rounded-lg border border-white/10 bg-secondary/40 p-2 text-left hover:border-primary transition">
+
                   <div className="aspect-video rounded bg-black/40 grid place-items-center mb-1 overflow-hidden">
                     {a.kind === "image" || a.kind === "gif"
                       ? <img src={a.url} alt={a.name} className="w-full h-full object-cover" />
