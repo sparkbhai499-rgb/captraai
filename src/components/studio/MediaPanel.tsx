@@ -110,16 +110,65 @@ export const MediaPanel = ({ projectId, userId }: { projectId: string; userId: s
   };
 
   const filtered = assets.filter((a) => a.name.toLowerCase().includes(q.toLowerCase()));
+  const musicAssets = filtered.filter((a) => a.kind === "audio");
+
+  /* ---- music helpers (non-destructive) ---- */
+  const addMusic = (a: Asset, opts?: { fromStart?: boolean }) => {
+    if (!a.url) return;
+    const src = a.duration_sec || 30;
+    const at = opts?.fromStart ? 0 : time;
+    addClip("audio", makeClip({
+      kind: "audio", name: a.name, src: a.url, assetId: a.id,
+      start: at, duration: src, sourceDuration: a.duration_sec || undefined,
+      audio: { volume: 0.8, fadeIn: 0.6, fadeOut: 1.2, pitch: 0 },
+    }));
+    toast.success("Music added to audio track");
+  };
+
+  const fitMusicToVideo = (a: Asset) => {
+    if (!a.url) return;
+    const src = a.duration_sec || 30;
+    const target = Math.max(1, duration);
+    let at = 0;
+    let added = 0;
+    while (at < target - 0.2 && added < 30) {
+      const len = Math.min(src, target - at);
+      addClip("audio", makeClip({
+        kind: "audio", name: a.name, src: a.url, assetId: a.id,
+        start: at, duration: len, sourceDuration: a.duration_sec || undefined,
+        audio: { volume: 0.8, fadeIn: at === 0 ? 0.6 : 0, fadeOut: at + len >= target - 0.2 ? 1.2 : 0, pitch: 0 },
+      }));
+      at += len; added++;
+    }
+    toast.success(`Music fit to video (${added} loop${added > 1 ? "s" : ""})`);
+  };
+
+  const isAudioSel = selectedClip?.kind === "audio";
+  const setSelAudio = (patch: Partial<{ volume: number; fadeIn: number; fadeOut: number }>) => {
+    if (!selectedClip) return;
+    updateClip(selectedClip.id, { audio: { ...selectedClip.audio, ...patch } });
+  };
+  const duckMusic = () => {
+    setDoc((d) => ({
+      ...d,
+      tracks: d.tracks.map((t) => t.kind !== "audio" ? t : {
+        ...t, clips: t.clips.map((c) => ({ ...c, audio: { ...c.audio, volume: 0.25 } })),
+      }),
+    }));
+    toast.success("Music ducked to 25% for voice clarity");
+  };
 
   return (
     <div className="glass rounded-xl overflow-hidden flex flex-col max-h-[70vh]">
       <Tabs defaultValue="media" className="flex flex-col overflow-hidden">
-        <TabsList className="grid grid-cols-4 m-2 bg-secondary/50">
+        <TabsList className="grid grid-cols-5 m-2 bg-secondary/50">
           <TabsTrigger value="media"><Video className="w-4 h-4" /></TabsTrigger>
+          <TabsTrigger value="music"><Music className="w-4 h-4" /></TabsTrigger>
           <TabsTrigger value="text"><Type className="w-4 h-4" /></TabsTrigger>
           <TabsTrigger value="stickers"><ImageIcon className="w-4 h-4" /></TabsTrigger>
           <TabsTrigger value="ai"><Sparkles className="w-4 h-4" /></TabsTrigger>
         </TabsList>
+
 
         <div className="overflow-y-auto px-3 pb-4 space-y-3">
           <TabsContent value="media" className="space-y-3 m-0">
