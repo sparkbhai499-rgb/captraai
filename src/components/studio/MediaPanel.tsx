@@ -200,6 +200,57 @@ export const MediaPanel = ({ projectId, userId }: { projectId: string; userId: s
             </div>
           </TabsContent>
 
+          <TabsContent value="music" className="space-y-3 m-0">
+            <input ref={musicRef} type="file" hidden multiple accept="audio/*"
+              onChange={(e) => e.target.files?.length && importFiles(e.target.files)} />
+            <Button className="w-full gradient-primary text-white border-0" disabled={busy} onClick={() => musicRef.current?.click()}>
+              {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Music className="w-4 h-4 mr-2" />} Import music
+            </Button>
+            <p className="text-[11px] text-muted-foreground">MP3, WAV, M4A — song timeline ke audio track par aayega, video ko chhua nahi jata.</p>
+
+            {musicAssets.length === 0 && (
+              <p className="text-[11px] text-muted-foreground">Koi music nahi hai. Upar se apna song import karo.</p>
+            )}
+
+            <div className="space-y-2">
+              {musicAssets.map((a) => (
+                <div key={a.id} className="rounded-lg border border-white/10 bg-secondary/40 p-2 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Music className="w-4 h-4 opacity-70 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-[11px] truncate">{a.name}</p>
+                      {a.duration_sec ? <p className="text-[10px] text-muted-foreground">{a.duration_sec.toFixed(1)}s</p> : null}
+                    </div>
+                  </div>
+                  {a.url && <audio src={a.url} controls className="w-full h-8" />}
+                  <div className="grid grid-cols-3 gap-1.5">
+                    <Button size="sm" variant="secondary" className="text-[10px] px-1" onClick={() => addMusic(a)}>At playhead</Button>
+                    <Button size="sm" variant="secondary" className="text-[10px] px-1" onClick={() => addMusic(a, { fromStart: true })}>From 0:00</Button>
+                    <Button size="sm" variant="secondary" className="text-[10px] px-1" onClick={() => fitMusicToVideo(a)}>Fit video</Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="rounded-lg border border-white/10 bg-secondary/30 p-2 space-y-2">
+              <p className="text-[11px] font-medium">Music mixing</p>
+              {isAudioSel ? (
+                <div className="grid grid-cols-2 gap-1.5">
+                  <Button size="sm" variant="secondary" className="text-[10px]" onClick={() => setSelAudio({ volume: 1 })}>Vol 100%</Button>
+                  <Button size="sm" variant="secondary" className="text-[10px]" onClick={() => setSelAudio({ volume: 0.5 })}>Vol 50%</Button>
+                  <Button size="sm" variant="secondary" className="text-[10px]" onClick={() => setSelAudio({ fadeIn: 1 })}>Fade in 1s</Button>
+                  <Button size="sm" variant="secondary" className="text-[10px]" onClick={() => setSelAudio({ fadeOut: 1.5 })}>Fade out 1.5s</Button>
+                </div>
+              ) : (
+                <p className="text-[10px] text-muted-foreground">Timeline par music clip select karo — yahan volume aur fade ke shortcuts aa jayenge.</p>
+              )}
+              <Button size="sm" variant="secondary" className="w-full text-[10px]" onClick={duckMusic}>Duck all music to 25% (voice clear)</Button>
+              <p className="text-[10px] text-muted-foreground">Tip: music clip par S dabao ya double-click karo beat par split karne ke liye.</p>
+            </div>
+          </TabsContent>
+
+
+
           <TabsContent value="text" className="space-y-2 m-0">
             <Button className="w-full" variant="secondary" onClick={addText}><Type className="w-4 h-4 mr-2" /> Add text layer</Button>
             <p className="text-[11px] text-muted-foreground">Fonts, stroke, shadow, background and animations live in the Text tab of the inspector.</p>
