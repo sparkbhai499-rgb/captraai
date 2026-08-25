@@ -30,7 +30,9 @@ const probeDuration = (file: File, kind: string) =>
   });
 
 export const MediaPanel = ({ projectId, userId }: { projectId: string; userId: string }) => {
-  const { addClip, doc, time } = useStudio();
+  const { addClip, doc, setDoc, time, duration, selectedClip, updateClip } = useStudio();
+  const musicRef = useRef<HTMLInputElement>(null);
+
   const [assets, setAssets] = useState<Asset[]>([]);
   const [busy, setBusy] = useState(false);
   const [q, setQ] = useState("");
