@@ -96,6 +96,19 @@ export const StudioProvider = ({ projectId, initialDoc, children }:
     setSelectedId(clip.id);
   }, [setDoc]);
 
+  /* batch insert — one undo step, keeps clip order */
+  const addClips: Ctx["addClips"] = useCallback((trackKind, clips) => {
+    if (!clips.length) return;
+    setDoc((d) => {
+      const idx = d.tracks.findIndex((t) => t.kind === trackKind);
+      if (idx < 0) return d;
+      const tracks = d.tracks.map((t, i) => (i === idx ? { ...t, clips: [...t.clips, ...clips] } : t));
+      return { ...d, tracks };
+    });
+    setSelectedId(clips[clips.length - 1].id);
+  }, [setDoc]);
+
+
   const removeClip = useCallback((id: string) => {
     setDoc((d) => ({ ...d, tracks: d.tracks.map((t) => ({ ...t, clips: t.clips.filter((c) => c.id !== id) })) }));
     setSelectedId((s) => (s === id ? null : s));
