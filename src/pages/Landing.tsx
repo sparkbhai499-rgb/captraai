@@ -1,5 +1,7 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { InstallButton } from "@/components/InstallButton";
+import appLogo from "@/assets/captra-logo.png";
 import { UploadDropzone } from "@/components/UploadDropzone";
 import { GlassCard } from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
@@ -83,6 +85,20 @@ const Landing = () => {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-6">No card needed · first watermark-free export ₹9</p>
+
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
+              {[
+                { k: "40+", v: "languages" },
+                { k: "95%+", v: "accuracy" },
+                { k: "<60s", v: "per 10-min video" },
+                { k: "4K", v: "export quality" },
+              ].map((s) => (
+                <div key={s.k} className="text-center">
+                  <p className="font-display text-2xl md:text-3xl font-bold gradient-text">{s.k}</p>
+                  <p className="text-xs text-muted-foreground">{s.v}</p>
+                </div>
+              ))}
+            </div>
           </motion.div>
 
           <motion.div id="upload" initial={{opacity:0,y:30}} animate={{opacity:1,y:0}} transition={{delay:0.25, duration:0.6}} className="max-w-2xl mx-auto mt-20">
@@ -218,6 +234,32 @@ const Landing = () => {
               {sending ? "Sending…" : "Send message"}
             </Button>
           </form>
+        </GlassCard>
+      </section>
+
+      {/* INSTALL APP */}
+      <section className="py-20 container">
+        <GlassCard className="max-w-4xl mx-auto relative overflow-hidden">
+          <div className="blob absolute -top-20 right-0 w-[320px] h-[220px] rounded-full bg-primary/50"/>
+          <div className="relative flex flex-col md:flex-row items-center gap-8">
+            <motion.img
+              src={appLogo}
+              alt="Captra AI app icon"
+              loading="lazy"
+              width={128}
+              height={128}
+              className="w-28 h-28 rounded-3xl shrink-0"
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <div className="text-center md:text-left flex-1">
+              <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">Install Captra AI on your device</h2>
+              <p className="text-sm text-muted-foreground mb-5 max-w-lg">
+                One tap and it lives on your home screen — full-screen studio, faster launch, works like a native app on phone and desktop.
+              </p>
+              <div className="flex justify-center md:justify-start"><InstallButton /></div>
+            </div>
+          </div>
         </GlassCard>
       </section>
 
