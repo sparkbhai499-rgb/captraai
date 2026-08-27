@@ -38,12 +38,11 @@ export const Navbar = () => {
   return (
     <header className={`fixed top-0 inset-x-0 z-50 transition-all ${scrolled ? "glass" : "bg-transparent"}`}>
       <div className="container flex items-center justify-between h-16">
-        <Link to="/" className="flex items-center gap-2 font-display font-bold text-lg">
-          <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center glow">
-            <Sparkles className="w-4 h-4 text-white" />
-          </div>
+        <Link to="/" className="flex items-center gap-2 font-display font-bold text-lg group">
+          <img src={logo} alt="Captra AI logo" width={32} height={32} className="w-8 h-8 rounded-lg transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110" />
           <span><span className="gradient-text">Captra</span> AI</span>
         </Link>
+
 
         <nav className="hidden md:flex items-center gap-1">
           {links.filter(l => !l.auth || user).map(l => (
