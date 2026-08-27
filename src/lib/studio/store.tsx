@@ -10,6 +10,8 @@ type Ctx = {
   selectedClip: Clip | null;
   updateClip: (id: string, patch: Partial<Clip> | ((c: Clip) => Partial<Clip>), commit?: boolean) => void;
   addClip: (trackKind: Track["kind"], clip: Clip) => void;
+  addClips: (trackKind: Track["kind"], clips: Clip[]) => void;
+
   removeClip: (id: string) => void;
   duplicateClip: (id: string) => void;
   splitClip: (id: string, at: number) => void;
@@ -93,6 +95,19 @@ export const StudioProvider = ({ projectId, initialDoc, children }:
     });
     setSelectedId(clip.id);
   }, [setDoc]);
+
+  /* batch insert — one undo step, keeps clip order */
+  const addClips: Ctx["addClips"] = useCallback((trackKind, clips) => {
+    if (!clips.length) return;
+    setDoc((d) => {
+      const idx = d.tracks.findIndex((t) => t.kind === trackKind);
+      if (idx < 0) return d;
+      const tracks = d.tracks.map((t, i) => (i === idx ? { ...t, clips: [...t.clips, ...clips] } : t));
+      return { ...d, tracks };
+    });
+    setSelectedId(clips[clips.length - 1].id);
+  }, [setDoc]);
+
 
   const removeClip = useCallback((id: string) => {
     setDoc((d) => ({ ...d, tracks: d.tracks.map((t) => ({ ...t, clips: t.clips.filter((c) => c.id !== id) })) }));
