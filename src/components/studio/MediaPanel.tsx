@@ -7,15 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Image as ImageIcon, Loader2, Music, Search, Sparkles, Type, Upload, Video } from "lucide-react";
+import { FilePlus2, Image as ImageIcon, Loader2, Music, Search, Sparkles, Type, Video } from "lucide-react";
 import { toast } from "sonner";
 
 type Asset = { id: string; name: string; kind: string; storage_path: string; duration_sec: number | null; url?: string };
 
 const kindOf = (file: File) => {
-  if (file.type.startsWith("audio")) return "audio";
-  if (file.type === "image/gif") return "gif";
-  if (file.type.startsWith("image")) return "image";
+  const extension = file.name.split(".").pop()?.toLowerCase();
+  if (file.type.startsWith("audio") || ["mp3", "wav", "m4a", "aac", "ogg", "flac"].includes(extension || "")) return "audio";
+  if (file.type === "image/gif" || extension === "gif") return "gif";
+  if (file.type.startsWith("image") || ["jpg", "jpeg", "png", "webp", "bmp", "avif"].includes(extension || "")) return "image";
   return "video";
 };
 
@@ -32,6 +33,8 @@ const probeDuration = (file: File, kind: string) =>
 export const MediaPanel = ({ projectId, userId }: { projectId: string; userId: string }) => {
   const { addClip, doc, setDoc, time, duration, selectedClip, updateClip } = useStudio();
   const musicRef = useRef<HTMLInputElement>(null);
+  const photoRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLInputElement>(null);
 
   const [assets, setAssets] = useState<Asset[]>([]);
   const [busy, setBusy] = useState(false);
@@ -70,6 +73,11 @@ export const MediaPanel = ({ projectId, userId }: { projectId: string; userId: s
       load();
     } catch (e: any) { toast.error(e.message || "Import failed"); }
     finally { setBusy(false); }
+  };
+
+  const onFilesSelected = (input: HTMLInputElement) => {
+    if (input.files?.length) void importFiles(input.files);
+    input.value = "";
   };
 
   const addAsset = (a: Asset) => {
@@ -181,12 +189,31 @@ export const MediaPanel = ({ projectId, userId }: { projectId: string; userId: s
 
         <div className="overflow-y-auto px-3 pb-4 space-y-3">
           <TabsContent value="media" className="space-y-3 m-0">
-            <input ref={fileRef} type="file" hidden multiple accept="video/*,image/*,audio/*,.gif,.mp3,.wav,.m4a,.aac,.mov,.mp4,.webm"
-              onChange={(e) => e.target.files?.length && importFiles(e.target.files)} />
+            <input ref={fileRef} type="file" hidden multiple
+              accept="video/*,image/*,audio/*,.mp4,.mov,.webm,.avi,.mkv,.jpg,.jpeg,.png,.webp,.gif,.bmp,.avif,.mp3,.wav,.m4a,.aac,.ogg,.flac"
+              onChange={(e) => onFilesSelected(e.currentTarget)} />
+            <input ref={videoRef} type="file" hidden multiple accept="video/*,.mp4,.mov,.webm,.avi,.mkv"
+              onChange={(e) => onFilesSelected(e.currentTarget)} />
+            <input ref={photoRef} type="file" hidden multiple accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.bmp,.avif"
+              onChange={(e) => onFilesSelected(e.currentTarget)} />
+            <input ref={musicRef} type="file" hidden multiple accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac"
+              onChange={(e) => onFilesSelected(e.currentTarget)} />
+
             <Button className="w-full gradient-primary text-white border-0" disabled={busy} onClick={() => fileRef.current?.click()}>
-              {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />} Add media
+              {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FilePlus2 className="w-4 h-4 mr-2" />} Import all media
             </Button>
-            <p className="text-[11px] text-muted-foreground">Video, photo, GIF ya music — sab kuch yahin se add hota hai. Captions sirf tab banenge jab tum AI tab se generate karoge.</p>
+            <div className="grid grid-cols-3 gap-1.5">
+              <Button size="sm" variant="secondary" disabled={busy} onClick={() => videoRef.current?.click()}>
+                <Video className="w-3.5 h-3.5 mr-1" /> Video
+              </Button>
+              <Button size="sm" variant="secondary" disabled={busy} onClick={() => photoRef.current?.click()}>
+                <ImageIcon className="w-3.5 h-3.5 mr-1" /> Photos
+              </Button>
+              <Button size="sm" variant="secondary" disabled={busy} onClick={() => musicRef.current?.click()}>
+                <Music className="w-3.5 h-3.5 mr-1" /> Audio
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground">Laptop se video, multiple photos, GIF ya music select karo. Import ke baad thumbnail par click karke timeline me add karo.</p>
             <div className="grid grid-cols-4 gap-1.5">
               {(["all", "video", "image", "audio"] as const).map((k) => (
                 <Button key={k} size="sm" variant={kindFilter === k ? "default" : "secondary"}
@@ -220,8 +247,6 @@ export const MediaPanel = ({ projectId, userId }: { projectId: string; userId: s
           </TabsContent>
 
           <TabsContent value="music" className="space-y-3 m-0">
-            <input ref={musicRef} type="file" hidden multiple accept="audio/*"
-              onChange={(e) => e.target.files?.length && importFiles(e.target.files)} />
             <Button className="w-full gradient-primary text-white border-0" disabled={busy} onClick={() => musicRef.current?.click()}>
               {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Music className="w-4 h-4 mr-2" />} Import music
             </Button>
