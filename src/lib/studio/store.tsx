@@ -10,6 +10,8 @@ type Ctx = {
   selectedClip: Clip | null;
   updateClip: (id: string, patch: Partial<Clip> | ((c: Clip) => Partial<Clip>), commit?: boolean) => void;
   addClip: (trackKind: Track["kind"], clip: Clip) => void;
+  addClips: (trackKind: Track["kind"], clips: Clip[]) => void;
+
   removeClip: (id: string) => void;
   duplicateClip: (id: string) => void;
   splitClip: (id: string, at: number) => void;
