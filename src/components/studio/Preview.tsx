@@ -29,47 +29,77 @@ const transitionStyle = (clip: Clip, local: number): React.CSSProperties => {
   }
 };
 
+const easeOut = (p: number) => 1 - Math.pow(1 - Math.min(1, Math.max(0, p)), 3);
+
 const TextLayer = ({ clip, local }: { clip: Clip; local: number }) => {
   const t = clip.text!;
-  const chars = t.content.split("");
-  const words = t.content.split(" ");
+  const content = t.uppercase ? t.content.toUpperCase() : t.content;
+  const chars = content.split("");
+  const words = content.split(/\s+/).filter(Boolean);
   const anim = t.animation;
+  const glow = t.glow || 0;
   const base: React.CSSProperties = {
     fontFamily: t.font, fontSize: t.size, color: t.color, fontWeight: t.weight,
     textAlign: t.align, letterSpacing: t.letterSpacing, lineHeight: t.lineHeight,
     WebkitTextStroke: t.strokeWidth ? `${t.strokeWidth}px ${t.stroke}` : undefined,
-    textShadow: t.shadow ? `0 ${4 * t.shadow}px ${16 * t.shadow}px rgba(0,0,0,${0.9 * t.shadow})` : undefined,
+    paintOrder: "stroke fill" as any,
+    textShadow: [
+      t.shadow ? `0 ${4 * t.shadow}px ${16 * t.shadow}px rgba(0,0,0,${0.9 * t.shadow})` : "",
+      glow ? `0 0 ${14 * glow}px ${t.highlight || t.color}, 0 0 ${34 * glow}px ${t.highlight || t.color}` : "",
+    ].filter(Boolean).join(", ") || undefined,
     background: t.bg !== "transparent" ? t.bg : undefined,
     padding: t.bg !== "transparent" ? "0.2em 0.5em" : undefined,
     borderRadius: 12, whiteSpace: "pre-wrap", maxWidth: "90%",
+    willChange: "transform, opacity",
   };
   if (anim === "typewriter") {
     const n = Math.floor((local / Math.max(0.2, clip.duration * 0.6)) * chars.length);
-    return <div style={base}>{t.content.slice(0, Math.max(1, n))}</div>;
+    return <div style={base}>{content.slice(0, Math.max(1, n))}</div>;
   }
   if (anim === "word") {
-    const per = Math.max(0.12, (clip.duration * 0.7) / words.length);
+    const per = Math.max(0.12, (clip.duration * 0.92) / Math.max(1, words.length));
+    const active = Math.min(words.length - 1, Math.floor(local / per));
+    const pop = t.popScale ?? 1.12;
     return (
       <div style={base}>
         {words.map((w, i) => {
-          const on = local >= i * per;
-          return <span key={i} style={{ opacity: on ? 1 : 0.15, transform: `scale(${on ? 1 : 0.9})`, display: "inline-block", marginRight: "0.28em", transition: "none" }}>{w}</span>;
+          const p = easeOut((local - i * per) / 0.18);
+          const isActive = t.karaoke ? i === active : local >= i * per;
+          const shown = local >= i * per;
+          const boxed = isActive && t.highlightBg && t.highlightBg !== "transparent";
+          return (
+            <span
+              key={i}
+              style={{
+                display: "inline-block",
+                marginRight: "0.28em",
+                opacity: shown ? 1 : t.karaoke ? 0 : 0.15,
+                color: isActive && t.highlight ? t.highlight : undefined,
+                background: boxed ? t.highlightBg : undefined,
+                padding: boxed ? "0 0.16em" : undefined,
+                borderRadius: boxed ? 8 : undefined,
+                transform: `translateY(${(1 - p) * 14}px) scale(${shown ? (isActive ? 1 + (pop - 1) * easeOut((local - i * per) / 0.22) : 1) : 0.9})`,
+              }}
+            >
+              {w}
+            </span>
+          );
         })}
       </div>
     );
   }
   if (anim === "pop") {
-    const p = Math.min(1, local / 0.35);
-    const s = 1 + 0.25 * Math.sin(p * Math.PI) * (1 - p) * 2;
-    return <div style={{ ...base, transform: `scale(${Math.min(1.3, 0.7 + p * 0.3 + (s - 1))})`, opacity: Math.min(1, p * 2) }}>{t.content}</div>;
+    const p = easeOut(local / 0.35);
+    return <div style={{ ...base, transform: `scale(${0.86 + 0.14 * p + Math.sin(p * Math.PI) * 0.08})`, opacity: Math.min(1, p * 1.4) }}>{content}</div>;
   }
   if (anim === "slide") {
-    const p = Math.min(1, local / 0.4);
-    return <div style={{ ...base, transform: `translateY(${(1 - p) * 40}px)`, opacity: p }}>{t.content}</div>;
+    const p = easeOut(local / 0.4);
+    return <div style={{ ...base, transform: `translateY(${(1 - p) * 40}px)`, opacity: p }}>{content}</div>;
   }
-  if (anim === "fade") return <div style={{ ...base, opacity: Math.min(1, local / 0.5) }}>{t.content}</div>;
-  return <div style={base}>{t.content}</div>;
+  if (anim === "fade") return <div style={{ ...base, opacity: easeOut(local / 0.5) }}>{content}</div>;
+  return <div style={base}>{content}</div>;
 };
+
 
 const Layer = ({ clip, time }: { clip: Clip; time: number }) => {
   const local = time - clip.start;
