@@ -34,7 +34,16 @@ export interface TextCfg {
   stroke: string; strokeWidth: number; shadow: number; bg: string; align: "left" | "center" | "right";
   animation: "none" | "fade" | "typewriter" | "pop" | "word" | "slide";
   letterSpacing: number; lineHeight: number; curve: number;
+  /** Caption template extras */
+  template?: string;
+  karaoke?: boolean;
+  highlight?: string;
+  highlightBg?: string;
+  glow?: number;
+  popScale?: number;
+  uppercase?: boolean;
 }
+
 
 export interface AudioCfg { volume: number; fadeIn: number; fadeOut: number; pitch: number; }
 
