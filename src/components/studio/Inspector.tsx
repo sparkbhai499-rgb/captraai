@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CaptionTemplates } from "@/components/studio/CaptionTemplates";
 import { Diamond, FlipHorizontal, FlipVertical, Plus, Snowflake, Trash2, Undo2 } from "lucide-react";
 
 const Row = ({ label, children }: { label: string; children: React.ReactNode }) => (
