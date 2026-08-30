@@ -238,16 +238,46 @@ export const Inspector = () => {
           <TabsContent value="text" className="space-y-3 m-0">
             {!clip.text ? <p className="text-xs text-muted-foreground">This clip has no text. Add a text or sticker layer from the left rail.</p> : (
               <>
-                <Row label="Content">
-                  <Textarea value={clip.text.content} className="bg-secondary/50"
-                    onChange={(e) => up({ text: { ...clip.text!, content: e.target.value } })} />
-                </Row>
+                <Tabs defaultValue="templates">
+                  <TabsList className="grid grid-cols-2 bg-secondary/50 w-full">
+                    <TabsTrigger value="templates">Templates</TabsTrigger>
+                    <TabsTrigger value="edit">Edit</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="templates" className="mt-3 m-0">
+                    <CaptionTemplates
+                      current={clip.text.template}
+                      onPick={(tpl) => up({ text: { ...clip.text!, ...tpl.cfg, template: tpl.id } })}
+                    />
+                  </TabsContent>
+                  <TabsContent value="edit" className="mt-3 m-0 space-y-3">
+                    <Row label="Content">
+                      <Textarea value={clip.text.content} className="bg-secondary/50"
+                        onChange={(e) => up({ text: { ...clip.text!, content: e.target.value } })} />
+                    </Row>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">Karaoke word highlight</Label>
+                      <Switch checked={!!clip.text.karaoke} onCheckedChange={(v) => up({ text: { ...clip.text!, karaoke: v, animation: v ? "word" : clip.text!.animation } })} />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">Uppercase</Label>
+                      <Switch checked={!!clip.text.uppercase} onCheckedChange={(v) => up({ text: { ...clip.text!, uppercase: v } })} />
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2"><Label className="text-xs">Highlight</Label>
+                        <input type="color" value={clip.text.highlight || "#ffe600"} className="h-8 w-10 rounded bg-transparent"
+                          onChange={(e) => up({ text: { ...clip.text!, highlight: e.target.value } })} /></div>
+                    </div>
+                    <NumSlider label="Glow" value={clip.text.glow ?? 0} min={0} max={2} step={0.05} onChange={(v) => up({ text: { ...clip.text!, glow: v } })} />
+                    <NumSlider label="Pop scale" value={clip.text.popScale ?? 1.12} min={1} max={1.6} step={0.01} onChange={(v) => up({ text: { ...clip.text!, popScale: v } })} />
+                  </TabsContent>
+                </Tabs>
                 <Row label="Font">
                   <Select value={clip.text.font} onValueChange={(v) => up({ text: { ...clip.text!, font: v } })}>
                     <SelectTrigger className="bg-secondary/50"><SelectValue /></SelectTrigger>
                     <SelectContent>{FONTS.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
                   </Select>
                 </Row>
+
                 <NumSlider label="Size" value={clip.text.size} min={12} max={280} onChange={(v) => up({ text: { ...clip.text!, size: v } })} />
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2"><Label className="text-xs">Fill</Label>
