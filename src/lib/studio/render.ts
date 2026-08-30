@@ -86,7 +86,7 @@ export const drawFrame = (ctx: CanvasRenderingContext2D, doc: TimelineDoc, pool:
         if (i && i.naturalWidth) drawFitted(ctx, i, i.naturalWidth, i.naturalHeight, W, H);
       } else if (clip.text) {
         const t = clip.text;
-        let content = t.content;
+        let content = t.uppercase ? t.content.toUpperCase() : t.content;
         if (t.animation === "typewriter") {
           const n = Math.floor((local / Math.max(0.2, clip.duration * 0.6)) * content.length);
           content = content.slice(0, Math.max(1, n));
@@ -96,14 +96,44 @@ export const drawFrame = (ctx: CanvasRenderingContext2D, doc: TimelineDoc, pool:
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         if (t.shadow) { ctx.shadowColor = `rgba(0,0,0,${0.9 * t.shadow})`; ctx.shadowBlur = 24 * t.shadow; ctx.shadowOffsetY = 6 * t.shadow; }
-        const lines = content.split("\n");
-        lines.forEach((line, li) => {
-          const ly = H / 2 + (li - (lines.length - 1) / 2) * size * t.lineHeight;
-          if (t.strokeWidth) { ctx.lineWidth = t.strokeWidth * 2; ctx.strokeStyle = t.stroke; ctx.strokeText(line, W / 2, ly); }
-          ctx.fillStyle = t.color;
-          ctx.fillText(line, W / 2, ly);
-        });
+
+        if (t.animation === "word" && clip.kind !== "sticker") {
+          const words = content.split(/\s+/).filter(Boolean);
+          const per = Math.max(0.12, (clip.duration * 0.92) / Math.max(1, words.length));
+          const active = Math.min(words.length - 1, Math.floor(local / per));
+          const visible = t.karaoke ? words : words.filter((_, i) => local >= i * per);
+          const space = ctx.measureText(" ").width;
+          const widths = words.map((w) => ctx.measureText(w).width);
+          const total = widths.reduce((a, b) => a + b, 0) + space * Math.max(0, words.length - 1);
+          let x = W / 2 - total / 2;
+          words.forEach((w, i) => {
+            const shown = local >= i * per;
+            const isActive = t.karaoke ? i === active : shown;
+            const cx = x + widths[i] / 2;
+            if (shown || !t.karaoke) {
+              if (isActive && t.highlightBg && t.highlightBg !== "transparent") {
+                ctx.fillStyle = t.highlightBg;
+                ctx.fillRect(x - size * 0.12, H / 2 - size * 0.62, widths[i] + size * 0.24, size * 1.24);
+              }
+              if (t.glow) { ctx.shadowColor = t.highlight || t.color; ctx.shadowBlur = 30 * t.glow; ctx.shadowOffsetY = 0; }
+              if (t.strokeWidth) { ctx.lineWidth = t.strokeWidth * 2; ctx.strokeStyle = t.stroke; ctx.lineJoin = "round"; ctx.strokeText(w, cx, H / 2); }
+              ctx.fillStyle = isActive && t.highlight ? t.highlight : t.color;
+              ctx.fillText(w, cx, H / 2);
+            }
+            x += widths[i] + space;
+          });
+        } else {
+          const lines = content.split("\n");
+          lines.forEach((line, li) => {
+            const ly = H / 2 + (li - (lines.length - 1) / 2) * size * t.lineHeight;
+            if (t.glow) { ctx.shadowColor = t.highlight || t.color; ctx.shadowBlur = 30 * t.glow; ctx.shadowOffsetY = 0; }
+            if (t.strokeWidth) { ctx.lineWidth = t.strokeWidth * 2; ctx.strokeStyle = t.stroke; ctx.lineJoin = "round"; ctx.strokeText(line, W / 2, ly); }
+            ctx.fillStyle = t.color;
+            ctx.fillText(line, W / 2, ly);
+          });
+        }
       }
+
       ctx.restore();
     }
   }
