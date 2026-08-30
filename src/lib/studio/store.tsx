@@ -190,10 +190,11 @@ export const StudioProvider = ({ projectId, initialDoc, children }:
 
   const value = useMemo<Ctx>(() => ({
     doc, setDoc, selectedId, select: setSelectedId, selectedClip: findClip(doc, selectedId),
-    updateClip, addClip, removeClip, duplicateClip, splitClip, moveClip,
+    updateClip, addClip, addClips, removeClip, duplicateClip, splitClip, moveClip,
     undo, redo, canUndo: past.length > 0, canRedo: future.length > 0,
     duration: docDuration(doc), time, setTime, playing, setPlaying, saving,
-  }), [doc, setDoc, selectedId, updateClip, addClip, removeClip, duplicateClip, splitClip, moveClip, undo, redo, past.length, future.length, time, playing, saving]);
+  }), [doc, setDoc, selectedId, updateClip, addClip, addClips, removeClip, duplicateClip, splitClip, moveClip, undo, redo, past.length, future.length, time, playing, saving]);
+
 
   return <StudioCtx.Provider value={value}>{children}</StudioCtx.Provider>;
 };
