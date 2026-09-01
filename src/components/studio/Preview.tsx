@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStudio } from "@/lib/studio/store";
 import { Clip } from "@/lib/studio/types";
 import { effectOffsets, filterCss, maskCss, prop, transitionProgress } from "@/lib/studio/presets";
