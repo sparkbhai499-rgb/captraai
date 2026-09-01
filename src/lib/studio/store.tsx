@@ -113,6 +113,42 @@ export const StudioProvider = ({ projectId, initialDoc, children }:
     setSelectedId(clips[clips.length - 1].id);
   }, [setDoc]);
 
+  /* apply a text/caption style to every text clip in the project */
+  const applyTextToAll: Ctx["applyTextToAll"] = useCallback((patch) => {
+    setDoc((d) => ({
+      ...d,
+      tracks: d.tracks.map((t) => ({
+        ...t,
+        clips: t.clips.map((c) => (c.kind === "text" && c.text ? { ...c, text: { ...c.text, ...patch } } : c)),
+      })),
+    }));
+  }, [setDoc]);
+
+  /* copy filter / colour / effects of one clip onto every visual clip */
+  const applyLookToAll: Ctx["applyLookToAll"] = useCallback((from) => {
+    setDoc((d) => ({
+      ...d,
+      tracks: d.tracks.map((t) => ({
+        ...t,
+        clips: t.clips.map((c) =>
+          c.kind === "video" || c.kind === "image" || c.kind === "gif"
+            ? {
+                ...c,
+                filter: from.filter,
+                filterIntensity: from.filterIntensity,
+                adjust: { ...from.adjust },
+                effects: from.effects.map((e) => ({ ...e, id: uid(), duration: Math.min(e.duration, c.duration) })),
+              }
+            : c,
+        ),
+      })),
+    }));
+  }, [setDoc]);
+
+  const setRatio: Ctx["setRatio"] = useCallback((w, h) => {
+    setDoc((d) => ({ ...d, width: w, height: h }));
+  }, [setDoc]);
+
 
   const removeClip = useCallback((id: string) => {
     setDoc((d) => ({ ...d, tracks: d.tracks.map((t) => ({ ...t, clips: t.clips.filter((c) => c.id !== id) })) }));
