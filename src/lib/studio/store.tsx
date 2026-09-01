@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Clip, TimelineDoc, Track, docDuration, emptyDoc, uid } from "./types";
+import { Clip, TextCfg, TimelineDoc, Track, docDuration, emptyDoc, uid } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 
 type Ctx = {
@@ -11,6 +11,10 @@ type Ctx = {
   updateClip: (id: string, patch: Partial<Clip> | ((c: Clip) => Partial<Clip>), commit?: boolean) => void;
   addClip: (trackKind: Track["kind"], clip: Clip) => void;
   addClips: (trackKind: Track["kind"], clips: Clip[]) => void;
+  /** style sync helpers */
+  applyTextToAll: (patch: Partial<TextCfg>) => void;
+  applyLookToAll: (from: Clip) => void;
+  setRatio: (w: number, h: number) => void;
 
   removeClip: (id: string) => void;
   duplicateClip: (id: string) => void;
@@ -27,6 +31,7 @@ type Ctx = {
   setPlaying: (p: boolean) => void;
   saving: boolean;
 };
+
 
 const StudioCtx = createContext<Ctx | null>(null);
 export const useStudio = () => {
