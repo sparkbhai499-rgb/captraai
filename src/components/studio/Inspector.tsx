@@ -31,7 +31,8 @@ const NumSlider = ({ label, value, min, max, step = 1, onChange, suffix }:
 );
 
 export const Inspector = () => {
-  const { selectedClip: clip, updateClip, time, doc, setDoc } = useStudio();
+  const { selectedClip: clip, updateClip, time, doc, setDoc, applyTextToAll, applyLookToAll } = useStudio();
+  const [syncAll, setSyncAll] = useState(true);
 
   if (!clip) {
     return (
