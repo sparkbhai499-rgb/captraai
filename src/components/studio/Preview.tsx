@@ -163,7 +163,9 @@ const Layer = ({ clip, time, docHeight }: { clip: Clip; time: number; docHeight:
       )}
       {(clip.kind === "image" || clip.kind === "gif") && <img src={clip.src} style={mediaStyle} alt={clip.name} />}
       {clip.kind === "text" && clip.text && (
-        <div style={{ filter: filterCss(clip, local) }}><TextLayer clip={clip} local={local} /></div>
+        <div style={{ filter: filterCss(clip, local), width: "100%", textAlign: "center" }}>
+          <TextLayer clip={clip} local={local} docHeight={docHeight} />
+        </div>
       )}
       {clip.kind === "sticker" && (
         <div style={{ fontSize: clip.text?.size || 120, lineHeight: 1 }}>{clip.text?.content || "✨"}</div>
