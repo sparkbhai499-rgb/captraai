@@ -69,6 +69,11 @@ export const Inspector = () => {
   const up = (p: Partial<Clip>) => updateClip(clip.id, p);
   const upT = (p: Partial<Clip["transform"]>) => up({ transform: { ...clip.transform, ...p } });
   const upA = (p: Partial<Clip["adjust"]>) => up({ adjust: { ...clip.adjust, ...p } });
+  /* text style edits: this clip + (optionally) every other caption */
+  const upText = (p: Partial<TextCfg>) => {
+    up({ text: { ...clip.text!, ...p } });
+    if (syncAll) applyTextToAll(p);
+  };
 
   const addKf = (name: KfProp, v: number) => {
     const cur = clip.keyframes[name] || [];
