@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Clip, TimelineDoc, Track, docDuration, emptyDoc, uid } from "./types";
+import { Clip, TextCfg, TimelineDoc, Track, docDuration, emptyDoc, uid } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 
 type Ctx = {
@@ -11,6 +11,10 @@ type Ctx = {
   updateClip: (id: string, patch: Partial<Clip> | ((c: Clip) => Partial<Clip>), commit?: boolean) => void;
   addClip: (trackKind: Track["kind"], clip: Clip) => void;
   addClips: (trackKind: Track["kind"], clips: Clip[]) => void;
+  /** style sync helpers */
+  applyTextToAll: (patch: Partial<TextCfg>) => void;
+  applyLookToAll: (from: Clip) => void;
+  setRatio: (w: number, h: number) => void;
 
   removeClip: (id: string) => void;
   duplicateClip: (id: string) => void;
@@ -27,6 +31,7 @@ type Ctx = {
   setPlaying: (p: boolean) => void;
   saving: boolean;
 };
+
 
 const StudioCtx = createContext<Ctx | null>(null);
 export const useStudio = () => {
@@ -106,6 +111,42 @@ export const StudioProvider = ({ projectId, initialDoc, children }:
       return { ...d, tracks };
     });
     setSelectedId(clips[clips.length - 1].id);
+  }, [setDoc]);
+
+  /* apply a text/caption style to every text clip in the project */
+  const applyTextToAll: Ctx["applyTextToAll"] = useCallback((patch) => {
+    setDoc((d) => ({
+      ...d,
+      tracks: d.tracks.map((t) => ({
+        ...t,
+        clips: t.clips.map((c) => (c.kind === "text" && c.text ? { ...c, text: { ...c.text, ...patch } } : c)),
+      })),
+    }));
+  }, [setDoc]);
+
+  /* copy filter / colour / effects of one clip onto every visual clip */
+  const applyLookToAll: Ctx["applyLookToAll"] = useCallback((from) => {
+    setDoc((d) => ({
+      ...d,
+      tracks: d.tracks.map((t) => ({
+        ...t,
+        clips: t.clips.map((c) =>
+          c.kind === "video" || c.kind === "image" || c.kind === "gif"
+            ? {
+                ...c,
+                filter: from.filter,
+                filterIntensity: from.filterIntensity,
+                adjust: { ...from.adjust },
+                effects: from.effects.map((e) => ({ ...e, id: uid(), duration: Math.min(e.duration, c.duration) })),
+              }
+            : c,
+        ),
+      })),
+    }));
+  }, [setDoc]);
+
+  const setRatio: Ctx["setRatio"] = useCallback((w, h) => {
+    setDoc((d) => ({ ...d, width: w, height: h }));
   }, [setDoc]);
 
 
@@ -190,10 +231,11 @@ export const StudioProvider = ({ projectId, initialDoc, children }:
 
   const value = useMemo<Ctx>(() => ({
     doc, setDoc, selectedId, select: setSelectedId, selectedClip: findClip(doc, selectedId),
-    updateClip, addClip, addClips, removeClip, duplicateClip, splitClip, moveClip,
+    updateClip, addClip, addClips, applyTextToAll, applyLookToAll, setRatio,
+    removeClip, duplicateClip, splitClip, moveClip,
     undo, redo, canUndo: past.length > 0, canRedo: future.length > 0,
     duration: docDuration(doc), time, setTime, playing, setPlaying, saving,
-  }), [doc, setDoc, selectedId, updateClip, addClip, addClips, removeClip, duplicateClip, splitClip, moveClip, undo, redo, past.length, future.length, time, playing, saving]);
+  }), [doc, setDoc, selectedId, updateClip, addClip, addClips, applyTextToAll, applyLookToAll, setRatio, removeClip, duplicateClip, splitClip, moveClip, undo, redo, past.length, future.length, time, playing, saving]);
 
 
   return <StudioCtx.Provider value={value}>{children}</StudioCtx.Provider>;

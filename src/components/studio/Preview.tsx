@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStudio } from "@/lib/studio/store";
 import { Clip } from "@/lib/studio/types";
 import { effectOffsets, filterCss, maskCss, prop, transitionProgress } from "@/lib/studio/presets";
@@ -31,15 +31,17 @@ const transitionStyle = (clip: Clip, local: number): React.CSSProperties => {
 
 const easeOut = (p: number) => 1 - Math.pow(1 - Math.min(1, Math.max(0, p)), 3);
 
-const TextLayer = ({ clip, local }: { clip: Clip; local: number }) => {
+const TextLayer = ({ clip, local, docHeight }: { clip: Clip; local: number; docHeight: number }) => {
   const t = clip.text!;
   const content = t.uppercase ? t.content.toUpperCase() : t.content;
   const chars = content.split("");
   const words = content.split(/\s+/).filter(Boolean);
   const anim = t.animation;
   const glow = t.glow || 0;
+  /* size is authored against a 1080p canvas — scale so captions never overflow the frame */
+  const fontSize = t.size * (docHeight / 1080);
   const base: React.CSSProperties = {
-    fontFamily: t.font, fontSize: t.size, color: t.color, fontWeight: t.weight,
+    fontFamily: t.font, fontSize, color: t.color, fontWeight: t.weight,
     textAlign: t.align, letterSpacing: t.letterSpacing, lineHeight: t.lineHeight,
     WebkitTextStroke: t.strokeWidth ? `${t.strokeWidth}px ${t.stroke}` : undefined,
     paintOrder: "stroke fill" as any,
@@ -49,9 +51,11 @@ const TextLayer = ({ clip, local }: { clip: Clip; local: number }) => {
     ].filter(Boolean).join(", ") || undefined,
     background: t.bg !== "transparent" ? t.bg : undefined,
     padding: t.bg !== "transparent" ? "0.2em 0.5em" : undefined,
-    borderRadius: 12, whiteSpace: "pre-wrap", maxWidth: "90%",
+    borderRadius: 12, whiteSpace: "pre-wrap", overflowWrap: "break-word",
+    maxWidth: "86%", margin: "0 auto",
     willChange: "transform, opacity",
   };
+
   if (anim === "typewriter") {
     const n = Math.floor((local / Math.max(0.2, clip.duration * 0.6)) * chars.length);
     return <div style={base}>{content.slice(0, Math.max(1, n))}</div>;
@@ -101,7 +105,7 @@ const TextLayer = ({ clip, local }: { clip: Clip; local: number }) => {
 };
 
 
-const Layer = ({ clip, time }: { clip: Clip; time: number }) => {
+const Layer = ({ clip, time, docHeight }: { clip: Clip; time: number; docHeight: number }) => {
   const local = time - clip.start;
   const vRef = useRef<HTMLVideoElement | null>(null);
   const { playing } = useStudio();
@@ -159,7 +163,9 @@ const Layer = ({ clip, time }: { clip: Clip; time: number }) => {
       )}
       {(clip.kind === "image" || clip.kind === "gif") && <img src={clip.src} style={mediaStyle} alt={clip.name} />}
       {clip.kind === "text" && clip.text && (
-        <div style={{ filter: filterCss(clip, local) }}><TextLayer clip={clip} local={local} /></div>
+        <div style={{ filter: filterCss(clip, local), width: "100%", textAlign: "center" }}>
+          <TextLayer clip={clip} local={local} docHeight={docHeight} />
+        </div>
       )}
       {clip.kind === "sticker" && (
         <div style={{ fontSize: clip.text?.size || 120, lineHeight: 1 }}>{clip.text?.content || "✨"}</div>
@@ -207,10 +213,30 @@ const AudioLayer = ({ clip, time }: { clip: Clip; time: number }) => {
   return <audio ref={ref} src={clip.src} hidden />;
 };
 
+const RATIOS = [
+  { id: "9:16", label: "Reel / Shorts / TikTok", short: "9:16", w: 1080, h: 1920 },
+  { id: "16:9", label: "YouTube", short: "16:9", w: 1920, h: 1080 },
+  { id: "1:1", label: "Square post", short: "1:1", w: 1080, h: 1080 },
+  { id: "4:5", label: "Feed portrait", short: "4:5", w: 1080, h: 1350 },
+];
+
 export const Preview = () => {
-  const { doc, time, setTime, playing, setPlaying, duration } = useStudio();
+  const { doc, time, setTime, playing, setPlaying, duration, setRatio } = useStudio();
   const raf = useRef<number>();
   const last = useRef<number>(0);
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  const [box, setBox] = useState({ w: 0, h: 0 });
+
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => {
+      const r = e.contentRect;
+      setBox({ w: r.width, h: r.height });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!playing) return;
@@ -232,15 +258,57 @@ export const Preview = () => {
   const layers = activeClips(doc.tracks, time);
   const audio = doc.tracks.filter((t) => !t.muted).flatMap((t) => t.clips.filter((c) => c.kind === "audio" && time >= c.start && time < c.start + c.duration));
 
+  const fit = box.w && box.h ? Math.min(box.w / doc.width, box.h / doc.height) : 0;
+  const stageW = doc.width * fit;
+  const stageH = doc.height * fit;
+  const activeRatio = RATIOS.find((r) => r.w === doc.width && r.h === doc.height)?.id;
+
   return (
-    <div className="relative w-full rounded-xl overflow-hidden bg-black" style={{ aspectRatio: `${doc.width}/${doc.height}` }} id="studio-stage">
-      {layers.length === 0 && (
-        <div className="absolute inset-0 grid place-items-center text-sm text-muted-foreground">
-          Import media to start editing
+    <div className="space-y-2">
+      <div className="glass rounded-xl px-2 py-1.5 flex items-center gap-1 flex-wrap">
+        <span className="text-[11px] text-muted-foreground px-1">Ratio</span>
+        {RATIOS.map((r) => (
+          <button
+            key={r.id}
+            title={r.label}
+            onClick={() => setRatio(r.w, r.h)}
+            className={`text-[11px] px-2.5 py-1 rounded-md border transition-colors ${
+              activeRatio === r.id ? "border-primary bg-primary/15 text-foreground" : "border-white/10 bg-secondary/40 text-muted-foreground hover:border-primary/50"
+            }`}
+          >
+            {r.short}
+          </button>
+        ))}
+        <span className="ml-auto text-[11px] text-muted-foreground tabular-nums pr-1">{doc.width}×{doc.height} · {doc.fps}fps</span>
+      </div>
+
+      <div
+        ref={boxRef}
+        className="relative w-full rounded-xl overflow-hidden bg-black grid place-items-center"
+        style={{ height: "min(58vh, 620px)" }}
+      >
+        <div
+          id="studio-stage"
+          className="relative overflow-hidden bg-black"
+          style={{ width: stageW || 1, height: stageH || 1, contain: "paint" }}
+        >
+          <div
+            style={{
+              width: doc.width, height: doc.height,
+              transform: `scale(${fit || 0.001})`, transformOrigin: "top left",
+              position: "absolute", top: 0, left: 0,
+            }}
+          >
+            {layers.map(({ clip }) => <Layer key={clip.id} clip={clip} time={time} docHeight={doc.height} />)}
+          </div>
         </div>
-      )}
-      {layers.map(({ clip }) => <Layer key={clip.id} clip={clip} time={time} />)}
-      {audio.map((c) => <AudioLayer key={c.id} clip={c} time={time} />)}
+        {layers.length === 0 && (
+          <div className="absolute inset-0 grid place-items-center text-sm text-muted-foreground pointer-events-none">
+            Import media to start editing
+          </div>
+        )}
+        {audio.map((c) => <AudioLayer key={c.id} clip={c} time={time} />)}
+      </div>
     </div>
   );
 };
