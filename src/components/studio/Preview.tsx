@@ -105,7 +105,7 @@ const TextLayer = ({ clip, local, docHeight }: { clip: Clip; local: number; docH
 };
 
 
-const Layer = ({ clip, time }: { clip: Clip; time: number }) => {
+const Layer = ({ clip, time, docHeight }: { clip: Clip; time: number; docHeight: number }) => {
   const local = time - clip.start;
   const vRef = useRef<HTMLVideoElement | null>(null);
   const { playing } = useStudio();
