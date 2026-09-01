@@ -239,6 +239,20 @@ export const Inspector = () => {
           <TabsContent value="text" className="space-y-3 m-0">
             {!clip.text ? <p className="text-xs text-muted-foreground">This clip has no text. Add a text or sticker layer from the left rail.</p> : (
               <>
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-2 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs flex items-center gap-1.5"><Layers className="w-3.5 h-3.5 text-primary" /> Apply style to all captions</Label>
+                    <Switch checked={syncAll} onCheckedChange={setSyncAll} />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-snug">
+                    On: har style / template / size change project ke saare caption clips par lagega. Text content alag rehta hai.
+                  </p>
+                  <Button size="sm" variant="secondary" className="h-7 w-full text-xs"
+                    onClick={() => { const { content, ...style } = clip.text!; applyTextToAll(style); }}>
+                    Apply this caption style to all now
+                  </Button>
+                </div>
+
                 <Tabs defaultValue="templates">
                   <TabsList className="grid grid-cols-2 bg-secondary/50 w-full">
                     <TabsTrigger value="templates">Templates</TabsTrigger>
@@ -247,50 +261,55 @@ export const Inspector = () => {
                   <TabsContent value="templates" className="mt-3 m-0">
                     <CaptionTemplates
                       current={clip.text.template}
-                      onPick={(tpl) => up({ text: { ...clip.text!, ...tpl.cfg, template: tpl.id } })}
+                      onPick={(tpl) => upText({ ...tpl.cfg, template: tpl.id })}
                     />
                   </TabsContent>
                   <TabsContent value="edit" className="mt-3 m-0 space-y-3">
-                    <Row label="Content">
+                    <Row label="Content (only this clip)">
                       <Textarea value={clip.text.content} className="bg-secondary/50"
                         onChange={(e) => up({ text: { ...clip.text!, content: e.target.value } })} />
                     </Row>
                     <div className="flex items-center justify-between">
                       <Label className="text-xs">Karaoke word highlight</Label>
-                      <Switch checked={!!clip.text.karaoke} onCheckedChange={(v) => up({ text: { ...clip.text!, karaoke: v, animation: v ? "word" : clip.text!.animation } })} />
+                      <Switch checked={!!clip.text.karaoke} onCheckedChange={(v) => upText({ karaoke: v, animation: v ? "word" : clip.text!.animation })} />
                     </div>
                     <div className="flex items-center justify-between">
                       <Label className="text-xs">Uppercase</Label>
-                      <Switch checked={!!clip.text.uppercase} onCheckedChange={(v) => up({ text: { ...clip.text!, uppercase: v } })} />
+                      <Switch checked={!!clip.text.uppercase} onCheckedChange={(v) => upText({ uppercase: v })} />
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-2"><Label className="text-xs">Highlight</Label>
                         <input type="color" value={clip.text.highlight || "#ffe600"} className="h-8 w-10 rounded bg-transparent"
-                          onChange={(e) => up({ text: { ...clip.text!, highlight: e.target.value } })} /></div>
+                          onChange={(e) => upText({ highlight: e.target.value })} /></div>
+                      <div className="flex items-center gap-2"><Label className="text-xs">Box</Label>
+                        <input type="color" value={clip.text.highlightBg && clip.text.highlightBg !== "transparent" ? clip.text.highlightBg : "#000000"}
+                          className="h-8 w-10 rounded bg-transparent" onChange={(e) => upText({ highlightBg: e.target.value })} /></div>
+                      <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px]" onClick={() => upText({ highlightBg: "transparent" })}>No box</Button>
                     </div>
-                    <NumSlider label="Glow" value={clip.text.glow ?? 0} min={0} max={2} step={0.05} onChange={(v) => up({ text: { ...clip.text!, glow: v } })} />
-                    <NumSlider label="Pop scale" value={clip.text.popScale ?? 1.12} min={1} max={1.6} step={0.01} onChange={(v) => up({ text: { ...clip.text!, popScale: v } })} />
+                    <NumSlider label="Glow" value={clip.text.glow ?? 0} min={0} max={2} step={0.05} onChange={(v) => upText({ glow: v })} />
+                    <NumSlider label="Pop scale" value={clip.text.popScale ?? 1.12} min={1} max={1.6} step={0.01} onChange={(v) => upText({ popScale: v })} />
+                    <NumSlider label="Line height" value={clip.text.lineHeight} min={0.8} max={2} step={0.01} onChange={(v) => upText({ lineHeight: v })} />
                   </TabsContent>
                 </Tabs>
                 <Row label="Font">
-                  <Select value={clip.text.font} onValueChange={(v) => up({ text: { ...clip.text!, font: v } })}>
+                  <Select value={clip.text.font} onValueChange={(v) => upText({ font: v })}>
                     <SelectTrigger className="bg-secondary/50"><SelectValue /></SelectTrigger>
                     <SelectContent>{FONTS.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
                   </Select>
                 </Row>
 
-                <NumSlider label="Size" value={clip.text.size} min={12} max={280} onChange={(v) => up({ text: { ...clip.text!, size: v } })} />
+                <NumSlider label="Size" value={clip.text.size} min={12} max={220} onChange={(v) => upText({ size: v })} />
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2"><Label className="text-xs">Fill</Label>
-                    <input type="color" value={clip.text.color} className="h-8 w-10 rounded bg-transparent" onChange={(e) => up({ text: { ...clip.text!, color: e.target.value } })} /></div>
+                    <input type="color" value={clip.text.color} className="h-8 w-10 rounded bg-transparent" onChange={(e) => upText({ color: e.target.value })} /></div>
                   <div className="flex items-center gap-2"><Label className="text-xs">Stroke</Label>
-                    <input type="color" value={clip.text.stroke} className="h-8 w-10 rounded bg-transparent" onChange={(e) => up({ text: { ...clip.text!, stroke: e.target.value } })} /></div>
+                    <input type="color" value={clip.text.stroke} className="h-8 w-10 rounded bg-transparent" onChange={(e) => upText({ stroke: e.target.value })} /></div>
                 </div>
-                <NumSlider label="Stroke width" value={clip.text.strokeWidth} min={0} max={16} step={0.5} onChange={(v) => up({ text: { ...clip.text!, strokeWidth: v } })} />
-                <NumSlider label="Shadow" value={clip.text.shadow} min={0} max={1} step={0.05} onChange={(v) => up({ text: { ...clip.text!, shadow: v } })} />
-                <NumSlider label="Letter spacing" value={clip.text.letterSpacing} min={-5} max={30} onChange={(v) => up({ text: { ...clip.text!, letterSpacing: v } })} />
+                <NumSlider label="Stroke width" value={clip.text.strokeWidth} min={0} max={16} step={0.5} onChange={(v) => upText({ strokeWidth: v })} />
+                <NumSlider label="Shadow" value={clip.text.shadow} min={0} max={1} step={0.05} onChange={(v) => upText({ shadow: v })} />
+                <NumSlider label="Letter spacing" value={clip.text.letterSpacing} min={-5} max={30} onChange={(v) => upText({ letterSpacing: v })} />
                 <Row label="Animation">
-                  <Select value={clip.text.animation} onValueChange={(v: any) => up({ text: { ...clip.text!, animation: v } })}>
+                  <Select value={clip.text.animation} onValueChange={(v: any) => upText({ animation: v })}>
                     <SelectTrigger className="bg-secondary/50"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {["none", "fade", "typewriter", "pop", "word", "slide"].map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
@@ -299,13 +318,22 @@ export const Inspector = () => {
                 </Row>
                 <Row label="Background">
                   <div className="flex gap-2">
-                    <Button size="sm" variant={clip.text.bg === "transparent" ? "default" : "secondary"} onClick={() => up({ text: { ...clip.text!, bg: "transparent" } })}>None</Button>
-                    <Button size="sm" variant={clip.text.bg !== "transparent" ? "default" : "secondary"} onClick={() => up({ text: { ...clip.text!, bg: "rgba(0,0,0,0.6)" } })}>Box</Button>
+                    <Button size="sm" variant={clip.text.bg === "transparent" ? "default" : "secondary"} onClick={() => upText({ bg: "transparent" })}>None</Button>
+                    <Button size="sm" variant={clip.text.bg !== "transparent" ? "default" : "secondary"} onClick={() => upText({ bg: "rgba(0,0,0,0.6)" })}>Box</Button>
+                  </div>
+                </Row>
+                <Row label="Safe position">
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {([["Top", -32], ["Middle", 0], ["Bottom", 30]] as const).map(([l, v]) => (
+                      <Button key={l} size="sm" variant={Math.round(clip.transform.y) === v ? "default" : "secondary"} className="h-7 text-xs"
+                        onClick={() => upT({ y: v })}>{l}</Button>
+                    ))}
                   </div>
                 </Row>
               </>
             )}
           </TabsContent>
+
 
           <TabsContent value="mask" className="space-y-3 m-0">
             <Row label="Mask shape">
