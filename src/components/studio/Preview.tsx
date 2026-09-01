@@ -31,15 +31,17 @@ const transitionStyle = (clip: Clip, local: number): React.CSSProperties => {
 
 const easeOut = (p: number) => 1 - Math.pow(1 - Math.min(1, Math.max(0, p)), 3);
 
-const TextLayer = ({ clip, local }: { clip: Clip; local: number }) => {
+const TextLayer = ({ clip, local, docHeight }: { clip: Clip; local: number; docHeight: number }) => {
   const t = clip.text!;
   const content = t.uppercase ? t.content.toUpperCase() : t.content;
   const chars = content.split("");
   const words = content.split(/\s+/).filter(Boolean);
   const anim = t.animation;
   const glow = t.glow || 0;
+  /* size is authored against a 1080p canvas — scale so captions never overflow the frame */
+  const fontSize = t.size * (docHeight / 1080);
   const base: React.CSSProperties = {
-    fontFamily: t.font, fontSize: t.size, color: t.color, fontWeight: t.weight,
+    fontFamily: t.font, fontSize, color: t.color, fontWeight: t.weight,
     textAlign: t.align, letterSpacing: t.letterSpacing, lineHeight: t.lineHeight,
     WebkitTextStroke: t.strokeWidth ? `${t.strokeWidth}px ${t.stroke}` : undefined,
     paintOrder: "stroke fill" as any,
@@ -49,9 +51,11 @@ const TextLayer = ({ clip, local }: { clip: Clip; local: number }) => {
     ].filter(Boolean).join(", ") || undefined,
     background: t.bg !== "transparent" ? t.bg : undefined,
     padding: t.bg !== "transparent" ? "0.2em 0.5em" : undefined,
-    borderRadius: 12, whiteSpace: "pre-wrap", maxWidth: "90%",
+    borderRadius: 12, whiteSpace: "pre-wrap", overflowWrap: "break-word",
+    maxWidth: "86%", margin: "0 auto",
     willChange: "transform, opacity",
   };
+
   if (anim === "typewriter") {
     const n = Math.floor((local / Math.max(0.2, clip.duration * 0.6)) * chars.length);
     return <div style={base}>{content.slice(0, Math.max(1, n))}</div>;
