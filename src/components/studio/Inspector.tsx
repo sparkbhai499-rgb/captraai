@@ -1,5 +1,5 @@
 import { useStudio } from "@/lib/studio/store";
-import { Clip, KfProp, uid } from "@/lib/studio/types";
+import { Clip, KfProp, TextCfg, uid } from "@/lib/studio/types";
 import { BLEND_MODES, EFFECTS, FILTERS, FONTS, SPEEDS, TRANSITIONS } from "@/lib/studio/presets";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
@@ -10,7 +10,8 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CaptionTemplates } from "@/components/studio/CaptionTemplates";
-import { Diamond, FlipHorizontal, FlipVertical, Plus, Snowflake, Trash2, Undo2 } from "lucide-react";
+import { useState } from "react";
+import { Diamond, FlipHorizontal, FlipVertical, Layers, Plus, Snowflake, Trash2, Undo2 } from "lucide-react";
 
 const Row = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div className="space-y-1.5">
@@ -195,6 +196,9 @@ export const Inspector = () => {
               brightness: 0, contrast: 0, saturation: 0, exposure: 0, highlights: 0, shadows: 0,
               temperature: 0, tint: 0, sharpness: 0, blur: 0, grain: 0,
             })}>Reset colour</Button>
+            <Button size="sm" className="w-full gradient-primary text-white border-0" onClick={() => applyLookToAll(clip)}>
+              <Layers className="w-4 h-4 mr-1" /> Apply this look to all clips
+            </Button>
           </TabsContent>
 
           <TabsContent value="fx" className="space-y-3 m-0">
@@ -205,6 +209,9 @@ export const Inspector = () => {
                   className="text-xs py-2 rounded-lg border border-white/10 bg-secondary/40 hover:border-primary">{e.label}</button>
               ))}
             </div>
+            <Button size="sm" variant="secondary" className="w-full" onClick={() => applyLookToAll(clip)}>
+              <Layers className="w-4 h-4 mr-1" /> Apply these effects to all clips
+            </Button>
             {clip.effects.length === 0 && <p className="text-xs text-muted-foreground">Tap an effect to add it to this clip.</p>}
             {clip.effects.map((e) => (
               <div key={e.id} className="rounded-lg border border-white/10 p-2 space-y-2">
