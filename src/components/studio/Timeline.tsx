@@ -113,8 +113,19 @@ export const Timeline = () => {
     return () => window.removeEventListener("keydown", h);
   }, [selectedId, selectedClip, time, updateClip]);
 
+  /* keep the playhead in view while scrubbing / playing */
+  useEffect(() => {
+    const el = areaRef.current;
+    if (!el || drag.current) return;
+    const x = time * zoom;
+    const pad = 80;
+    if (x < el.scrollLeft + pad) el.scrollLeft = Math.max(0, x - pad);
+    else if (x > el.scrollLeft + el.clientWidth - pad) el.scrollLeft = x - el.clientWidth + pad;
+  }, [time, zoom]);
+
   const toggleTrack = (id: string, key: "hidden" | "locked" | "muted") =>
     setDoc((dd) => ({ ...dd, tracks: dd.tracks.map((t) => (t.id === id ? { ...t, [key]: !t[key] } : t)) }));
+
 
   const step = zoom < 30 ? 5 : zoom < 80 ? 2 : 1;
   const ticks = Math.ceil(total);
