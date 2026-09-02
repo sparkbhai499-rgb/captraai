@@ -238,22 +238,31 @@ export const Preview = () => {
     return () => ro.disconnect();
   }, []);
 
+  const timeRef = useRef(time);
+  timeRef.current = time;
+
+  /* playback clock — frame-quantised so heavy docs stay smooth instead of thrashing renders */
   useEffect(() => {
-    if (!playing) return;
+    if (!playing || duration <= 0) return;
+    const frame = 1 / (doc.fps || 30);
     last.current = performance.now();
+    let acc = 0;
     const tick = (now: number) => {
-      const dt = (now - last.current) / 1000;
+      const dt = Math.min(0.25, (now - last.current) / 1000);
       last.current = now;
-      setTime(Math.min(duration, timeRef.current + dt));
-      if (timeRef.current + dt >= duration) setPlaying(false);
+      acc += dt;
+      if (acc >= frame) {
+        const next = timeRef.current + acc;
+        acc = 0;
+        if (next >= duration) { setTime(duration); setPlaying(false); return; }
+        setTime(next);
+      }
       raf.current = requestAnimationFrame(tick);
     };
     raf.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf.current!);
-  }, [playing, duration, setTime, setPlaying]);
+  }, [playing, duration, setTime, setPlaying, doc.fps]);
 
-  const timeRef = useRef(time);
-  timeRef.current = time;
 
   const layers = activeClips(doc.tracks, time);
   const audio = doc.tracks.filter((t) => !t.muted).flatMap((t) => t.clips.filter((c) => c.kind === "audio" && time >= c.start && time < c.start + c.duration));
