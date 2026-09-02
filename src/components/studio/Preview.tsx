@@ -272,29 +272,45 @@ export const Preview = () => {
   const stageH = doc.height * fit;
   const activeRatio = RATIOS.find((r) => r.w === doc.width && r.h === doc.height)?.id;
 
+  const frame = 1 / (doc.fps || 30);
+  const t = clip?.transform;
+  const rotate = (d: number) => clip && updateClip(clip.id, { transform: { ...clip!.transform, rotation: (((clip!.transform.rotation + d + 180) % 360) + 360) % 360 - 180 } });
+  const setCrop = (v: Partial<NonNullable<typeof t>>) => clip && updateClip(clip.id, { transform: { ...clip!.transform, ...v } });
+
   return (
     <div className="space-y-2">
-      <div className="glass rounded-xl px-2 py-1.5 flex items-center gap-1 flex-wrap">
-        <span className="text-[11px] text-muted-foreground px-1">Ratio</span>
+      {/* one compact bar: ratio + crop + rotate */}
+      <div className="glass rounded-xl px-2 py-1.5 flex items-center gap-1 flex-wrap text-[11px]">
         {RATIOS.map((r) => (
           <button
             key={r.id}
             title={r.label}
             onClick={() => setRatio(r.w, r.h)}
-            className={`text-[11px] px-2.5 py-1 rounded-md border transition-colors ${
+            className={`px-2 py-1 rounded-md border transition-colors ${
               activeRatio === r.id ? "border-primary bg-primary/15 text-foreground" : "border-white/10 bg-secondary/40 text-muted-foreground hover:border-primary/50"
             }`}
           >
             {r.short}
           </button>
         ))}
-        <span className="ml-auto text-[11px] text-muted-foreground tabular-nums pr-1">{doc.width}×{doc.height} · {doc.fps}fps</span>
+        <span className="w-px h-4 bg-white/10 mx-1" />
+        <button disabled={!clip} title="Rotate left 90°" onClick={() => rotate(-90)}
+          className="p-1.5 rounded-md border border-white/10 bg-secondary/40 hover:border-primary/50 disabled:opacity-40"><RotateCcw className="w-3.5 h-3.5" /></button>
+        <button disabled={!clip} title="Rotate right 90°" onClick={() => rotate(90)}
+          className="p-1.5 rounded-md border border-white/10 bg-secondary/40 hover:border-primary/50 disabled:opacity-40"><RotateCw className="w-3.5 h-3.5" /></button>
+        <button disabled={!clip} title="Crop 10% border" onClick={() => setCrop({ cropT: 10, cropB: 10, cropL: 10, cropR: 10 })}
+          className="p-1.5 rounded-md border border-white/10 bg-secondary/40 hover:border-primary/50 disabled:opacity-40"><Crop className="w-3.5 h-3.5" /></button>
+        <button disabled={!clip} title="Crop to bars (cinematic)" onClick={() => setCrop({ cropT: 12, cropB: 12, cropL: 0, cropR: 0 })}
+          className="px-2 py-1 rounded-md border border-white/10 bg-secondary/40 hover:border-primary/50 disabled:opacity-40">Bars</button>
+        <button disabled={!clip} title="Reset crop & rotation" onClick={() => setCrop({ cropT: 0, cropB: 0, cropL: 0, cropR: 0, rotation: 0 })}
+          className="px-2 py-1 rounded-md border border-white/10 bg-secondary/40 hover:border-primary/50 disabled:opacity-40">Reset</button>
+        <span className="ml-auto text-muted-foreground tabular-nums pr-1">{doc.width}×{doc.height} · {doc.fps}fps</span>
       </div>
 
       <div
         ref={boxRef}
         className="relative w-full rounded-xl overflow-hidden bg-black grid place-items-center"
-        style={{ height: "min(58vh, 620px)" }}
+        style={{ height: "min(52vh, 560px)" }}
       >
         <div
           id="studio-stage"
@@ -318,6 +334,26 @@ export const Preview = () => {
         )}
         {audio.map((c) => <AudioLayer key={c.id} clip={c} time={time} />)}
       </div>
+
+      {/* transport — right below the video, next to the editing area */}
+      <div className="glass rounded-xl px-2 py-1.5 flex items-center gap-1">
+        <button title="Undo" disabled={!canUndo} onClick={undo}
+          className="p-1.5 rounded-md hover:bg-white/10 disabled:opacity-30"><Undo2 className="w-4 h-4" /></button>
+        <button title="Redo" disabled={!canRedo} onClick={redo}
+          className="p-1.5 rounded-md hover:bg-white/10 disabled:opacity-30"><Redo2 className="w-4 h-4" /></button>
+        <span className="w-px h-4 bg-white/10 mx-1" />
+        <button title="Start" onClick={() => setTime(0)} className="p-1.5 rounded-md hover:bg-white/10"><Rewind className="w-4 h-4" /></button>
+        <button title="Prev frame" onClick={() => setTime(Math.max(0, time - frame))} className="p-1.5 rounded-md hover:bg-white/10"><SkipBack className="w-4 h-4" /></button>
+        <button title="Play / Pause (Space)" onClick={() => setPlaying(!playing)}
+          className="h-9 w-9 grid place-items-center rounded-full gradient-primary text-white shadow-lg">
+          {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+        </button>
+        <button title="Next frame" onClick={() => setTime(Math.min(duration, time + frame))} className="p-1.5 rounded-md hover:bg-white/10"><SkipForward className="w-4 h-4" /></button>
+        <button title="End" onClick={() => setTime(duration)} className="p-1.5 rounded-md hover:bg-white/10"><FastForward className="w-4 h-4" /></button>
+        <span className="ml-auto text-[11px] tabular-nums text-muted-foreground pr-1">{fmt(time)} / {fmt(duration)}</span>
+      </div>
     </div>
   );
+};
+
 };
