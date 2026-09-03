@@ -11,8 +11,22 @@ import { MediaPanel } from "@/components/studio/MediaPanel";
 import { ExportDialog } from "@/components/studio/ExportDialog";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Cloud, Loader2 } from "lucide-react";
-...
-        <ExportDialog />
+
+const Shell = ({ projectId, userId, title }: { projectId: string; userId: string; title: string }) => {
+  const { saving } = useStudio();
+  const nav = useNavigate();
+
+  return (
+    <div className="min-h-screen p-3 md:p-4 space-y-3">
+      <header className="glass rounded-xl px-3 py-2 flex items-center gap-2 flex-wrap">
+        <Button size="sm" variant="ghost" onClick={() => nav("/dashboard")}><ArrowLeft className="w-4 h-4" /></Button>
+        <span className="font-display font-semibold truncate max-w-[30vw]">{title}</span>
+        <span className="text-xs text-muted-foreground flex items-center gap-1">
+          {saving ? <><Loader2 className="w-3 h-3 animate-spin" /> saving</> : <><Cloud className="w-3 h-3" /> saved</>}
+        </span>
+        <div className="ml-auto">
+          <ExportDialog />
+        </div>
       </header>
 
       <div className="grid lg:grid-cols-[280px_1fr_320px] gap-3">
