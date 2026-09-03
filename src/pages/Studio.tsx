@@ -10,33 +10,8 @@ import { Inspector } from "@/components/studio/Inspector";
 import { MediaPanel } from "@/components/studio/MediaPanel";
 import { ExportDialog } from "@/components/studio/ExportDialog";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Cloud, Loader2, Pause, Play, Redo2, SkipBack, SkipForward, Undo2 } from "lucide-react";
-
-const fmt = (t: number) => `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(Math.floor(t % 60)).padStart(2, "0")}.${String(Math.floor((t % 1) * 100)).padStart(2, "0")}`;
-
-const Shell = ({ projectId, userId, title }: { projectId: string; userId: string; title: string }) => {
-  const { playing, setPlaying, time, setTime, duration, undo, redo, canUndo, canRedo, saving, doc } = useStudio();
-  const nav = useNavigate();
-  const frame = 1 / (doc.fps || 30);
-
-  return (
-    <div className="min-h-screen p-3 md:p-4 space-y-3">
-      <header className="glass rounded-xl px-3 py-2 flex items-center gap-2 flex-wrap">
-        <Button size="sm" variant="ghost" onClick={() => nav("/dashboard")}><ArrowLeft className="w-4 h-4" /></Button>
-        <span className="font-display font-semibold truncate max-w-[30vw]">{title}</span>
-        <span className="text-xs text-muted-foreground flex items-center gap-1">
-          {saving ? <><Loader2 className="w-3 h-3 animate-spin" /> saving</> : <><Cloud className="w-3 h-3" /> saved</>}
-        </span>
-        <div className="mx-auto flex items-center gap-1">
-          <Button size="sm" variant="ghost" disabled={!canUndo} onClick={undo}><Undo2 className="w-4 h-4" /></Button>
-          <Button size="sm" variant="ghost" disabled={!canRedo} onClick={redo}><Redo2 className="w-4 h-4" /></Button>
-          <Button size="sm" variant="ghost" onClick={() => setTime(Math.max(0, time - frame))}><SkipBack className="w-4 h-4" /></Button>
-          <Button size="sm" className="gradient-primary text-white border-0" onClick={() => setPlaying(!playing)}>
-            {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-          </Button>
-          <Button size="sm" variant="ghost" onClick={() => setTime(Math.min(duration, time + frame))}><SkipForward className="w-4 h-4" /></Button>
-          <span className="text-xs tabular-nums ml-2 text-muted-foreground">{fmt(time)} / {fmt(duration)}</span>
-        </div>
+import { ArrowLeft, Cloud, Loader2 } from "lucide-react";
+...
         <ExportDialog />
       </header>
 
