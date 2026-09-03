@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { useStudio } from "@/lib/studio/store";
 import { Clip } from "@/lib/studio/types";
 import { effectOffsets, filterCss, maskCss, prop, transitionProgress } from "@/lib/studio/presets";
+import { Crop, FastForward, Pause, Play, Redo2, Rewind, RotateCcw, RotateCw, SkipBack, SkipForward, Undo2 } from "lucide-react";
+
+const fmt = (t: number) =>
+  `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(Math.floor(t % 60)).padStart(2, "0")}.${String(Math.floor((t % 1) * 100)).padStart(2, "0")}`;
 
 const activeClips = (tracks: any[], t: number) =>
   tracks.flatMap((tr: any) =>
@@ -221,7 +225,7 @@ const RATIOS = [
 ];
 
 export const Preview = () => {
-  const { doc, time, setTime, playing, setPlaying, duration, setRatio } = useStudio();
+  const { doc, time, setTime, playing, setPlaying, duration, setRatio, selectedClip: clip, updateClip, undo, redo, canUndo, canRedo } = useStudio();
   const raf = useRef<number>();
   const last = useRef<number>(0);
   const boxRef = useRef<HTMLDivElement | null>(null);
@@ -354,6 +358,4 @@ export const Preview = () => {
       </div>
     </div>
   );
-};
-
 };
