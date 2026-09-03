@@ -178,7 +178,16 @@ const Layer = ({ clip, time, docHeight, trackMuted }: { clip: Clip; time: number
   return (
     <div style={wrapStyle}>
       {(clip.kind === "video") && (
-        <video ref={vRef} src={clip.src} style={mediaStyle} playsInline muted={clip.audio.volume === 0} preload="auto" />
+        <video
+          ref={vRef}
+          src={clip.src}
+          style={{ ...mediaStyle, transform: "translateZ(0)" }}
+          playsInline
+          preload="auto"
+          disablePictureInPicture
+          disableRemotePlayback
+        />
+
       )}
       {(clip.kind === "image" || clip.kind === "gif") && <img src={clip.src} style={mediaStyle} alt={clip.name} />}
       {clip.kind === "text" && clip.text && (
