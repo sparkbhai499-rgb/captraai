@@ -109,21 +109,36 @@ const TextLayer = ({ clip, local, docHeight }: { clip: Clip; local: number; docH
 };
 
 
-const Layer = ({ clip, time, docHeight }: { clip: Clip; time: number; docHeight: number }) => {
+const Layer = ({ clip, time, docHeight, trackMuted }: { clip: Clip; time: number; docHeight: number; trackMuted?: boolean }) => {
   const local = time - clip.start;
   const vRef = useRef<HTMLVideoElement | null>(null);
   const { playing } = useStudio();
+  const silent = trackMuted || clip.audio.volume === 0;
 
+  /* play / pause + volume — kept out of the per-frame effect so audio never stutters */
   useEffect(() => {
     const v = vRef.current;
-    if (!v) return;
+    if (!v || clip.kind !== "video") return;
+    v.muted = silent;
+    v.volume = Math.min(1, Math.max(0, clip.audio.volume));
+    v.playbackRate = Math.min(4, Math.max(0.1, clip.speed));
+    if (playing && !clip.freeze && !clip.reverse) {
+      if (v.paused) v.play().catch(() => {});
+    } else if (!v.paused) {
+      v.pause();
+    }
+  }, [playing, silent, clip.audio.volume, clip.speed, clip.freeze, clip.reverse, clip.kind]);
+
+  /* sync only when drift is real — frequent seeks are what killed the audio */
+  useEffect(() => {
+    const v = vRef.current;
+    if (!v || clip.kind !== "video") return;
     const src = clip.inPoint + (clip.freeze ? 0 : local * clip.speed);
     const target = clip.reverse ? Math.max(0, (clip.sourceDuration || clip.duration) - src) : src;
-    if (Math.abs(v.currentTime - target) > 0.22) v.currentTime = target;
-    v.playbackRate = Math.min(10, Math.max(0.1, clip.speed));
-    v.volume = clip.audio.volume;
-    if (playing && !clip.freeze && !clip.reverse) v.play().catch(() => {}); else v.pause();
-  }, [local, playing, clip.speed, clip.inPoint, clip.freeze, clip.reverse, clip.audio.volume, clip.duration, clip.sourceDuration]);
+    const tol = playing ? 0.5 : 0.05;
+    if (Number.isFinite(target) && Math.abs(v.currentTime - target) > tol) v.currentTime = target;
+  }, [local, playing, clip.speed, clip.inPoint, clip.freeze, clip.reverse, clip.duration, clip.sourceDuration, clip.kind]);
+
 
   const opacityKf = prop(clip, "opacity", local, clip.transform.opacity);
   const scale = prop(clip, "scale", local, clip.transform.scale);
