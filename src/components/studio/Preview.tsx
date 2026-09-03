@@ -109,21 +109,36 @@ const TextLayer = ({ clip, local, docHeight }: { clip: Clip; local: number; docH
 };
 
 
-const Layer = ({ clip, time, docHeight }: { clip: Clip; time: number; docHeight: number }) => {
+const Layer = ({ clip, time, docHeight, trackMuted }: { clip: Clip; time: number; docHeight: number; trackMuted?: boolean }) => {
   const local = time - clip.start;
   const vRef = useRef<HTMLVideoElement | null>(null);
   const { playing } = useStudio();
+  const silent = trackMuted || clip.audio.volume === 0;
 
+  /* play / pause + volume — kept out of the per-frame effect so audio never stutters */
   useEffect(() => {
     const v = vRef.current;
-    if (!v) return;
+    if (!v || clip.kind !== "video") return;
+    v.muted = silent;
+    v.volume = Math.min(1, Math.max(0, clip.audio.volume));
+    v.playbackRate = Math.min(4, Math.max(0.1, clip.speed));
+    if (playing && !clip.freeze && !clip.reverse) {
+      if (v.paused) v.play().catch(() => {});
+    } else if (!v.paused) {
+      v.pause();
+    }
+  }, [playing, silent, clip.audio.volume, clip.speed, clip.freeze, clip.reverse, clip.kind]);
+
+  /* sync only when drift is real — frequent seeks are what killed the audio */
+  useEffect(() => {
+    const v = vRef.current;
+    if (!v || clip.kind !== "video") return;
     const src = clip.inPoint + (clip.freeze ? 0 : local * clip.speed);
     const target = clip.reverse ? Math.max(0, (clip.sourceDuration || clip.duration) - src) : src;
-    if (Math.abs(v.currentTime - target) > 0.22) v.currentTime = target;
-    v.playbackRate = Math.min(10, Math.max(0.1, clip.speed));
-    v.volume = clip.audio.volume;
-    if (playing && !clip.freeze && !clip.reverse) v.play().catch(() => {}); else v.pause();
-  }, [local, playing, clip.speed, clip.inPoint, clip.freeze, clip.reverse, clip.audio.volume, clip.duration, clip.sourceDuration]);
+    const tol = playing ? 0.5 : 0.05;
+    if (Number.isFinite(target) && Math.abs(v.currentTime - target) > tol) v.currentTime = target;
+  }, [local, playing, clip.speed, clip.inPoint, clip.freeze, clip.reverse, clip.duration, clip.sourceDuration, clip.kind]);
+
 
   const opacityKf = prop(clip, "opacity", local, clip.transform.opacity);
   const scale = prop(clip, "scale", local, clip.transform.scale);
@@ -163,7 +178,16 @@ const Layer = ({ clip, time, docHeight }: { clip: Clip; time: number; docHeight:
   return (
     <div style={wrapStyle}>
       {(clip.kind === "video") && (
-        <video ref={vRef} src={clip.src} style={mediaStyle} playsInline muted={clip.audio.volume === 0} preload="auto" />
+        <video
+          ref={vRef}
+          src={clip.src}
+          style={{ ...mediaStyle, transform: "translateZ(0)" }}
+          playsInline
+          preload="auto"
+          disablePictureInPicture
+          disableRemotePlayback
+        />
+
       )}
       {(clip.kind === "image" || clip.kind === "gif") && <img src={clip.src} style={mediaStyle} alt={clip.name} />}
       {clip.kind === "text" && clip.text && (
@@ -205,15 +229,17 @@ const AudioLayer = ({ clip, time }: { clip: Clip; time: number }) => {
   useEffect(() => {
     const a = ref.current; if (!a) return;
     const target = clip.inPoint + local * clip.speed;
-    if (Math.abs(a.currentTime - target) > 0.25) a.currentTime = target;
+    const tol = playing ? 0.5 : 0.05;
+    if (Number.isFinite(target) && Math.abs(a.currentTime - target) > tol) a.currentTime = target;
     a.playbackRate = clip.speed;
     let v = clip.audio.volume;
     if (clip.audio.fadeIn && local < clip.audio.fadeIn) v *= local / clip.audio.fadeIn;
     const toEnd = clip.duration - local;
     if (clip.audio.fadeOut && toEnd < clip.audio.fadeOut) v *= Math.max(0, toEnd / clip.audio.fadeOut);
     a.volume = Math.min(1, Math.max(0, v));
-    if (playing) a.play().catch(() => {}); else a.pause();
+    if (playing) { if (a.paused) a.play().catch(() => {}); } else if (!a.paused) a.pause();
   }, [local, playing, clip]);
+
   return <audio ref={ref} src={clip.src} hidden />;
 };
 
@@ -245,17 +271,19 @@ export const Preview = () => {
   const timeRef = useRef(time);
   timeRef.current = time;
 
-  /* playback clock — frame-quantised so heavy docs stay smooth instead of thrashing renders */
+  /* playback clock — heavy docs (2K/4K) update the UI less often; the <video> keeps playing
+     natively at full smoothness, so we only cut React re-render cost, not visual fps */
   useEffect(() => {
     if (!playing || duration <= 0) return;
-    const frame = 1 / (doc.fps || 30);
+    const heavy = doc.width * doc.height >= 1920 * 1080 * 1.5;
+    const step = heavy ? 1 / 20 : 1 / (doc.fps || 30);
     last.current = performance.now();
     let acc = 0;
     const tick = (now: number) => {
       const dt = Math.min(0.25, (now - last.current) / 1000);
       last.current = now;
       acc += dt;
-      if (acc >= frame) {
+      if (acc >= step) {
         const next = timeRef.current + acc;
         acc = 0;
         if (next >= duration) { setTime(duration); setPlaying(false); return; }
@@ -265,7 +293,8 @@ export const Preview = () => {
     };
     raf.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf.current!);
-  }, [playing, duration, setTime, setPlaying, doc.fps]);
+  }, [playing, duration, setTime, setPlaying, doc.fps, doc.width, doc.height]);
+
 
 
   const layers = activeClips(doc.tracks, time);
@@ -328,7 +357,10 @@ export const Preview = () => {
               position: "absolute", top: 0, left: 0,
             }}
           >
-            {layers.map(({ clip }) => <Layer key={clip.id} clip={clip} time={time} docHeight={doc.height} />)}
+            {layers.map(({ clip, track }) => (
+              <Layer key={clip.id} clip={clip} time={time} docHeight={doc.height} trackMuted={track?.muted} />
+            ))}
+
           </div>
         </div>
         {layers.length === 0 && (
