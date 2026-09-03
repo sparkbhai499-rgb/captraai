@@ -229,15 +229,17 @@ const AudioLayer = ({ clip, time }: { clip: Clip; time: number }) => {
   useEffect(() => {
     const a = ref.current; if (!a) return;
     const target = clip.inPoint + local * clip.speed;
-    if (Math.abs(a.currentTime - target) > 0.25) a.currentTime = target;
+    const tol = playing ? 0.5 : 0.05;
+    if (Number.isFinite(target) && Math.abs(a.currentTime - target) > tol) a.currentTime = target;
     a.playbackRate = clip.speed;
     let v = clip.audio.volume;
     if (clip.audio.fadeIn && local < clip.audio.fadeIn) v *= local / clip.audio.fadeIn;
     const toEnd = clip.duration - local;
     if (clip.audio.fadeOut && toEnd < clip.audio.fadeOut) v *= Math.max(0, toEnd / clip.audio.fadeOut);
     a.volume = Math.min(1, Math.max(0, v));
-    if (playing) a.play().catch(() => {}); else a.pause();
+    if (playing) { if (a.paused) a.play().catch(() => {}); } else if (!a.paused) a.pause();
   }, [local, playing, clip]);
+
   return <audio ref={ref} src={clip.src} hidden />;
 };
 
