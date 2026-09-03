@@ -357,7 +357,10 @@ export const Preview = () => {
               position: "absolute", top: 0, left: 0,
             }}
           >
-            {layers.map(({ clip }) => <Layer key={clip.id} clip={clip} time={time} docHeight={doc.height} />)}
+            {layers.map(({ clip, track }) => (
+              <Layer key={clip.id} clip={clip} time={time} docHeight={doc.height} trackMuted={track?.muted} />
+            ))}
+
           </div>
         </div>
         {layers.length === 0 && (
