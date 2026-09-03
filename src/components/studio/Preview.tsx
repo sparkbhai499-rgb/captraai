@@ -271,17 +271,19 @@ export const Preview = () => {
   const timeRef = useRef(time);
   timeRef.current = time;
 
-  /* playback clock — frame-quantised so heavy docs stay smooth instead of thrashing renders */
+  /* playback clock — heavy docs (2K/4K) update the UI less often; the <video> keeps playing
+     natively at full smoothness, so we only cut React re-render cost, not visual fps */
   useEffect(() => {
     if (!playing || duration <= 0) return;
-    const frame = 1 / (doc.fps || 30);
+    const heavy = doc.width * doc.height >= 1920 * 1080 * 1.5;
+    const step = heavy ? 1 / 20 : 1 / (doc.fps || 30);
     last.current = performance.now();
     let acc = 0;
     const tick = (now: number) => {
       const dt = Math.min(0.25, (now - last.current) / 1000);
       last.current = now;
       acc += dt;
-      if (acc >= frame) {
+      if (acc >= step) {
         const next = timeRef.current + acc;
         acc = 0;
         if (next >= duration) { setTime(duration); setPlaying(false); return; }
@@ -291,7 +293,8 @@ export const Preview = () => {
     };
     raf.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf.current!);
-  }, [playing, duration, setTime, setPlaying, doc.fps]);
+  }, [playing, duration, setTime, setPlaying, doc.fps, doc.width, doc.height]);
+
 
 
   const layers = activeClips(doc.tracks, time);
