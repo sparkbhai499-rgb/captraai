@@ -14,7 +14,7 @@ import {
   Undo2, Redo2, Upload, Crown, SkipBack, SkipForward, ZoomIn, ZoomOut, Copy, ArrowUp, ArrowDown, Maximize2, Sliders,
 } from "lucide-react";
 import { toast } from "sonner";
-import { toSRT, toVTT, toTXT, download, Caption } from "@/lib/captionUtils";
+import { toSRT, toVTT, toTXT, download, Caption, generateCaptions } from "@/lib/captionUtils";
 import { LANGS } from "@/components/UploadDropzone";
 
 const fontOptions = ["Inter", "Space Grotesk", "Arial", "Georgia", "Impact", "Courier New"];
