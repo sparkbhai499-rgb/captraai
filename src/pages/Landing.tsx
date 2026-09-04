@@ -64,21 +64,26 @@ const Landing = () => {
 
       {/* HERO */}
       <section className="relative pt-40 pb-24 overflow-hidden">
-        <div className="blob absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-primary/60"/>
+        <div className="grid-fade absolute inset-0 pointer-events-none" />
+        <div className="blob absolute top-1/4 left-1/4 w-[520px] h-[380px] rounded-full bg-primary/60"/>
+        <div className="blob absolute top-1/3 right-1/5 w-[460px] h-[340px] rounded-full bg-[hsl(var(--neon-violet))]/50"/>
 
         <div className="container relative">
           <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.7}} className="max-w-5xl mx-auto text-center">
+            <span className="inline-flex items-center gap-2 glass neon-ring rounded-full px-4 py-1.5 text-xs font-medium mb-8">
+              <Sparkles className="w-3.5 h-3.5 text-accent pulse-soft"/> Premium AI creative studio
+            </span>
             <h1 className="font-display font-black tracking-tight leading-[0.95] text-6xl md:text-8xl lg:text-9xl mb-8">
-              Captions that get
+              Create. Edit.
               <br/>
-              <span className="text-primary">Hinglish</span> right.
+              <span className="gradient-text neon-text">Captivate.</span>
             </h1>
             <p className="text-base md:text-lg text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-              Most caption tools mangle code-mixed speech. Captra transcribes Hindi, Hinglish and 20+ Indian languages, then lets you edit every word before you export, up to 4K.
+              AI-powered captions &amp; professional editing. Captra transcribes Hindi, Hinglish and 40+ languages, then lets you style every word before you export, up to 4K.
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
-              <Button size="lg" className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground border-0 glow px-7 h-12 text-base font-semibold" asChild>
-                <Link to="/auth">Try it free →</Link>
+              <Button size="lg" className="rounded-full btn-neon border-0 px-7 h-12 text-base font-semibold" asChild>
+                <Link to="/auth">Try it free ✦</Link>
               </Button>
               <Button size="lg" variant="outline" className="rounded-full border-white/15 hover:bg-white/5 px-7 h-12 text-base font-semibold" asChild>
                 <a href="#features">See the styles</a>
@@ -101,11 +106,33 @@ const Landing = () => {
             </div>
           </motion.div>
 
-          <motion.div id="upload" initial={{opacity:0,y:30}} animate={{opacity:1,y:0}} transition={{delay:0.25, duration:0.6}} className="max-w-2xl mx-auto mt-20">
+          {/* PREMIUM ENTRY CARDS */}
+          <div className="grid md:grid-cols-2 gap-5 max-w-4xl mx-auto mt-16">
+            {[
+              { icon: Wand2, title: "Caption AI", desc: "Generate viral, professional and creative captions in seconds.", to: "/auth" },
+              { icon: Palette, title: "AI Editor", desc: "Create stunning social media content on a pro timeline.", to: "/auth" },
+            ].map((c, i) => (
+              <motion.div key={c.title} initial={{opacity:0,y:26}} animate={{opacity:1,y:0}} transition={{delay:0.15 + i*0.1, duration:0.6}}>
+                <Link to={c.to} className="block h-full">
+                  <GlassCard className="h-full p-7 group">
+                    <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center mb-5 glow float-3d">
+                      <c.icon className="w-6 h-6 text-background"/>
+                    </div>
+                    <h3 className="font-display text-2xl font-bold mb-2">✦ {c.title}</h3>
+                    <p className="text-sm text-muted-foreground">{c.desc}</p>
+                    <span className="inline-block mt-5 text-sm font-medium text-accent group-hover:translate-x-1 transition-transform">Open →</span>
+                  </GlassCard>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div id="upload" initial={{opacity:0,y:30}} animate={{opacity:1,y:0}} transition={{delay:0.25, duration:0.6}} className="max-w-2xl mx-auto mt-16">
             <UploadDropzone />
           </motion.div>
         </div>
       </section>
+
 
       {/* DEMO */}
       <section className="py-20 container">
