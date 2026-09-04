@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FilePlus2, Image as ImageIcon, Loader2, Music, Search, Sparkles, Type, Video } from "lucide-react";
 import { toast } from "sonner";
+import { generateCaptions } from "@/lib/captionUtils";
+
 
 type Asset = { id: string; name: string; kind: string; storage_path: string; duration_sec: number | null; url?: string };
 
