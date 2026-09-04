@@ -81,16 +81,16 @@ export const PaymentDialog = ({ plan, open, onOpenChange }: { plan: any; open: b
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass border-white/10 max-w-md">
+      <DialogContent className="glass neon-card border-white/10 max-w-md">
         <DialogHeader>
           <DialogTitle className="font-display flex items-center gap-2">
             {step === "submit" && (
               <button onClick={() => setStep("pay")} className="hover:text-primary"><ArrowLeft className="w-4 h-4"/></button>
             )}
-            Pay for {plan?.name}
+            Unlock Premium
           </DialogTitle>
           <DialogDescription>
-            {step === "pay" ? `Pay ₹${amount} using any UPI app, then come back to submit.` : "Almost done — share your payment details."}
+            {step === "pay" ? `${plan?.name} · Pay ₹${amount} using any UPI app, then come back to submit.` : "Almost done — share your payment details."}
           </DialogDescription>
         </DialogHeader>
 
@@ -98,7 +98,7 @@ export const PaymentDialog = ({ plan, open, onOpenChange }: { plan: any; open: b
           {step === "pay" && (
             <motion.div key="pay" initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} className="space-y-4">
               {settings?.qr_url && (
-                <motion.div initial={{ scale: 0.94, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="p-4 rounded-xl bg-white flex flex-col items-center">
+                <motion.div initial={{ scale: 0.94, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="p-4 rounded-2xl bg-white flex flex-col items-center neon-card float-3d glow">
                   <img src={settings.qr_url} alt={`UPI QR code to pay ${upiName}`} className="w-48 h-48 object-contain" />
                   <p className="text-xs text-black/60 mt-2 flex items-center gap-1"><QrCode className="w-3 h-3"/>Scan to pay ₹{amount}</p>
                 </motion.div>
@@ -135,7 +135,7 @@ export const PaymentDialog = ({ plan, open, onOpenChange }: { plan: any; open: b
               </div>
 
               <Button variant="outline" className="w-full" onClick={() => setStep("submit")}>
-                Already paid → Submit proof
+                Upgrade Now → Submit proof
               </Button>
             </motion.div>
           )}
@@ -154,7 +154,7 @@ export const PaymentDialog = ({ plan, open, onOpenChange }: { plan: any; open: b
                   <input type="file" accept="image/*" hidden onChange={(e) => setFile(e.target.files?.[0] || null)} />
                 </label>
               </div>
-              <Button onClick={submit} disabled={busy} className="w-full gradient-primary text-white border-0">
+              <Button onClick={submit} disabled={busy} className="w-full btn-neon border-0">
                 {busy ? <Loader2 className="w-4 h-4 animate-spin"/> : "Submit for approval"}
               </Button>
             </motion.div>
@@ -163,9 +163,9 @@ export const PaymentDialog = ({ plan, open, onOpenChange }: { plan: any; open: b
           {step === "done" && (
             <motion.div key="done" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="py-10 flex flex-col items-center text-center">
               <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 220, damping: 12 }}>
-                <CheckCircle2 className="w-16 h-16 text-green-400"/>
+                <CheckCircle2 className="w-16 h-16 text-accent pulse-soft"/>
               </motion.div>
-              <p className="font-display text-xl font-bold mt-4">Payment submitted!</p>
+              <p className="font-display text-xl font-bold mt-4 gradient-text neon-text">Payment Successful ✓</p>
               <p className="text-sm text-muted-foreground mt-1">Admin approval ke baad plan activate ho jayega.</p>
             </motion.div>
           )}
