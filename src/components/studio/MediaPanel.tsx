@@ -101,10 +101,7 @@ export const MediaPanel = ({ projectId, userId }: { projectId: string; userId: s
   const autoCaptions = async () => {
     setAiBusy(true);
     try {
-      const { error } = await supabase.functions.invoke("transcribe-video", { body: { project_id: projectId, language: lang } });
-      if (error) throw error;
-      const { data: caps } = await supabase.from("captions").select("*").eq("project_id", projectId).order("idx");
-      if (!caps?.length) throw new Error("No speech detected");
+      const caps = await generateCaptions(projectId, lang);
       caps.forEach((c: any) => addClip("text", makeClip({
         kind: "text", name: "Caption", start: c.start_ms / 1000,
         duration: Math.max(0.4, (c.end_ms - c.start_ms) / 1000),
@@ -115,6 +112,7 @@ export const MediaPanel = ({ projectId, userId }: { projectId: string; userId: s
     } catch (e: any) { toast.error(e.message || "Caption generation failed"); }
     finally { setAiBusy(false); }
   };
+
 
   const silenceTrim = () => {
     // non-destructive helper: tightens gaps between clips on the video track
