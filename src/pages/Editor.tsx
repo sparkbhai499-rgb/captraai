@@ -230,11 +230,17 @@ const Editor = () => {
     await supabase.from("projects").update({ status: "transcribing", language, error_message: null }).eq("id", id);
     setProject((p: any) => ({ ...p, status: "transcribing", language }));
     toast.loading(`Generating captions in ${LANGS.find(l => l.value === language)?.label || language}…`, { id: "gen-caps" });
-    const { data, error } = await supabase.functions.invoke("transcribe-video", { body: { project_id: id, language } });
-    toast.dismiss("gen-caps");
-    if (error) { toast.error(error.message || "Caption generation failed"); loadProj(); return; }
-    toast.success(`Captions generated (${data?.count || 0} lines)!`); loadProj();
+    try {
+      const caps = await generateCaptions(id, language);
+      toast.dismiss("gen-caps");
+      toast.success(`Captions generated (${caps.length} lines)!`);
+    } catch (e: any) {
+      toast.dismiss("gen-caps");
+      toast.error(e.message || "Caption generation failed");
+    }
+    loadProj();
   };
+
 
   const genYT = async () => {
     if (!id) return; setYtBusy(true);
