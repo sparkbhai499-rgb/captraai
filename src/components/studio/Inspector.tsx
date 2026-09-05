@@ -96,7 +96,7 @@ export const Inspector = () => {
   );
 
   return (
-    <div className="glass rounded-xl overflow-hidden flex flex-col max-h-[70vh]">
+    <div className="glass neon-card rounded-xl overflow-hidden flex flex-col max-h-[70vh]">
       <div className="px-3 py-2 border-b border-white/5 text-sm font-medium truncate">{clip.name}</div>
       <Tabs defaultValue="transform" className="flex-1 overflow-hidden flex flex-col">
         <TabsList className="grid grid-cols-3 m-2 bg-secondary/50">

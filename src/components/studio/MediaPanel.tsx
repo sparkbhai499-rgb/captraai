@@ -176,7 +176,7 @@ export const MediaPanel = ({ projectId, userId }: { projectId: string; userId: s
   };
 
   return (
-    <div className="glass rounded-xl overflow-hidden flex flex-col max-h-[70vh]">
+    <div className="glass neon-card rounded-xl overflow-hidden flex flex-col max-h-[70vh]">
       <Tabs defaultValue="media" className="flex flex-col overflow-hidden">
         <TabsList className="grid grid-cols-5 m-2 bg-secondary/50">
           <TabsTrigger value="media"><Video className="w-4 h-4" /></TabsTrigger>

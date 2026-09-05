@@ -105,7 +105,7 @@ export const ExportDialog = () => {
       <DialogTrigger asChild>
         <Button className="btn-neon border-0"><Download className="w-4 h-4 mr-1" /> Export</Button>
       </DialogTrigger>
-      <DialogContent className="glass">
+      <DialogContent className="glass neon-card">
         <DialogHeader><DialogTitle className="font-display">Export video</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
