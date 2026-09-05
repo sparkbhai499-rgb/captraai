@@ -53,7 +53,7 @@ const Pricing = () => {
               <ul className="space-y-2 mb-6 text-sm flex-1">
                 {(p.features || []).map((f: string) => <li key={f} className="flex gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5"/>{f}</li>)}
               </ul>
-              <Button onClick={() => onBuy(p)} className={`w-full ${p.is_popular ? "gradient-primary text-white border-0" : ""}`} variant={p.is_popular ? "default" : "outline"}>
+              <Button onClick={() => onBuy(p)} className={`w-full ${p.is_popular ? "btn-neon border-0" : ""}`} variant={p.is_popular ? "default" : "outline"}>
                 {p.price_inr === 0 ? "Current" : `Buy ${p.name}`}
               </Button>
             </GlassCard>

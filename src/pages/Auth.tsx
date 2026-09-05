@@ -74,7 +74,7 @@ const Auth = () => {
               <form onSubmit={login} className="space-y-4">
                 <div><Label>Email</Label><Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="bg-secondary/50 mt-1.5"/></div>
                 <div><Label>Password</Label><div className="relative mt-1.5"><Input type={showPw ? "text" : "password"} required value={password} onChange={(e) => setPassword(e.target.value)} className="bg-secondary/50 pr-10"/><button type="button" onClick={() => setShowPw(v => !v)} aria-label={showPw ? "Hide password" : "Show password"} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">{showPw ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</button></div></div>
-                <Button type="submit" className="w-full gradient-primary text-white border-0" disabled={busy}>
+                <Button type="submit" className="w-full btn-neon border-0" disabled={busy}>
                   {busy ? <Loader2 className="w-4 h-4 animate-spin"/> : "Sign in"}
                 </Button>
               </form>
@@ -84,7 +84,7 @@ const Auth = () => {
               <form onSubmit={signup} className="space-y-4">
                 <div><Label>Email</Label><Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="bg-secondary/50 mt-1.5"/></div>
                 <div><Label>Password</Label><div className="relative mt-1.5"><Input type={showPw ? "text" : "password"} required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="bg-secondary/50 pr-10"/><button type="button" onClick={() => setShowPw(v => !v)} aria-label={showPw ? "Hide password" : "Show password"} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">{showPw ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</button></div></div>
-                <Button type="submit" className="w-full gradient-primary text-white border-0" disabled={busy}>
+                <Button type="submit" className="w-full btn-neon border-0" disabled={busy}>
                   {busy ? <Loader2 className="w-4 h-4 animate-spin"/> : "Create account"}
                 </Button>
               </form>

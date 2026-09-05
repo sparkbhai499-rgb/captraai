@@ -197,7 +197,7 @@ const Landing = () => {
                   <li key={f} className="flex gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5"/>{f}</li>
                 ))}
               </ul>
-              <Button className={`w-full ${p.is_popular ? "gradient-primary text-white border-0" : ""}`} variant={p.is_popular ? "default" : "outline"} asChild>
+              <Button className={`w-full ${p.is_popular ? "btn-neon border-0" : ""}`} variant={p.is_popular ? "default" : "outline"} asChild>
                 <Link to="/auth">Get {p.name}</Link>
               </Button>
             </GlassCard>
@@ -257,7 +257,7 @@ const Landing = () => {
             </div>
             <Input placeholder="Subject" value={form.subject} onChange={(e) => setForm({...form, subject: e.target.value})} className="bg-secondary/50"/>
             <Textarea required rows={5} placeholder="Your message" value={form.message} onChange={(e) => setForm({...form, message: e.target.value})} className="bg-secondary/50"/>
-            <Button type="submit" className="w-full gradient-primary text-white border-0" disabled={sending}>
+            <Button type="submit" className="w-full btn-neon border-0" disabled={sending}>
               {sending ? "Sending…" : "Send message"}
             </Button>
           </form>

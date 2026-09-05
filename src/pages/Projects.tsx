@@ -49,7 +49,7 @@ const Projects = () => {
         {filtered.length === 0 ? (
           <GlassCard className="text-center py-16">
             <p className="text-muted-foreground">No projects found.</p>
-            <Button className="mt-4 gradient-primary text-white border-0" asChild><Link to="/dashboard">Upload a video</Link></Button>
+            <Button className="mt-4 btn-neon border-0" asChild><Link to="/dashboard">Upload a video</Link></Button>
           </GlassCard>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -62,7 +62,7 @@ const Projects = () => {
                   <p className="font-medium truncate">{p.title}</p>
                   <p className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString()} · {p.status}</p>
                   <div className="flex gap-2 mt-3">
-                    <Button size="sm" className="flex-1 gradient-primary text-white border-0" asChild><Link to={`/studio/${p.id}`}>Studio</Link></Button>
+                    <Button size="sm" className="flex-1 btn-neon border-0" asChild><Link to={`/studio/${p.id}`}>Studio</Link></Button>
                     <Button size="sm" variant="outline" asChild><Link to={`/editor/${p.id}`}>Captions</Link></Button>
                     <Button size="sm" variant="outline" onClick={() => remove(p.id, p.video_path)}><Trash2 className="w-4 h-4"/></Button>
                   </div>

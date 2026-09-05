@@ -173,7 +173,7 @@ const AdminPage = () => {
                   )}
                   {settings.qr_url && <Button size="sm" variant="ghost" className="mt-2" onClick={() => setSettings({ ...settings, qr_url: null })}><Trash2 className="w-4 h-4 mr-1"/>Remove QR</Button>}
                 </div>
-                <Button onClick={saveSettings} className="gradient-primary text-white border-0">Save payment settings</Button>
+                <Button onClick={saveSettings} className="btn-neon border-0">Save payment settings</Button>
               </div>
             </GlassCard>
           </TabsContent>
@@ -198,7 +198,7 @@ const AdminPage = () => {
                     {p.status === "pending" && (
                       <div className="mt-3 flex gap-2 flex-wrap items-center">
                         {p.screenshot_path && <Button size="sm" variant="outline" onClick={() => viewProof(p.screenshot_path)}><ExternalLink className="w-3.5 h-3.5 mr-1"/>View proof</Button>}
-                        <Button size="sm" onClick={() => approve(p.id)} className="gradient-primary text-white border-0"><Check className="w-3.5 h-3.5 mr-1"/>Approve</Button>
+                        <Button size="sm" onClick={() => approve(p.id)} className="btn-neon border-0"><Check className="w-3.5 h-3.5 mr-1"/>Approve</Button>
                         <Input placeholder="Reject reason" value={rejectNote[p.id] || ""} onChange={(e) => setRejectNote({ ...rejectNote, [p.id]: e.target.value })} className="h-8 w-40 bg-secondary/50"/>
                         <Button size="sm" variant="destructive" onClick={() => reject(p.id)}><X className="w-3.5 h-3.5 mr-1"/>Reject</Button>
                       </div>
@@ -213,7 +213,7 @@ const AdminPage = () => {
             <GlassCard>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-display text-lg font-semibold">Plans</h2>
-                <Button size="sm" onClick={() => setEditPlan({ ...emptyPlan })} className="gradient-primary text-white border-0"><Plus className="w-4 h-4 mr-1"/>New plan</Button>
+                <Button size="sm" onClick={() => setEditPlan({ ...emptyPlan })} className="btn-neon border-0"><Plus className="w-4 h-4 mr-1"/>New plan</Button>
               </div>
               <div className="space-y-2">
                 {plans.map((p) => (
@@ -237,7 +237,7 @@ const AdminPage = () => {
               <h2 className="font-display text-lg font-semibold mb-3">Grant admin</h2>
               <div className="flex gap-2">
                 <Input placeholder="email or user_id UUID" value={newAdminEmail} onChange={(e) => setNewAdminEmail(e.target.value)} className="bg-secondary/50"/>
-                <Button onClick={promote} className="gradient-primary text-white border-0">Add</Button>
+                <Button onClick={promote} className="btn-neon border-0">Add</Button>
               </div>
             </GlassCard>
             <GlassCard>
@@ -307,7 +307,7 @@ const AdminPage = () => {
                 <Label className="text-xs">Features (one per line)</Label>
                 <Textarea rows={5} value={editPlan.features} onChange={(e) => setEditPlan({ ...editPlan, features: e.target.value })} className="bg-secondary/50 mt-1"/>
               </div>
-              <Button onClick={savePlan} className="w-full gradient-primary text-white border-0">Save</Button>
+              <Button onClick={savePlan} className="w-full btn-neon border-0">Save</Button>
             </div>
           )}
         </DialogContent>

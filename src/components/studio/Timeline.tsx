@@ -132,7 +132,7 @@ export const Timeline = () => {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="glass rounded-xl flex flex-col overflow-hidden">
+      <div className="glass neon-card rounded-xl flex flex-col overflow-hidden">
         {/* toolbar */}
         <div className="flex items-center gap-1 px-2 py-1.5 border-b border-white/5 bg-black/30">
           <TIP label="Select / drag clip">
