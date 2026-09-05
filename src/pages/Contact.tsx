@@ -40,7 +40,7 @@ const Contact = () => {
             <Input required type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({...form, email: e.target.value})} className="bg-secondary/50"/>
             <Input placeholder="Subject" value={form.subject} onChange={(e) => setForm({...form, subject: e.target.value})} className="bg-secondary/50"/>
             <Textarea required rows={5} placeholder="Your message" value={form.message} onChange={(e) => setForm({...form, message: e.target.value})} className="bg-secondary/50"/>
-            <Button type="submit" disabled={busy} className="w-full gradient-primary text-white border-0">{busy ? "Sending…" : "Send"}</Button>
+            <Button type="submit" disabled={busy} className="w-full btn-neon border-0">{busy ? "Sending…" : "Send"}</Button>
           </form>
         </GlassCard>
       </section>

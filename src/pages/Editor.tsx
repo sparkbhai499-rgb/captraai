@@ -335,7 +335,7 @@ const Editor = () => {
           <Button size="icon" variant="ghost" onClick={undo} disabled={!history.length} className="h-9 w-9"><Undo2 className="w-4 h-4"/></Button>
           <Button size="icon" variant="ghost" onClick={redo} disabled={!future.length} className="h-9 w-9"><Redo2 className="w-4 h-4"/></Button>
           <Button size="icon" variant="ghost" className="h-9 w-9 text-yellow-400"><Crown className="w-4 h-4"/></Button>
-          <Button onClick={burnIn} disabled={burning || !videoUrl || !captions.length} className="gradient-primary text-white border-0 h-9 gap-2 px-4">
+          <Button onClick={burnIn} disabled={burning || !videoUrl || !captions.length} className="btn-neon border-0 h-9 gap-2 px-4">
             {burning ? <Loader2 className="w-4 h-4 animate-spin"/> : <Upload className="w-4 h-4"/>}
             Export
           </Button>
@@ -378,7 +378,7 @@ const Editor = () => {
                 <p className="text-[11px] text-muted-foreground">{project.duration_sec ? `${project.duration_sec.toFixed(1)}s` : "—"} · {project.language || "auto"}</p>
                 <input ref={mediaInputRef} type="file" accept="video/*,.mp4,.mov,.avi,.mkv" hidden
                   onChange={(e) => e.target.files?.[0] && importVideo(e.target.files[0])}/>
-                <Button onClick={() => mediaInputRef.current?.click()} className="w-full gradient-primary text-white border-0">
+                <Button onClick={() => mediaInputRef.current?.click()} className="w-full btn-neon border-0">
                   <Upload className="w-4 h-4 mr-2"/>Import / replace video
                 </Button>
                 <p className="text-[11px] text-muted-foreground">MP4, MOV, AVI, MKV up to 200 MB. New captions can be generated after import.</p>
@@ -395,7 +395,7 @@ const Editor = () => {
                       <SelectTrigger className="bg-white/5 h-9"><SelectValue/></SelectTrigger>
                       <SelectContent>{LANGS.map(l => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}</SelectContent>
                     </Select>
-                    <Button onClick={() => retranscribe()} disabled={project.status === "transcribing"} className="gradient-primary text-white border-0 w-full">
+                    <Button onClick={() => retranscribe()} disabled={project.status === "transcribing"} className="btn-neon border-0 w-full">
                       {project.status === "transcribing" ? <><Loader2 className="w-4 h-4 mr-2 animate-spin"/>Generating…</> : <><Sparkles className="w-4 h-4 mr-2"/>Generate</>}
                     </Button>
                   </div>
@@ -467,7 +467,7 @@ const Editor = () => {
                 <div><Label className="text-xs">Position</Label>
                   <div className="grid grid-cols-3 gap-1.5 mt-1.5">
                     {positions.map(p => (
-                      <Button key={p} size="sm" variant={style.position===p?"default":"outline"} onClick={() => setStyle({...style, position: p})} className={`text-xs h-8 ${style.position===p?"gradient-primary text-white border-0":""}`}>{p}</Button>
+                      <Button key={p} size="sm" variant={style.position===p?"default":"outline"} onClick={() => setStyle({...style, position: p})} className={`text-xs h-8 ${style.position===p?"btn-neon border-0":""}`}>{p}</Button>
                     ))}
                   </div>
                 </div>
@@ -519,7 +519,7 @@ const Editor = () => {
 
             {activePanel === "youtube" && (
               <>
-                <Button size="sm" onClick={genYT} disabled={ytBusy || !captions.length} className="w-full gradient-primary text-white border-0">
+                <Button size="sm" onClick={genYT} disabled={ytBusy || !captions.length} className="w-full btn-neon border-0">
                   {ytBusy ? <Loader2 className="w-4 h-4 animate-spin"/> : <><Sparkles className="w-4 h-4 mr-1"/>Generate YouTube kit</>}
                 </Button>
                 {yt ? (
@@ -553,7 +553,7 @@ const Editor = () => {
                 <div className="pt-3 border-t border-white/5">
                   <Label className="text-xs">Burn captions & effects into MP4</Label>
                   <p className="text-[11px] text-muted-foreground my-2">Runs in your browser. Under 100 MB is best.</p>
-                  <Button className="w-full gradient-primary text-white border-0" onClick={burnIn} disabled={burning || !videoUrl || !captions.length}>
+                  <Button className="w-full btn-neon border-0" onClick={burnIn} disabled={burning || !videoUrl || !captions.length}>
                     {burning ? <><Loader2 className="w-4 h-4 mr-2 animate-spin"/>Burning…</> : <><Flame className="w-4 h-4 mr-2"/>Download MP4</>}
                   </Button>
                 </div>

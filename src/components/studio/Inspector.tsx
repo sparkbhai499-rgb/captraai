@@ -196,7 +196,7 @@ export const Inspector = () => {
               brightness: 0, contrast: 0, saturation: 0, exposure: 0, highlights: 0, shadows: 0,
               temperature: 0, tint: 0, sharpness: 0, blur: 0, grain: 0,
             })}>Reset colour</Button>
-            <Button size="sm" className="w-full gradient-primary text-white border-0" onClick={() => applyLookToAll(clip)}>
+            <Button size="sm" className="w-full btn-neon border-0" onClick={() => applyLookToAll(clip)}>
               <Layers className="w-4 h-4 mr-1" /> Apply this look to all clips
             </Button>
           </TabsContent>

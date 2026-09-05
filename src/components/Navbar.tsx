@@ -65,7 +65,7 @@ export const Navbar = () => {
           ) : (
             <>
               <Button variant="ghost" size="sm" onClick={() => nav("/auth")}>Sign in</Button>
-              <Button size="sm" className="gradient-primary text-white border-0" onClick={() => nav("/auth")}>Get started</Button>
+              <Button size="sm" className="btn-neon border-0" onClick={() => nav("/auth")}>Get started</Button>
             </>
           )}
         </div>
@@ -89,7 +89,7 @@ export const Navbar = () => {
               ) : (
                 <>
                   <Button variant="outline" size="sm" onClick={() => {setOpen(false); nav("/auth");}} className="flex-1">Sign in</Button>
-                  <Button size="sm" onClick={() => {setOpen(false); nav("/auth");}} className="flex-1 gradient-primary text-white border-0">Get started</Button>
+                  <Button size="sm" onClick={() => {setOpen(false); nav("/auth");}} className="flex-1 btn-neon border-0">Get started</Button>
                 </>
               )}
             </div>

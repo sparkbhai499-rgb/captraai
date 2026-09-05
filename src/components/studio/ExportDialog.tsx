@@ -103,7 +103,7 @@ export const ExportDialog = () => {
   return (
     <Dialog open={open} onOpenChange={(o) => !busy && setOpen(o)}>
       <DialogTrigger asChild>
-        <Button className="gradient-primary text-white border-0"><Download className="w-4 h-4 mr-1" /> Export</Button>
+        <Button className="btn-neon border-0"><Download className="w-4 h-4 mr-1" /> Export</Button>
       </DialogTrigger>
       <DialogContent className="glass">
         <DialogHeader><DialogTitle className="font-display">Export video</DialogTitle></DialogHeader>
@@ -141,7 +141,7 @@ export const ExportDialog = () => {
               <p className="text-xs text-muted-foreground">Rendering frame-by-frame — {pct}%</p>
             </div>
           )}
-          <Button disabled={busy} onClick={run} className="w-full gradient-primary text-white border-0">
+          <Button disabled={busy} onClick={run} className="w-full btn-neon border-0">
             {busy ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Exporting…</> : "Start export"}
           </Button>
           <p className="text-[11px] text-muted-foreground">

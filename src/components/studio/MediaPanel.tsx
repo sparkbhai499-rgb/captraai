@@ -199,7 +199,7 @@ export const MediaPanel = ({ projectId, userId }: { projectId: string; userId: s
             <input ref={musicRef} type="file" hidden multiple accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac"
               onChange={(e) => onFilesSelected(e.currentTarget)} />
 
-            <Button className="w-full gradient-primary text-white border-0" disabled={busy} onClick={() => fileRef.current?.click()}>
+            <Button className="w-full btn-neon border-0" disabled={busy} onClick={() => fileRef.current?.click()}>
               {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FilePlus2 className="w-4 h-4 mr-2" />} Import all media
             </Button>
             <div className="grid grid-cols-3 gap-1.5">
@@ -247,7 +247,7 @@ export const MediaPanel = ({ projectId, userId }: { projectId: string; userId: s
           </TabsContent>
 
           <TabsContent value="music" className="space-y-3 m-0">
-            <Button className="w-full gradient-primary text-white border-0" disabled={busy} onClick={() => musicRef.current?.click()}>
+            <Button className="w-full btn-neon border-0" disabled={busy} onClick={() => musicRef.current?.click()}>
               {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Music className="w-4 h-4 mr-2" />} Import music
             </Button>
             <p className="text-[11px] text-muted-foreground">MP3, WAV, M4A — song timeline ke audio track par aayega, video ko chhua nahi jata.</p>
@@ -321,7 +321,7 @@ export const MediaPanel = ({ projectId, userId }: { projectId: string; userId: s
                 </SelectContent>
               </Select>
             </div>
-            <Button className="w-full gradient-primary text-white border-0" disabled={aiBusy} onClick={autoCaptions}>
+            <Button className="w-full btn-neon border-0" disabled={aiBusy} onClick={autoCaptions}>
               {aiBusy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />} AI auto captions
             </Button>
             <Button className="w-full" variant="secondary" onClick={silenceTrim}>Silence trim helper</Button>
