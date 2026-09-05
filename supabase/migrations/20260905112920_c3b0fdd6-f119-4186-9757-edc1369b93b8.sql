@@ -1,0 +1,23 @@
+REVOKE EXECUTE ON FUNCTION public.award_points(uuid, integer, text, jsonb) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.get_my_points() FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.claim_signup_bonus() FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.claim_refill_points() FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.apply_referral_code(text) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.spend_points(integer, text, jsonb) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.admin_adjust_points(uuid, integer, text) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.approve_payment_request(uuid) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.admin_list_users() FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.user_has_active_plan(uuid) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.has_role(uuid, public.app_role) FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.get_my_points() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.claim_signup_bonus() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.claim_refill_points() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.apply_referral_code(text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.spend_points(integer, text, jsonb) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_adjust_points(uuid, integer, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.approve_payment_request(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_list_users() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.user_has_active_plan(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.has_role(uuid, public.app_role) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.award_points(uuid, integer, text, jsonb) TO service_role;

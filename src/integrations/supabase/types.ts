@@ -164,6 +164,7 @@ export type Database = {
           is_popular: boolean | null
           minutes_included: number
           name: string
+          points_included: number
           price_inr: number
           slug: string
           sort_order: number | null
@@ -175,6 +176,7 @@ export type Database = {
           is_popular?: boolean | null
           minutes_included?: number
           name: string
+          points_included?: number
           price_inr?: number
           slug: string
           sort_order?: number | null
@@ -186,9 +188,67 @@ export type Database = {
           is_popular?: boolean | null
           minutes_included?: number
           name?: string
+          points_included?: number
           price_inr?: number
           slug?: string
           sort_order?: number | null
+        }
+        Relationships: []
+      }
+      point_transactions: {
+        Row: {
+          created_at: string
+          delta: number
+          id: string
+          meta: Json | null
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delta: number
+          id?: string
+          meta?: Json | null
+          reason: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          id?: string
+          meta?: Json | null
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      points_settings: {
+        Row: {
+          id: string
+          referral_points: number
+          refill_amount: number
+          refill_period: string
+          signup_bonus: number
+          updated_at: string
+          video_cost: number
+        }
+        Insert: {
+          id?: string
+          referral_points?: number
+          refill_amount?: number
+          refill_period?: string
+          signup_bonus?: number
+          updated_at?: string
+          video_cost?: number
+        }
+        Update: {
+          id?: string
+          referral_points?: number
+          refill_amount?: number
+          refill_period?: string
+          signup_bonus?: number
+          updated_at?: string
+          video_cost?: number
         }
         Relationships: []
       }
@@ -200,6 +260,7 @@ export type Database = {
           id: string
           is_banned: boolean
           phone: string | null
+          referral_code: string | null
           status_text: string | null
           updated_at: string
           user_id: string
@@ -211,6 +272,7 @@ export type Database = {
           id?: string
           is_banned?: boolean
           phone?: string | null
+          referral_code?: string | null
           status_text?: string | null
           updated_at?: string
           user_id: string
@@ -222,6 +284,7 @@ export type Database = {
           id?: string
           is_banned?: boolean
           phone?: string | null
+          referral_code?: string | null
           status_text?: string | null
           updated_at?: string
           user_id?: string
@@ -335,6 +398,33 @@ export type Database = {
         }
         Relationships: []
       }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          points_awarded: number
+          referred_id: string
+          referrer_id: string
+          rewarded: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          points_awarded?: number
+          referred_id: string
+          referrer_id: string
+          rewarded?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          points_awarded?: number
+          referred_id?: string
+          referrer_id?: string
+          rewarded?: boolean
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -369,6 +459,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_points: {
+        Row: {
+          balance: number
+          created_at: string
+          last_refill_at: string | null
+          signup_claimed: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          last_refill_at?: string | null
+          signup_claimed?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          last_refill_at?: string | null
+          signup_claimed?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -443,6 +560,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_adjust_points: {
+        Args: { _amount: number; _reason: string; _user_id: string }
+        Returns: undefined
+      }
       admin_list_users: {
         Args: never
         Returns: {
@@ -454,13 +575,43 @@ export type Database = {
           user_id: string
         }[]
       }
+      apply_referral_code: { Args: { _code: string }; Returns: undefined }
       approve_payment_request: { Args: { _id: string }; Returns: undefined }
+      award_points: {
+        Args: {
+          _amount: number
+          _meta?: Json
+          _reason: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
+      claim_refill_points: { Args: never; Returns: number }
+      claim_signup_bonus: { Args: never; Returns: number }
+      get_my_points: {
+        Args: never
+        Returns: {
+          balance: number
+          can_claim_refill: boolean
+          referral_code: string
+          referral_points: number
+          refill_amount: number
+          refill_period: string
+          signup_bonus: number
+          signup_claimed: boolean
+          video_cost: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      spend_points: {
+        Args: { _amount: number; _meta?: Json; _reason: string }
+        Returns: number
       }
       user_has_active_plan: { Args: { _user_id: string }; Returns: boolean }
     }
