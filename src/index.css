@@ -141,7 +141,15 @@
     transform: translateY(-4px);
     box-shadow: 0 26px 70px -28px hsl(217 100% 55% / .8), 0 0 60px -30px hsl(270 95% 65% / .7);
   }
+  /* dialogs/popovers are centred with their own transform — never override it */
+  .neon-card[role="dialog"],
+  .neon-card[role="alertdialog"],
+  .neon-card[role="dialog"]:hover,
+  .neon-card[role="alertdialog"]:hover {
+    transform: translate(-50%, -50%);
+  }
   .neon-card:hover::before { opacity: 1; }
+
 
   .neon-text {
     text-shadow: 0 0 18px hsl(217 100% 60% / .55), 0 0 46px hsl(270 95% 65% / .35);
