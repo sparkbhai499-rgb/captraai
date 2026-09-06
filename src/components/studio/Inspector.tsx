@@ -300,6 +300,13 @@ export const Inspector = () => {
                       <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px]" onClick={() => upText({ highlightBg: "transparent" })}>No box</Button>
                     </div>
                     <NumSlider label="Glow" value={clip.text.glow ?? 0} min={0} max={2} step={0.05} onChange={(v) => upText({ glow: v })} />
+                    <NumSlider label="Caption speed" value={clip.text.speed ?? 1} min={0.25} max={4} step={0.05} onChange={(v) => upText({ speed: v })} suffix="x" />
+                    <div className="flex flex-wrap gap-1">
+                      {[0.5, 0.75, 1, 1.5, 2, 3].map((s) => (
+                        <Button key={s} size="sm" variant={(clip.text!.speed ?? 1) === s ? "default" : "secondary"} className="h-7 px-2 text-xs"
+                          onClick={() => upText({ speed: s })}>{s}x</Button>
+                      ))}
+                    </div>
                     <NumSlider label="Pop scale" value={clip.text.popScale ?? 1.12} min={1} max={1.6} step={0.01} onChange={(v) => upText({ popScale: v })} />
                     <NumSlider label="Line height" value={clip.text.lineHeight} min={0.8} max={2} step={0.01} onChange={(v) => upText({ lineHeight: v })} />
                   </TabsContent>

@@ -102,8 +102,9 @@ export const drawFrame = (ctx: CanvasRenderingContext2D, doc: TimelineDoc, pool:
       } else if (clip.text) {
         const t = clip.text;
         let content = t.uppercase ? t.content.toUpperCase() : t.content;
+        const tsp = Math.min(4, Math.max(0.25, t.speed ?? 1));
         if (t.animation === "typewriter") {
-          const n = Math.floor((local / Math.max(0.2, clip.duration * 0.6)) * content.length);
+          const n = Math.floor((local / Math.max(0.2, (clip.duration * 0.6) / tsp)) * content.length);
           content = content.slice(0, Math.max(1, n));
         }
         const size = clip.kind === "sticker" ? t.size : t.size * (H / 1080);
@@ -114,7 +115,7 @@ export const drawFrame = (ctx: CanvasRenderingContext2D, doc: TimelineDoc, pool:
 
         if (t.animation === "word" && clip.kind !== "sticker") {
           const words = content.split(/\s+/).filter(Boolean);
-          const per = Math.max(0.12, (clip.duration * 0.92) / Math.max(1, words.length));
+          const per = Math.max(0.05, (clip.duration * 0.92) / Math.max(1, words.length) / tsp);
           const active = Math.min(words.length - 1, Math.floor(local / per));
           const visible = t.karaoke ? words : words.filter((_, i) => local >= i * per);
           const space = ctx.measureText(" ").width;
