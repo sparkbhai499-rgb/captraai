@@ -41,6 +41,8 @@ export interface TextCfg {
   highlightBg?: string;
   glow?: number;
   popScale?: number;
+  /** caption animation speed multiplier (1 = normal, 2 = twice as fast) */
+  speed?: number;
   uppercase?: boolean;
 }
 

@@ -41,6 +41,7 @@ const TextLayer = ({ clip, local, docHeight }: { clip: Clip; local: number; docH
   const chars = content.split("");
   const words = content.split(/\s+/).filter(Boolean);
   const anim = t.animation;
+  const sp = Math.min(4, Math.max(0.25, t.speed ?? 1));
   const glow = t.glow || 0;
   /* size is authored against a 1080p canvas — scale so captions never overflow the frame */
   const fontSize = t.size * (docHeight / 1080);
@@ -61,17 +62,17 @@ const TextLayer = ({ clip, local, docHeight }: { clip: Clip; local: number; docH
   };
 
   if (anim === "typewriter") {
-    const n = Math.floor((local / Math.max(0.2, clip.duration * 0.6)) * chars.length);
+    const n = Math.floor((local / Math.max(0.2, (clip.duration * 0.6) / sp)) * chars.length);
     return <div style={base}>{content.slice(0, Math.max(1, n))}</div>;
   }
   if (anim === "word") {
-    const per = Math.max(0.12, (clip.duration * 0.92) / Math.max(1, words.length));
+    const per = Math.max(0.05, (clip.duration * 0.92) / Math.max(1, words.length) / sp);
     const active = Math.min(words.length - 1, Math.floor(local / per));
     const pop = t.popScale ?? 1.12;
     return (
       <div style={base}>
         {words.map((w, i) => {
-          const p = easeOut((local - i * per) / 0.18);
+          const p = easeOut(((local - i * per) * sp) / 0.18);
           const isActive = t.karaoke ? i === active : local >= i * per;
           const shown = local >= i * per;
           const boxed = isActive && t.highlightBg && t.highlightBg !== "transparent";
@@ -86,7 +87,7 @@ const TextLayer = ({ clip, local, docHeight }: { clip: Clip; local: number; docH
                 background: boxed ? t.highlightBg : undefined,
                 padding: boxed ? "0 0.16em" : undefined,
                 borderRadius: boxed ? 8 : undefined,
-                transform: `translateY(${(1 - p) * 14}px) scale(${shown ? (isActive ? 1 + (pop - 1) * easeOut((local - i * per) / 0.22) : 1) : 0.9})`,
+                transform: `translateY(${(1 - p) * 14}px) scale(${shown ? (isActive ? 1 + (pop - 1) * easeOut(((local - i * per) * sp) / 0.22) : 1) : 0.9})`,
               }}
             >
               {w}
@@ -97,14 +98,14 @@ const TextLayer = ({ clip, local, docHeight }: { clip: Clip; local: number; docH
     );
   }
   if (anim === "pop") {
-    const p = easeOut(local / 0.35);
+    const p = easeOut((local * sp) / 0.35);
     return <div style={{ ...base, transform: `scale(${0.86 + 0.14 * p + Math.sin(p * Math.PI) * 0.08})`, opacity: Math.min(1, p * 1.4) }}>{content}</div>;
   }
   if (anim === "slide") {
-    const p = easeOut(local / 0.4);
+    const p = easeOut((local * sp) / 0.4);
     return <div style={{ ...base, transform: `translateY(${(1 - p) * 40}px)`, opacity: p }}>{content}</div>;
   }
-  if (anim === "fade") return <div style={{ ...base, opacity: easeOut(local / 0.5) }}>{content}</div>;
+  if (anim === "fade") return <div style={{ ...base, opacity: easeOut((local * sp) / 0.5) }}>{content}</div>;
   return <div style={base}>{content}</div>;
 };
 
@@ -276,7 +277,7 @@ export const Preview = () => {
   useEffect(() => {
     if (!playing || duration <= 0) return;
     const heavy = doc.width * doc.height >= 1920 * 1080 * 1.5;
-    const step = heavy ? 1 / 20 : 1 / (doc.fps || 30);
+    const step = heavy ? 1 / 12 : 1 / Math.min(24, doc.fps || 30);
     last.current = performance.now();
     let acc = 0;
     const tick = (now: number) => {
