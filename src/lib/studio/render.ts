@@ -13,9 +13,19 @@ export class MediaPool {
       if (c.kind === "video") {
         if (this.videos.has(c.id)) continue;
         const v = document.createElement("video");
-        v.src = c.src; v.crossOrigin = "anonymous"; v.muted = true; v.playsInline = true; v.preload = "auto";
+        // crossOrigin MUST be set before src, otherwise the canvas gets tainted and exports render black
+        v.crossOrigin = "anonymous";
+        v.muted = true; v.playsInline = true; v.preload = "auto";
+        v.src = c.src;
         this.videos.set(c.id, v);
-        jobs.push(new Promise<void>((res) => { v.onloadeddata = () => res(); v.onerror = () => res(); }));
+        jobs.push(new Promise<void>((res) => {
+          const ok = () => res();
+          v.addEventListener("loadeddata", ok, { once: true });
+          v.addEventListener("error", ok, { once: true });
+          setTimeout(ok, 15000);
+          try { v.load(); } catch { /* noop */ }
+        }));
+
       } else if (c.kind === "image" || c.kind === "gif") {
         if (this.images.has(c.id)) continue;
         const i = new Image(); i.crossOrigin = "anonymous"; i.src = c.src;
