@@ -30,35 +30,52 @@ export const ExportDialog = () => {
       const w = Math.round((h * doc.width) / doc.height / 2) * 2;
       const canvas = document.createElement("canvas");
       canvas.width = w; canvas.height = h;
-      const ctx = canvas.getContext("2d")!;
+      const ctx = canvas.getContext("2d", { alpha: false, desynchronized: false })!;
       const pool = new MediaPool();
       await pool.preload(doc);
 
       const F = Number(fps);
+      const totalFrames = Math.max(1, Math.ceil(duration * F));
+
+      const seekAll = async (t: number) => {
+        for (const tr of doc.tracks) for (const c of tr.clips) {
+          if (c.kind === "video" && t >= c.start && t < c.start + c.duration) await pool.seek(c, t - c.start);
+        }
+      };
+
+      // paint the very first frame BEFORE recording starts, else the file opens on black
+      await seekAll(0);
+      drawFrame(ctx, doc, pool, 0);
+
       const stream = canvas.captureStream(0);
       const track = stream.getVideoTracks()[0] as any;
-      const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9") ? "video/webm;codecs=vp9" : "video/webm";
+      if (typeof track.requestFrame !== "function") throw new Error("Your browser can't record canvas video. Use Chrome or Edge.");
+      const mime = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].find((m) => MediaRecorder.isTypeSupported(m)) || "video/webm";
       const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: bitrate * 1_000_000 });
       const chunks: BlobPart[] = [];
       rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
       const done = new Promise<Blob>((res2) => { rec.onstop = () => res2(new Blob(chunks, { type: "video/webm" })); });
-      rec.start();
+      rec.start(1000);
+      await new Promise((r) => setTimeout(r, 60));
 
-      const totalFrames = Math.ceil(duration * F);
       for (let f = 0; f < totalFrames; f++) {
         if (cancelled.current) break;
         const t = f / F;
-        // seek every video clip that is live at this timestamp
-        for (const tr of doc.tracks) for (const c of tr.clips) {
-          if (c.kind === "video" && t >= c.start && t < c.start + c.duration) await pool.seek(c, t - c.start);
-        }
+        await seekAll(t);
         drawFrame(ctx, doc, pool, t);
-        track.requestFrame?.();
-        if (f % 3 === 0) { setPct(Math.round((f / totalFrames) * 100)); await new Promise((r) => setTimeout(r, 0)); }
+        track.requestFrame();
+        // yield every frame so the recorder can actually encode what we painted
+        await new Promise((r) => setTimeout(r, 0));
+        if (f % 3 === 0) setPct(Math.round((f / totalFrames) * 100));
       }
+      // hold the last frame briefly so the tail isn't dropped
+      track.requestFrame();
+      await new Promise((r) => setTimeout(r, 200));
       rec.stop();
       const blob = await done;
+      if (!blob.size) throw new Error("Recording produced an empty file — try a lower resolution.");
       setPct(100);
+
 
       let out = blob;
       let ext = "webm";
