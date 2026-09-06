@@ -41,17 +41,22 @@ export class MediaPool {
 
   async seek(clip: Clip, local: number) {
     const v = this.videos.get(clip.id);
-    if (!v) return;
+    if (!v || !v.readyState) return;
     const target = clip.inPoint + (clip.freeze ? 0 : local * clip.speed);
-    if (Math.abs(v.currentTime - target) < 0.02) return;
+    if (Math.abs(v.currentTime - target) < 0.008) return;
     await new Promise<void>((res) => {
-      const done = () => { v.removeEventListener("seeked", done); res(); };
-      v.addEventListener("seeked", done);
-      try { v.currentTime = Math.max(0, target); } catch { res(); }
-      setTimeout(res, 220);
+      let done = false;
+      const finish = () => { if (done) return; done = true; v.removeEventListener("seeked", finish); res(); };
+      v.addEventListener("seeked", finish);
+      try { v.currentTime = Math.max(0, Math.min(target, (v.duration || target) - 0.001)); } catch { finish(); }
+      setTimeout(finish, 1200);
     });
+    // make sure the decoded frame is actually presented before we draw it
+    const rvfc = (v as any).requestVideoFrameCallback;
+    if (rvfc) await new Promise<void>((res) => { let d = false; rvfc.call(v, () => { d = true; res(); }); setTimeout(() => { if (!d) res(); }, 120); });
   }
 }
+
 
 const drawFitted = (ctx: CanvasRenderingContext2D, el: CanvasImageSource, iw: number, ih: number, W: number, H: number) => {
   if (!iw || !ih) return;
