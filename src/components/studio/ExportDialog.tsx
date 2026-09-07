@@ -1,16 +1,18 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Loader2, CheckCircle2 } from "lucide-react";
 import { useStudio } from "@/lib/studio/store";
 import { MediaPool, drawFrame } from "@/lib/studio/render";
 import { toast } from "sonner";
 
-const RES: Record<string, number> = { "720p": 720, "1080p": 1080, "2K": 1440, "4K": 2160 };
+const RES: Record<string, number> = { "1080p": 1080, "720p": 720, "480p": 480, "360p": 360, "144p": 144 };
+
+const fmtSize = (b: number) => (b > 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
 
 export const ExportDialog = () => {
   const { doc, duration } = useStudio();
@@ -21,10 +23,14 @@ export const ExportDialog = () => {
   const [bitrate, setBitrate] = useState(12);
   const [busy, setBusy] = useState(false);
   const [pct, setPct] = useState(0);
+  const [result, setResult] = useState<{ url: string; name: string; size: number; ext: string } | null>(null);
   const cancelled = useRef(false);
+
+  useEffect(() => () => { if (result) URL.revokeObjectURL(result.url); }, [result]);
 
   const run = async () => {
     setBusy(true); setPct(0); cancelled.current = false;
+    if (result) { URL.revokeObjectURL(result.url); setResult(null); }
     try {
       const h = RES[res];
       const w = Math.round((h * doc.width) / doc.height / 2) * 2;
@@ -76,7 +82,6 @@ export const ExportDialog = () => {
       if (!blob.size) throw new Error("Recording produced an empty file — try a lower resolution.");
       setPct(100);
 
-
       let out = blob;
       let ext = "webm";
       if (format !== "webm") {
@@ -105,11 +110,12 @@ export const ExportDialog = () => {
       }
 
       const url = URL.createObjectURL(out);
+      const name = `captra-${res}-${Date.now()}.${ext}`;
+      setResult({ url, name, size: out.size, ext });
+      // start the download right away too
       const a = document.createElement("a");
-      a.href = url; a.download = `export-${res}.${ext}`; a.click();
-      URL.revokeObjectURL(url);
+      a.href = url; a.download = name; a.click();
       toast.success("Export complete");
-      setOpen(false);
     } catch (e: any) {
       toast.error(e?.message || "Export failed");
     } finally {
@@ -122,7 +128,7 @@ export const ExportDialog = () => {
       <DialogTrigger asChild>
         <Button className="btn-neon border-0"><Download className="w-4 h-4 mr-1" /> Export</Button>
       </DialogTrigger>
-      <DialogContent className="glass neon-card bg-card/95 backdrop-blur-2xl border-primary/30">
+      <DialogContent className="bg-card border-primary/30 shadow-xl">
         <DialogHeader><DialogTitle className="font-display">Export video</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
@@ -158,8 +164,27 @@ export const ExportDialog = () => {
               <p className="text-xs text-muted-foreground">Rendering frame-by-frame — {pct}%</p>
             </div>
           )}
+
+          {result && !busy && (
+            <div className="rounded-xl border border-accent/40 bg-secondary/40 p-3 space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle2 className="w-4 h-4 text-accent" />
+                <span className="font-medium">Ready to download</span>
+              </div>
+              <p className="text-xs text-muted-foreground break-all">{result.name}</p>
+              <div className="flex gap-3 text-xs text-muted-foreground">
+                <span>Format: {result.ext.toUpperCase()}</span>
+                <span>Size: {fmtSize(result.size)}</span>
+                <span>Quality: {res}</span>
+              </div>
+              <a href={result.url} download={result.name} className="block">
+                <Button className="w-full btn-neon border-0"><Download className="w-4 h-4 mr-2" /> Download {result.ext.toUpperCase()} · {fmtSize(result.size)}</Button>
+              </a>
+            </div>
+          )}
+
           <Button disabled={busy} onClick={run} className="w-full btn-neon border-0">
-            {busy ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Exporting…</> : "Start export"}
+            {busy ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Exporting…</> : result ? "Export again" : "Start export"}
           </Button>
           <p className="text-[11px] text-muted-foreground">
             Rendered locally on your device at full quality — nothing is re-uploaded.
