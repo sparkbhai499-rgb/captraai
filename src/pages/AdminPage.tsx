@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import { Loader2, Shield, Users, Mail, Video, Trash2, Plus, Pencil, CreditCard, Check, X, ExternalLink } from "lucide-react";
 
-const emptyPlan = { name: "", slug: "", price_inr: 0, minutes_included: 0, features: "", is_popular: false, sort_order: 0 };
+const emptyPlan = { name: "", slug: "", price_inr: 0, minutes_included: 0, points_included: 0, features: "", is_popular: false, sort_order: 0 };
 
 const AdminPage = () => {
   const { user, loading } = useAuth();
@@ -29,6 +29,7 @@ const AdminPage = () => {
   const [editPlan, setEditPlan] = useState<any | null>(null);
   const [proofUrl, setProofUrl] = useState<string | null>(null);
   const [rejectNote, setRejectNote] = useState<Record<string, string>>({});
+  const [ptSet, setPtSet] = useState<any>({ signup_bonus: 150, video_cost: 30, referral_points: 100, refill_amount: 0, refill_period: "none" });
   const [settings, setSettings] = useState<any>({ upi_id: "", upi_name: "", note: "", qr_url: null });
 
   const saveSettings = async () => {
@@ -40,6 +41,15 @@ const AdminPage = () => {
     toast.success("Payment settings saved"); refresh();
   };
 
+
+  const savePoints = async () => {
+    const payload = { signup_bonus: Number(ptSet.signup_bonus) || 0, video_cost: Number(ptSet.video_cost) || 0, referral_points: Number(ptSet.referral_points) || 0, refill_amount: Number(ptSet.refill_amount) || 0, refill_period: ptSet.refill_period, updated_at: new Date().toISOString() };
+    const { error } = ptSet.id
+      ? await supabase.from("points_settings" as any).update(payload).eq("id", ptSet.id)
+      : await supabase.from("points_settings" as any).insert(payload);
+    if (error) return toast.error(error.message);
+    toast.success("Points settings saved"); refresh();
+  };
 
   useEffect(() => { if (!loading && !user) nav("/auth"); }, [user, loading, nav]);
   useEffect(() => {
@@ -61,6 +71,8 @@ const AdminPage = () => {
     ]);
     const { data: ps } = await supabase.from("payment_settings" as any).select("*").limit(1).maybeSingle();
     if (ps) setSettings(ps);
+    const { data: pts } = await supabase.from("points_settings" as any).select("*").limit(1).maybeSingle();
+    if (pts) setPtSet(pts);
     const uMap = new Map(((ulist as any[]) || []).map((u: any) => [u.user_id, u]));
     setStats({ users: uc || 0, projects: pc || 0, messages: mc || 0, pending: pr || 0 });
     setMessages(msgs || []); setUsers((ulist as any) || []); setPlans(pl || []);
@@ -86,7 +98,7 @@ const AdminPage = () => {
     if (!editPlan) return;
     const payload = {
       name: editPlan.name, slug: editPlan.slug, price_inr: Number(editPlan.price_inr) || 0,
-      minutes_included: Number(editPlan.minutes_included) || 0, is_popular: !!editPlan.is_popular,
+      minutes_included: Number(editPlan.minutes_included) || 0, points_included: Number(editPlan.points_included) || 0, is_popular: !!editPlan.is_popular,
       sort_order: Number(editPlan.sort_order) || 0,
       features: typeof editPlan.features === "string"
         ? editPlan.features.split("\n").map((s: string) => s.trim()).filter(Boolean)
@@ -149,6 +161,7 @@ const AdminPage = () => {
             <TabsTrigger value="payments">Payments {stats.pending > 0 && <span className="ml-2 bg-primary text-white text-xs px-2 py-0.5 rounded-full">{stats.pending}</span>}</TabsTrigger>
             <TabsTrigger value="upi">UPI / QR</TabsTrigger>
             <TabsTrigger value="plans">Plans</TabsTrigger>
+            <TabsTrigger value="points">Points</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="messages">Messages</TabsTrigger>
           </TabsList>
@@ -209,6 +222,23 @@ const AdminPage = () => {
             </GlassCard>
           </TabsContent>
 
+          <TabsContent value="points">
+            <GlassCard className="max-w-xl">
+              <h2 className="font-display text-lg font-semibold mb-4">Points settings</h2>
+              <div className="grid grid-cols-2 gap-3">
+                {[["signup_bonus","Signup bonus"],["video_cost","Points per video"],["referral_points","Referral reward"],["refill_amount","Free refill points"]].map(([k,l]) => (
+                  <div key={k}><Label className="text-xs">{l}</Label><Input type="number" value={ptSet[k] ?? 0} onChange={(e) => setPtSet({ ...ptSet, [k]: e.target.value })} className="bg-secondary/50 mt-1"/></div>
+                ))}
+                <div className="col-span-2"><Label className="text-xs">Free refill frequency</Label>
+                  <select value={ptSet.refill_period} onChange={(e) => setPtSet({ ...ptSet, refill_period: e.target.value })} className="w-full mt-1 h-10 rounded-md bg-secondary/50 border border-input px-3 text-sm">
+                    <option value="none">Off</option><option value="daily">Daily</option><option value="monthly">Monthly</option>
+                  </select>
+                </div>
+              </div>
+              <Button onClick={savePoints} className="w-full mt-4 btn-neon border-0">Save points settings</Button>
+            </GlassCard>
+          </TabsContent>
+
           <TabsContent value="plans">
             <GlassCard>
               <div className="flex items-center justify-between mb-4">
@@ -220,7 +250,7 @@ const AdminPage = () => {
                   <div key={p.id} className="flex justify-between items-center p-3 rounded-lg border border-border">
                     <div>
                       <p className="font-medium">{p.name} {p.is_popular && <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full ml-2">Popular</span>}</p>
-                      <p className="text-xs text-muted-foreground">₹{p.price_inr}/mo · {p.minutes_included} min · slug: {p.slug}</p>
+                      <p className="text-xs text-muted-foreground">₹{p.price_inr}/mo · {p.minutes_included} min · {p.points_included || 0} pts · slug: {p.slug}</p>
                     </div>
                     <div className="flex gap-2">
                       <Button size="icon" variant="ghost" onClick={() => setEditPlan({ ...p, features: (p.features || []).join("\n") })}><Pencil className="w-4 h-4"/></Button>
@@ -299,6 +329,7 @@ const AdminPage = () => {
                 <div><Label className="text-xs">Name</Label><Input value={editPlan.name} onChange={(e) => setEditPlan({ ...editPlan, name: e.target.value })} className="bg-secondary/50 mt-1"/></div>
                 <div><Label className="text-xs">Slug</Label><Input value={editPlan.slug} onChange={(e) => setEditPlan({ ...editPlan, slug: e.target.value })} className="bg-secondary/50 mt-1"/></div>
                 <div><Label className="text-xs">Price (₹)</Label><Input type="number" value={editPlan.price_inr} onChange={(e) => setEditPlan({ ...editPlan, price_inr: e.target.value })} className="bg-secondary/50 mt-1"/></div>
+                <div><Label className="text-xs">Points included</Label><Input type="number" value={editPlan.points_included ?? 0} onChange={(e) => setEditPlan({ ...editPlan, points_included: e.target.value })} className="bg-secondary/50 mt-1"/></div>
                 <div><Label className="text-xs">Minutes included</Label><Input type="number" value={editPlan.minutes_included} onChange={(e) => setEditPlan({ ...editPlan, minutes_included: e.target.value })} className="bg-secondary/50 mt-1"/></div>
                 <div><Label className="text-xs">Sort order</Label><Input type="number" value={editPlan.sort_order} onChange={(e) => setEditPlan({ ...editPlan, sort_order: e.target.value })} className="bg-secondary/50 mt-1"/></div>
                 <div className="flex items-end gap-2"><input type="checkbox" checked={!!editPlan.is_popular} onChange={(e) => setEditPlan({ ...editPlan, is_popular: e.target.checked })} id="pop"/><Label htmlFor="pop" className="text-xs">Mark as popular</Label></div>
