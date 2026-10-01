@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Navbar } from "@/components/Navbar";
 import { UploadDropzone } from "@/components/UploadDropzone";
+import { PointsPanel } from "@/components/PointsPanel";
+import { WelcomePointsDialog } from "@/components/WelcomePointsDialog";
 import { GlassCard } from "@/components/GlassCard";
 import { motion } from "framer-motion";
 import { Video, Clock, CheckCircle2, XCircle, Loader2, FolderOpen } from "lucide-react";
@@ -48,6 +50,9 @@ const Dashboard = () => {
           <GlassCard><p className="text-xs text-muted-foreground">Minutes processed</p><p className="font-display text-3xl font-bold mt-1">{totalMins}</p></GlassCard>
           <GlassCard><p className="text-xs text-muted-foreground">Plan</p><p className="font-display text-xl font-bold mt-1 gradient-text">Free · 15 min/mo</p></GlassCard>
         </div>
+
+        <div className="mb-8"><PointsPanel /></div>
+        <WelcomePointsDialog />
 
         <div className="grid lg:grid-cols-5 gap-6">
           <div className="lg:col-span-2">

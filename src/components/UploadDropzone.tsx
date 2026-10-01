@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { spendPoints } from "@/hooks/usePoints";
 import { checkUploadQuota, FREE_PROJECT_LIMIT } from "@/lib/quota";
 
 const ALLOWED = ["video/mp4", "video/quicktime", "video/x-msvideo", "video/x-matroska"];
@@ -37,6 +38,14 @@ export const UploadDropzone = ({ compact = false }: { compact?: boolean }) => {
     if (!q.allowed) {
       toast.error(`Free limit reached (${FREE_PROJECT_LIMIT} videos). Please upgrade your plan.`);
       nav("/pricing"); return;
+    }
+    try {
+      const { data: ps }: any = await supabase.from("points_settings" as any).select("video_cost").limit(1).maybeSingle();
+      await spendPoints(ps?.video_cost ?? 30, "video_upload", { file: file.name });
+    } catch (e: any) {
+      toast.error(e?.message?.includes("Not enough") ? "Not enough points — buy a plan to get more." : (e?.message || "Could not use points"));
+      if (e?.message?.includes("Not enough")) navigate("/pricing");
+      return;
     }
     setBusy(true); setProgress(10);
     try {

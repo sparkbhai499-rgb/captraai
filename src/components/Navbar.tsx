@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { LogOut, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { PointsBadge } from "@/components/PointsBadge";
 import { InstallButton } from "@/components/InstallButton";
 import logo from "@/assets/captra-logo.png";
 
@@ -59,6 +60,7 @@ export const Navbar = () => {
           <InstallButton />
           {user ? (
             <>
+              <PointsBadge />
               <span className="text-xs text-muted-foreground max-w-[160px] truncate">{user.email}</span>
               <Button variant="ghost" size="sm" onClick={signOut}><LogOut className="w-4 h-4"/></Button>
             </>
@@ -70,9 +72,10 @@ export const Navbar = () => {
           )}
         </div>
 
+        <div className="md:hidden flex items-center gap-2">{user && <PointsBadge />}
         <button className="md:hidden p-2" onClick={() => setOpen(!open)} aria-label="menu">
           {open ? <X className="w-5 h-5"/> : <Menu className="w-5 h-5"/>}
-        </button>
+        </button></div>
       </div>
 
       {open && (

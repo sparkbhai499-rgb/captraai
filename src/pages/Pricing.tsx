@@ -15,6 +15,8 @@ const Pricing = () => {
   const nav = useNavigate();
   const [plans, setPlans] = useState<any[]>([]);
   const [selected, setSelected] = useState<any | null>(null);
+  const [videoCost, setVideoCost] = useState(30);
+  useEffect(() => { supabase.from("points_settings" as any).select("video_cost").limit(1).maybeSingle().then(({ data }: any) => data && setVideoCost(data.video_cost)); }, []);
   const [myPending, setMyPending] = useState<any[]>([]);
 
   useEffect(() => {
@@ -38,7 +40,7 @@ const Pricing = () => {
       <section className="container pt-32 pb-16">
         <div className="text-center mb-14 max-w-2xl mx-auto">
           <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">Choose your plan</h1>
-          <p className="text-muted-foreground">Free includes 5 videos. Upgrade for more.</p>
+          <p className="text-muted-foreground">Every video uses {videoCost} points. Buy a plan to get more points.</p>
         </div>
         <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto">
           {plans.map((p) => (
@@ -49,7 +51,8 @@ const Pricing = () => {
                 <span className="font-display text-5xl font-bold">₹{p.price_inr}</span>
                 <span className="text-sm text-muted-foreground">/mo</span>
               </div>
-              <p className="text-sm text-muted-foreground mb-4">{p.minutes_included} minutes included</p>
+              <p className="text-sm text-muted-foreground mb-1">{p.minutes_included} minutes included</p>
+              <p className="text-sm font-semibold gradient-text mb-4">✦ {p.points_included || 0} points{videoCost ? ` · ~${Math.floor((p.points_included || 0) / videoCost)} videos` : ""}</p>
               <ul className="space-y-2 mb-6 text-sm flex-1">
                 {(p.features || []).map((f: string) => <li key={f} className="flex gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5"/>{f}</li>)}
               </ul>
