@@ -44,7 +44,7 @@ export const UploadDropzone = ({ compact = false }: { compact?: boolean }) => {
       await spendPoints(ps?.video_cost ?? 30, "video_upload", { file: file.name });
     } catch (e: any) {
       toast.error(e?.message?.includes("Not enough") ? "Not enough points — buy a plan to get more." : (e?.message || "Could not use points"));
-      if (e?.message?.includes("Not enough")) navigate("/pricing");
+      if (e?.message?.includes("Not enough")) nav("/pricing");
       return;
     }
     setBusy(true); setProgress(10);
