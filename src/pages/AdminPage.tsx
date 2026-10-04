@@ -24,6 +24,7 @@ const AdminPage = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [userSearch, setUserSearch] = useState("");
   const [newAdminEmail, setNewAdminEmail] = useState("");
+  const [freeVideos, setFreeVideos] = useState<Record<string, string>>({});
   const [plans, setPlans] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
   const [editPlan, setEditPlan] = useState<any | null>(null);
@@ -83,6 +84,15 @@ const AdminPage = () => {
     })));
   };
   useEffect(() => { if (ok) refresh(); }, [ok]);
+
+  const grantFreeVideos = async (userId: string) => {
+    const count = parseInt(freeVideos[userId] ?? "0", 10);
+    if (isNaN(count) || count < 0) return toast.error("Enter a valid number");
+    const { error } = await supabase.rpc("admin_grant_free_videos" as any, { _user_id: userId, _count: count });
+    if (error) return toast.error(error.message);
+    toast.success(`Extra free videos set to ${count}`);
+    refresh();
+  };
 
   const promote = async () => {
     if (!newAdminEmail) return;
