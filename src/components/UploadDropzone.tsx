@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { spendPoints } from "@/hooks/usePoints";
-import { checkUploadQuota, FREE_PROJECT_LIMIT } from "@/lib/quota";
+import { checkUploadQuota } from "@/lib/quota";
 import { extractAudioWav } from "@/lib/extractAudio";
 
 const ALLOWED_EXT = /\.(mp4|mov|avi|mkv|webm|mp3|wav|m4a|aac|ogg|flac|jpg|jpeg|png|webp|gif|bmp|avif)$/i;
