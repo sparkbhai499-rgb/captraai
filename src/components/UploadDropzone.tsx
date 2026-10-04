@@ -6,10 +6,13 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { spendPoints } from "@/hooks/usePoints";
-import { checkUploadQuota, FREE_PROJECT_LIMIT } from "@/lib/quota";
+import { checkUploadQuota } from "@/lib/quota";
 import { extractAudioWav } from "@/lib/extractAudio";
 
-const ALLOWED = ["video/mp4", "video/quicktime", "video/x-msvideo", "video/x-matroska"];
+const ALLOWED_EXT = /\.(mp4|mov|avi|mkv|webm|mp3|wav|m4a|aac|ogg|flac|jpg|jpeg|png|webp|gif|bmp|avif)$/i;
+const isAllowed = (f: File) =>
+  f.type.startsWith("video/") || f.type.startsWith("audio/") || f.type.startsWith("image/") || ALLOWED_EXT.test(f.name);
+const isVideo = (f: File) => f.type.startsWith("video/") || /\.(mp4|mov|avi|mkv|webm)$/i.test(f.name);
 const MAX_MB = 500;
 
 export const LANGS = [
@@ -31,13 +34,13 @@ export const UploadDropzone = ({ compact = false }: { compact?: boolean }) => {
 
   const upload = async (file: File) => {
     if (!user) { nav("/auth"); return; }
-    if (!ALLOWED.includes(file.type) && !/\.(mp4|mov|avi|mkv)$/i.test(file.name)) {
-      toast.error("Only MP4, MOV, AVI, MKV allowed"); return;
+    if (!isAllowed(file)) {
+      toast.error("Video, audio ya image file upload karo (MP4, MOV, MP3, WAV, JPG, PNG…)"); return;
     }
     if (file.size > MAX_MB * 1024 * 1024) { toast.error(`Max ${MAX_MB} MB`); return; }
     const q = await checkUploadQuota(user.id);
     if (!q.allowed) {
-      toast.error(`Free limit reached (${FREE_PROJECT_LIMIT} videos). Please upgrade your plan.`);
+      toast.error(`Free limit reached (${q.freeLimit} video${q.freeLimit > 1 ? "s" : ""}). Please upgrade your plan.`);
       nav("/pricing"); return;
     }
     try {
@@ -50,22 +53,26 @@ export const UploadDropzone = ({ compact = false }: { compact?: boolean }) => {
     }
     setBusy(true); setProgress(10);
     try {
+      const video = isVideo(file);
       const ext = file.name.split(".").pop() || "mp4";
       const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
       const { error: upErr } = await supabase.storage.from("videos").upload(path, file, { contentType: file.type || "video/mp4" });
       if (upErr) throw upErr;
       setProgress(50);
-      // Clean compact audio for accurate captions (songs + big files)
-      const wav = await extractAudioWav(file);
-      if (wav) await supabase.storage.from("videos").upload(`${path}.audio.wav`, wav, { contentType: "audio/wav", upsert: true });
-      // Extract real duration client-side so caption timings sync accurately
-      const duration_sec = await new Promise<number | null>((resolve) => {
-        const v = document.createElement("video");
-        v.preload = "metadata";
-        v.onloadedmetadata = () => { resolve(Math.round(v.duration) || null); URL.revokeObjectURL(v.src); };
-        v.onerror = () => resolve(null);
-        v.src = URL.createObjectURL(file);
-      });
+      let duration_sec: number | null = null;
+      if (video) {
+        // Clean compact audio for accurate captions (songs + big files)
+        const wav = await extractAudioWav(file);
+        if (wav) await supabase.storage.from("videos").upload(`${path}.audio.wav`, wav, { contentType: "audio/wav", upsert: true });
+        // Extract real duration client-side so caption timings sync accurately
+        duration_sec = await new Promise<number | null>((resolve) => {
+          const v = document.createElement("video");
+          v.preload = "metadata";
+          v.onloadedmetadata = () => { resolve(Math.round(v.duration) || null); URL.revokeObjectURL(v.src); };
+          v.onerror = () => resolve(null);
+          v.src = URL.createObjectURL(file);
+        });
+      }
       setProgress(65);
       const { data: proj, error: pErr } = await supabase.from("projects").insert({
         user_id: user.id,
@@ -77,8 +84,12 @@ export const UploadDropzone = ({ compact = false }: { compact?: boolean }) => {
       }).select().single();
       if (pErr) throw pErr;
       setProgress(85);
-      supabase.functions.invoke("transcribe-video", { body: { project_id: proj.id, language } }).catch(() => {});
-      toast.success("Uploaded! Starting AI transcription…");
+      if (video) {
+        supabase.functions.invoke("transcribe-video", { body: { project_id: proj.id, language } }).catch(() => {});
+        toast.success("Uploaded! Starting AI transcription…");
+      } else {
+        toast.success("Media uploaded!");
+      }
       nav(`/editor/${proj.id}`);
     } catch (e: any) {
       toast.error(e.message || "Upload failed");
@@ -103,7 +114,7 @@ export const UploadDropzone = ({ compact = false }: { compact?: boolean }) => {
           ${drag ? "border-primary glow scale-[1.02]" : "border-white/10 hover:border-primary/50"}
           ${compact ? "p-6" : "p-10 md:p-14"} text-center`}
       >
-        <input ref={inputRef} type="file" hidden accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,.mp4,.mov,.avi,.mkv"
+        <input ref={inputRef} type="file" hidden accept="video/*,audio/*,image/*,.mp4,.mov,.avi,.mkv,.webm,.mp3,.wav,.m4a,.aac,.ogg,.flac,.jpg,.jpeg,.png,.webp,.gif"
           onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
         {busy ? (
           <div className="flex flex-col items-center gap-3">
@@ -116,9 +127,9 @@ export const UploadDropzone = ({ compact = false }: { compact?: boolean }) => {
               <UploadCloud className="w-7 h-7 text-white"/>
             </div>
             <div>
-              <p className={`font-display font-semibold ${compact ? "text-base" : "text-xl"}`}>Drop your video here</p>
+              <p className={`font-display font-semibold ${compact ? "text-base" : "text-xl"}`}>Drop your media here</p>
               <p className="text-sm text-muted-foreground mt-1 flex items-center justify-center gap-1">
-                <Video className="w-3.5 h-3.5"/> MP4, MOV, AVI, MKV — up to {MAX_MB} MB
+                <Video className="w-3.5 h-3.5"/> Video, audio ya photo — up to {MAX_MB} MB
               </p>
             </div>
             {!compact && <p className="text-xs text-muted-foreground">or click to browse</p>}

@@ -257,6 +257,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string | null
+          extra_free_videos: number
           id: string
           is_banned: boolean
           phone: string | null
@@ -269,6 +270,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          extra_free_videos?: number
           id?: string
           is_banned?: boolean
           phone?: string | null
@@ -281,6 +283,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          extra_free_videos?: number
           id?: string
           is_banned?: boolean
           phone?: string | null
@@ -564,12 +567,17 @@ export type Database = {
         Args: { _amount: number; _reason: string; _user_id: string }
         Returns: undefined
       }
+      admin_grant_free_videos: {
+        Args: { _count: number; _user_id: string }
+        Returns: undefined
+      }
       admin_list_users: {
         Args: never
         Returns: {
           created_at: string
           display_name: string
           email: string
+          extra_free_videos: number
           phone: string
           project_count: number
           user_id: string
