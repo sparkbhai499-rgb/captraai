@@ -9,7 +9,10 @@ import { spendPoints } from "@/hooks/usePoints";
 import { checkUploadQuota, FREE_PROJECT_LIMIT } from "@/lib/quota";
 import { extractAudioWav } from "@/lib/extractAudio";
 
-const ALLOWED = ["video/mp4", "video/quicktime", "video/x-msvideo", "video/x-matroska"];
+const ALLOWED_EXT = /\.(mp4|mov|avi|mkv|webm|mp3|wav|m4a|aac|ogg|flac|jpg|jpeg|png|webp|gif|bmp|avif)$/i;
+const isAllowed = (f: File) =>
+  f.type.startsWith("video/") || f.type.startsWith("audio/") || f.type.startsWith("image/") || ALLOWED_EXT.test(f.name);
+const isVideo = (f: File) => f.type.startsWith("video/") || /\.(mp4|mov|avi|mkv|webm)$/i.test(f.name);
 const MAX_MB = 500;
 
 export const LANGS = [
@@ -31,13 +34,13 @@ export const UploadDropzone = ({ compact = false }: { compact?: boolean }) => {
 
   const upload = async (file: File) => {
     if (!user) { nav("/auth"); return; }
-    if (!ALLOWED.includes(file.type) && !/\.(mp4|mov|avi|mkv)$/i.test(file.name)) {
-      toast.error("Only MP4, MOV, AVI, MKV allowed"); return;
+    if (!isAllowed(file)) {
+      toast.error("Video, audio ya image file upload karo (MP4, MOV, MP3, WAV, JPG, PNG…)"); return;
     }
     if (file.size > MAX_MB * 1024 * 1024) { toast.error(`Max ${MAX_MB} MB`); return; }
     const q = await checkUploadQuota(user.id);
     if (!q.allowed) {
-      toast.error(`Free limit reached (${FREE_PROJECT_LIMIT} videos). Please upgrade your plan.`);
+      toast.error(`Free limit reached (${q.freeLimit} video${q.freeLimit > 1 ? "s" : ""}). Please upgrade your plan.`);
       nav("/pricing"); return;
     }
     try {
