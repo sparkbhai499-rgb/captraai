@@ -114,7 +114,7 @@ export const UploadDropzone = ({ compact = false }: { compact?: boolean }) => {
           ${drag ? "border-primary glow scale-[1.02]" : "border-white/10 hover:border-primary/50"}
           ${compact ? "p-6" : "p-10 md:p-14"} text-center`}
       >
-        <input ref={inputRef} type="file" hidden accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,.mp4,.mov,.avi,.mkv"
+        <input ref={inputRef} type="file" hidden accept="video/*,audio/*,image/*,.mp4,.mov,.avi,.mkv,.webm,.mp3,.wav,.m4a,.aac,.ogg,.flac,.jpg,.jpeg,.png,.webp,.gif"
           onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
         {busy ? (
           <div className="flex flex-col items-center gap-3">
@@ -127,9 +127,9 @@ export const UploadDropzone = ({ compact = false }: { compact?: boolean }) => {
               <UploadCloud className="w-7 h-7 text-white"/>
             </div>
             <div>
-              <p className={`font-display font-semibold ${compact ? "text-base" : "text-xl"}`}>Drop your video here</p>
+              <p className={`font-display font-semibold ${compact ? "text-base" : "text-xl"}`}>Drop your media here</p>
               <p className="text-sm text-muted-foreground mt-1 flex items-center justify-center gap-1">
-                <Video className="w-3.5 h-3.5"/> MP4, MOV, AVI, MKV — up to {MAX_MB} MB
+                <Video className="w-3.5 h-3.5"/> Video, audio ya photo — up to {MAX_MB} MB
               </p>
             </div>
             {!compact && <p className="text-xs text-muted-foreground">or click to browse</p>}
