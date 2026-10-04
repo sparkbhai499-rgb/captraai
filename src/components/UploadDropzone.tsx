@@ -7,9 +7,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { spendPoints } from "@/hooks/usePoints";
 import { checkUploadQuota, FREE_PROJECT_LIMIT } from "@/lib/quota";
+import { extractAudioWav } from "@/lib/extractAudio";
 
 const ALLOWED = ["video/mp4", "video/quicktime", "video/x-msvideo", "video/x-matroska"];
-const MAX_MB = 200;
+const MAX_MB = 500;
 
 export const LANGS = [
   { value: "auto", label: "Auto detect" },
@@ -54,6 +55,9 @@ export const UploadDropzone = ({ compact = false }: { compact?: boolean }) => {
       const { error: upErr } = await supabase.storage.from("videos").upload(path, file, { contentType: file.type || "video/mp4" });
       if (upErr) throw upErr;
       setProgress(50);
+      // Clean compact audio for accurate captions (songs + big files)
+      const wav = await extractAudioWav(file);
+      if (wav) await supabase.storage.from("videos").upload(`${path}.audio.wav`, wav, { contentType: "audio/wav", upsert: true });
       // Extract real duration client-side so caption timings sync accurately
       const duration_sec = await new Promise<number | null>((resolve) => {
         const v = document.createElement("video");

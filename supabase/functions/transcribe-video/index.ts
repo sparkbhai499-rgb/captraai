@@ -52,29 +52,33 @@ serve(async (req) => {
     await supabase.from("projects").update({ status: "transcribing", error_message: null, language }).eq("id", project_id);
     await supabase.from("captions").delete().eq("project_id", project_id);
 
-    // Download the video file
-    const { data: fileData, error: dlErr } = await supabase.storage.from("videos").download(proj.video_path);
-    if (dlErr || !fileData) throw new Error("Failed to download video");
+    // Prefer the compact extracted audio (uploaded by the client), fall back to the video
+    let fileData: Blob | null = null; let fname = "audio.wav"; let ftype = "audio/wav";
+    const aud = await supabase.storage.from("videos").download(`${proj.video_path}.audio.wav`);
+    if (!aud.error && aud.data) fileData = aud.data;
+    else {
+      const { data: vd, error: dlErr } = await supabase.storage.from("videos").download(proj.video_path);
+      if (dlErr || !vd) throw new Error("Failed to download video");
+      if (vd.size > 25 * 1024 * 1024) throw new Error("Video audio too large — please re-upload the video so audio can be extracted");
+      fileData = vd; fname = `audio.${proj.video_path.split(".").pop() || "mp4"}`; ftype = vd.type || "video/mp4";
+    }
 
     const form = new FormData();
     form.append("model", "openai/gpt-4o-mini-transcribe");
-    const ext = proj.video_path.split(".").pop() || "mp4";
-    form.append("file", new File([fileData], `audio.${ext}`, { type: fileData.type || "video/mp4" }));
+    form.append("file", new File([fileData], fname, { type: ftype }));
 
-    // Force language — Whisper often misdetects Hindi as Urdu, so ALWAYS pass an ISO code
-    // for hi/hinglish/auto (default to hi), and use prompt to steer script.
+    const SONG = " Audio may be a song with background music — transcribe the sung lyrics word by word, including repeated lines.";
     if (language === "en") {
       form.append("language", "en");
-      form.append("prompt", "Transcribe spoken English accurately with proper punctuation.");
+      form.append("prompt", "Transcribe spoken or sung English accurately with punctuation." + SONG);
     } else if (language === "hinglish") {
       form.append("language", "hi");
-      form.append("prompt", "Yeh Hinglish hai — Hindi aur English mixed. Roman/Latin script mein likho, Urdu ya Arabic script bilkul mat use karo. Example: 'aaj main market gaya tha aur shopping ki'. Never use Urdu.");
+      form.append("prompt", "Yeh Hinglish hai — Hindi aur English mixed. Roman/Latin script mein likho, Urdu ya Arabic script bilkul mat use karo. Example: 'aaj main market gaya tha'. Never use Urdu." + SONG);
     } else if (language === "multi") {
-      form.append("prompt", "Transcribe multilingual speech in the original language spoken. If Hindi, use Devanagari script only, never Urdu/Arabic script.");
+      form.append("prompt", "Transcribe multilingual speech in the original language. If Hindi, use Devanagari only, never Urdu script." + SONG);
     } else {
-      // "hi" or "auto" — force Hindi to prevent Urdu misdetection
       form.append("language", "hi");
-      form.append("prompt", "हिंदी भाषा को देवनागरी लिपि में लिखें। उर्दू या अरबी लिपि का उपयोग बिल्कुल न करें। This is Hindi, not Urdu — use Devanagari script only.");
+      form.append("prompt", "हिंदी भाषा को देवनागरी लिपि में लिखें। उर्दू लिपि का उपयोग न करें। This is Hindi, not Urdu — Devanagari only." + SONG);
     }
 
     const LOVABLE_KEY = Deno.env.get("LOVABLE_API_KEY");
