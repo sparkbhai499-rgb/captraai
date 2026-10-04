@@ -48,7 +48,7 @@ const Dashboard = () => {
         <div className="grid md:grid-cols-3 gap-4 mb-8">
           <GlassCard><p className="text-xs text-muted-foreground">Total projects</p><p className="font-display text-3xl font-bold mt-1">{projects.length}</p></GlassCard>
           <GlassCard><p className="text-xs text-muted-foreground">Minutes processed</p><p className="font-display text-3xl font-bold mt-1">{totalMins}</p></GlassCard>
-          <GlassCard><p className="text-xs text-muted-foreground">Plan</p><p className="font-display text-xl font-bold mt-1 gradient-text">Free · 15 min/mo</p></GlassCard>
+          <GlassCard><p className="text-xs text-muted-foreground">Plan</p><p className="font-display text-xl font-bold mt-1 gradient-text">Free · 1 video</p></GlassCard>
         </div>
 
         <div className="mb-8"><PointsPanel /></div>
