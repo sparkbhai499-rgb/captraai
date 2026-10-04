@@ -278,7 +278,7 @@ const AdminPage = () => {
               <div className="overflow-x-auto max-h-[420px]">
                 <table className="w-full text-sm">
                   <thead className="text-xs text-muted-foreground border-b border-border">
-                    <tr><th className="text-left py-2 px-2">Name</th><th className="text-left py-2 px-2">Email</th><th className="text-left py-2 px-2">Phone</th><th className="text-left py-2 px-2">Projects</th><th className="text-left py-2 px-2">Joined</th></tr>
+                    <tr><th className="text-left py-2 px-2">Name</th><th className="text-left py-2 px-2">Email</th><th className="text-left py-2 px-2">Phone</th><th className="text-left py-2 px-2">Projects</th><th className="text-left py-2 px-2">Extra free videos</th><th className="text-left py-2 px-2">Joined</th></tr>
                   </thead>
                   <tbody>
                     {users.filter(u => { const q = userSearch.toLowerCase().trim(); return !q || (u.email || "").toLowerCase().includes(q) || (u.display_name || "").toLowerCase().includes(q); }).map((u) => (
@@ -287,6 +287,13 @@ const AdminPage = () => {
                         <td className="py-2 px-2 font-mono text-xs">{u.email || "—"}</td>
                         <td className="py-2 px-2">{u.phone || "—"}</td>
                         <td className="py-2 px-2">{u.project_count}</td>
+                        <td className="py-2 px-2">
+                          <div className="flex items-center gap-1">
+                            <Input type="number" min={0} className="h-7 w-16 bg-secondary/50 text-xs" value={freeVideos[u.user_id] ?? u.extra_free_videos ?? 0}
+                              onChange={(e) => setFreeVideos({ ...freeVideos, [u.user_id]: e.target.value })}/>
+                            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => grantFreeVideos(u.user_id)}>Save</Button>
+                          </div>
+                        </td>
                         <td className="py-2 px-2 text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</td>
                       </tr>
                     ))}
