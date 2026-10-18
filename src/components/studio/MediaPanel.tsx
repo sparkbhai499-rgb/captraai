@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FilePlus2, Image as ImageIcon, Loader2, Music, Search, Sparkles, Type, Video } from "lucide-react";
 import { toast } from "sonner";
-import { generateCaptions } from "@/lib/captionUtils";
+import { AudioTranscript } from "./AudioTranscript";
 
 
 type Asset = { id: string; name: string; kind: string; storage_path: string; duration_sec: number | null; url?: string };
@@ -41,8 +41,6 @@ export const MediaPanel = ({ projectId, userId }: { projectId: string; userId: s
   const [assets, setAssets] = useState<Asset[]>([]);
   const [busy, setBusy] = useState(false);
   const [q, setQ] = useState("");
-  const [aiBusy, setAiBusy] = useState(false);
-  const [lang, setLang] = useState("auto");
   const [kindFilter, setKindFilter] = useState<"all" | "video" | "image" | "audio">("all");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -100,20 +98,6 @@ export const MediaPanel = ({ projectId, userId }: { projectId: string; userId: s
     text: { ...defaultText(), content: emoji, size: 140, animation: "pop" },
   }));
 
-  const autoCaptions = async () => {
-    setAiBusy(true);
-    try {
-      const caps = await generateCaptions(projectId, lang);
-      caps.forEach((c: any) => addClip("text", makeClip({
-        kind: "text", name: "Caption", start: c.start_ms / 1000,
-        duration: Math.max(0.4, (c.end_ms - c.start_ms) / 1000),
-        text: { ...defaultText(), content: c.text, size: 56, animation: "word", strokeWidth: 3, shadow: 0.8 },
-        transform: { ...makeClip({ kind: "text", name: "x" }).transform, y: 32 },
-      })));
-      toast.success(`${caps.length} caption layers added`);
-    } catch (e: any) { toast.error(e.message || "Caption generation failed"); }
-    finally { setAiBusy(false); }
-  };
 
 
   const silenceTrim = () => {
@@ -183,7 +167,7 @@ export const MediaPanel = ({ projectId, userId }: { projectId: string; userId: s
           <TabsTrigger value="music"><Music className="w-4 h-4" /></TabsTrigger>
           <TabsTrigger value="text"><Type className="w-4 h-4" /></TabsTrigger>
           <TabsTrigger value="stickers"><ImageIcon className="w-4 h-4" /></TabsTrigger>
-          <TabsTrigger value="ai"><Sparkles className="w-4 h-4" /></TabsTrigger>
+          <TabsTrigger value="ai" aria-label="Audio to text" title="Audio to text"><Sparkles className="w-4 h-4" /></TabsTrigger>
         </TabsList>
 
 
@@ -309,25 +293,8 @@ export const MediaPanel = ({ projectId, userId }: { projectId: string; userId: s
           </TabsContent>
 
           <TabsContent value="ai" className="space-y-3 m-0">
-            <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground">Caption language</label>
-              <Select value={lang} onValueChange={setLang}>
-                <SelectTrigger className="bg-secondary/50 h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="auto">Auto detect</SelectItem>
-                  <SelectItem value="hi">Hindi</SelectItem>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="hinglish">Hinglish</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button className="w-full btn-neon border-0" disabled={aiBusy} onClick={autoCaptions}>
-              {aiBusy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />} AI auto captions
-            </Button>
+            <AudioTranscript projectId={projectId} assets={assets} />
             <Button className="w-full" variant="secondary" onClick={silenceTrim}>Silence trim helper</Button>
-            <p className="text-[11px] text-muted-foreground">
-              Captions are transcribed from the project video and dropped onto the text track as fully editable layers.
-            </p>
           </TabsContent>
         </div>
       </Tabs>
