@@ -53,6 +53,7 @@ const AnimatedRoutes = () => {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
       </PageTransition>
     </AnimatePresence>
   );
