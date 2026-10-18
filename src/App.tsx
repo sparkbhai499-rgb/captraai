@@ -6,17 +6,24 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { PageTransition } from "@/components/PageTransition";
+import { lazy, Suspense } from "react";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import Projects from "./pages/Projects";
-import Editor from "./pages/Editor";
-import Studio from "./pages/Studio";
-import Pricing from "./pages/Pricing";
-import Contact from "./pages/Contact";
-import AdminPage from "./pages/AdminPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
-import NotFound from "./pages/NotFound";
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Projects = lazy(() => import("./pages/Projects"));
+const Editor = lazy(() => import("./pages/Editor"));
+const Studio = lazy(() => import("./pages/Studio"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const Contact = lazy(() => import("./pages/Contact"));
+const AdminPage = lazy(() => import("./pages/AdminPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+  </div>
+);
 
 const queryClient = new QueryClient();
 
