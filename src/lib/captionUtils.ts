@@ -41,7 +41,7 @@ export const fetchCaptions = async (projectId: string): Promise<Caption[]> => {
   return (data as any) || [];
 };
 
-export const generateCaptions = async (projectId: string, language = "auto"): Promise<Caption[]> => {
+export const generateCaptions = async (projectId: string, language = "auto", assetId?: string): Promise<Caption[]> => {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error("Session expired — please log in again");
 
@@ -55,14 +55,19 @@ export const generateCaptions = async (projectId: string, language = "auto"): Pr
         apikey: ANON,
         Authorization: `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ project_id: projectId, language }),
+      body: JSON.stringify({ project_id: projectId, language, ...(assetId ? { asset_id: assetId } : {}) }),
       signal: ctrl.signal,
     });
     const txt = await res.text();
     let json: any = {};
     try { json = txt ? JSON.parse(txt) : {}; } catch { /* non-json */ }
-    if (!res.ok) throw new Error(json.error || txt.slice(0, 200) || `Server error ${res.status}`);
+    if (!res.ok) {
+      const error = new Error(json.error || json.message || txt.slice(0, 200) || `Server error ${res.status}`);
+      Object.assign(error, { terminal: true });
+      throw error;
+    }
   } catch (e: any) {
+    if (e?.terminal) throw e;
     // network drop / abort — the job may still have completed server-side
     const caps = await fetchCaptions(projectId);
     if (caps.length) return caps;
