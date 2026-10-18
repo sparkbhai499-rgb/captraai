@@ -11,6 +11,7 @@ import { MediaPanel } from "@/components/studio/MediaPanel";
 import { ExportDialog } from "@/components/studio/ExportDialog";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Cloud, Loader2 } from "lucide-react";
+import { mediaKind } from "@/lib/media";
 
 const Shell = ({ projectId, userId, title }: { projectId: string; userId: string; title: string }) => {
   const { saving } = useStudio();
@@ -62,8 +63,10 @@ const Studio = () => {
       if (data.video_path) {
         const { data: s } = await supabase.storage.from("videos").createSignedUrl(data.video_path, 60 * 60 * 8);
         if (s?.signedUrl) {
-          base.tracks[0].clips.push(makeClip({
-            kind: "video", name: data.title || "Video", src: s.signedUrl,
+          const kind = mediaKind(data.video_path);
+          const track = base.tracks.find((t) => t.kind === (kind === "audio" ? "audio" : kind === "video" ? "video" : "overlay"));
+          track?.clips.push(makeClip({
+            kind, name: data.title || "Media", src: s.signedUrl,
             duration: data.duration_sec || 10, sourceDuration: data.duration_sec || undefined,
           }));
         }

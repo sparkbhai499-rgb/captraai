@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { spendPoints } from "@/hooks/usePoints";
 import { checkUploadQuota } from "@/lib/quota";
 import { extractAudioWav } from "@/lib/extractAudio";
+import { isAudioMedia, probeMediaDuration } from "@/lib/media";
+import { generateCaptions } from "@/lib/captionUtils";
 
 const ALLOWED_EXT = /\.(mp4|mov|avi|mkv|webm|mp3|wav|m4a|aac|ogg|flac|jpg|jpeg|png|webp|gif|bmp|avif)$/i;
 const isAllowed = (f: File) =>
@@ -54,38 +56,31 @@ export const UploadDropzone = ({ compact = false }: { compact?: boolean }) => {
     setBusy(true); setProgress(10);
     try {
       const video = isVideo(file);
+      const audio = isAudioMedia(file.name, file.type);
       const ext = file.name.split(".").pop() || "mp4";
       const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
       const { error: upErr } = await supabase.storage.from("videos").upload(path, file, { contentType: file.type || "video/mp4" });
       if (upErr) throw upErr;
       setProgress(50);
-      let duration_sec: number | null = null;
+      const duration_sec = await probeMediaDuration(file, video ? "video" : audio ? "audio" : "image");
       if (video) {
         // Clean compact audio for accurate captions (songs + big files)
         const wav = await extractAudioWav(file);
         if (wav) await supabase.storage.from("videos").upload(`${path}.audio.wav`, wav, { contentType: "audio/wav", upsert: true });
-        // Extract real duration client-side so caption timings sync accurately
-        duration_sec = await new Promise<number | null>((resolve) => {
-          const v = document.createElement("video");
-          v.preload = "metadata";
-          v.onloadedmetadata = () => { resolve(Math.round(v.duration) || null); URL.revokeObjectURL(v.src); };
-          v.onerror = () => resolve(null);
-          v.src = URL.createObjectURL(file);
-        });
       }
       setProgress(65);
       const { data: proj, error: pErr } = await supabase.from("projects").insert({
         user_id: user.id,
         title: file.name.replace(/\.[^.]+$/, ""),
         video_path: path,
-        status: "uploaded",
+        status: video || audio ? "transcribing" : "uploaded",
         language,
         duration_sec,
       }).select().single();
       if (pErr) throw pErr;
       setProgress(85);
-      if (video) {
-        supabase.functions.invoke("transcribe-video", { body: { project_id: proj.id, language } }).catch(() => {});
+      if (video || audio) {
+        void generateCaptions(proj.id, language).catch((error: Error) => toast.error(error.message));
         toast.success("Uploaded! Starting AI transcription…");
       } else {
         toast.success("Media uploaded!");
