@@ -2,6 +2,9 @@
 // (works for songs + big 500 MB videos; keeps payload under the ~25 MB transcription limit).
 export async function extractAudioWav(file: File): Promise<Blob | null> {
   try {
+    // Very large files freeze the browser during decode — skip extraction;
+    // the server will transcribe the video directly if it's small enough.
+    if (file.size > 120 * 1024 * 1024) return null;
     const buf = await file.arrayBuffer();
     const Ctx = (window.AudioContext || (window as any).webkitAudioContext);
     const ctx = new Ctx();
